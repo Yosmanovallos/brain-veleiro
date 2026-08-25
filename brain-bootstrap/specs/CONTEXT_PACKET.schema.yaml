@@ -1,0 +1,405 @@
+schema_version: "1.0"
+schema_name: "Brain Context Pack"
+
+description: >
+  Schema for one bounded, task-specific Context Pack.
+  The canonical concept is "Context Pack"; the filename retains "PACKET"
+  only for compatibility with the bootstrap step contract.
+
+type: object
+
+required:
+  - id
+  - objective
+  - authority_policy
+  - budget
+  - items
+
+properties:
+
+  id:
+    type: string
+    required: true
+    description: "Unique identifier for this Context Pack instance."
+
+  thread_ref:
+    type: string
+    required: false
+    description: "Optional reference to the Thread associated with this Context Pack."
+
+  run_ref:
+    type: string
+    required: false
+    description: "Optional reference to the Run or execution that will consume this Context Pack."
+
+  parent_context_pack_ref:
+    type: string
+    required: false
+    description: >
+      Optional parent Context Pack reference when this pack is a bounded derivative,
+      such as a child-agent packet. This field does not define delegation mechanics.
+
+  objective:
+    type: object
+    required: true
+    description: "The bounded objective for which this Context Pack was assembled."
+    required_fields:
+      - statement
+    properties:
+      statement:
+        type: string
+        required: true
+        description: "Exact execution or decision objective."
+      spec_ref:
+        type: string
+        required: false
+        description: "Reference to the explicit current Spec when applicable."
+      acceptance_criteria_refs:
+        type: array
+        required: false
+        items_type: string
+        description: "References to acceptance criteria relevant to this objective."
+      quality_contract_ref:
+        type: string
+        required: false
+        description: "Reference to the applicable Quality Contract."
+
+  authority_policy:
+    type: object
+    required: true
+    description: "Canonical authority order used to resolve contradictory context."
+    required_fields:
+      - ordering
+    properties:
+      ordering:
+        type: array
+        required: true
+        min_items: 9
+        max_items: 9
+        description: "Must preserve the canonical S05 authority order exactly."
+        items:
+          type: object
+          required_fields:
+            - rank
+            - name
+          properties:
+            rank:
+              type: integer
+              required: true
+              description: "1 is highest authority; 9 is lowest."
+            name:
+              type: string
+              required: true
+              allowed_values:
+                - "runtime/repository reality"
+                - "explicit current spec"
+                - "verified current/handoff"
+                - "ADRs"
+                - "project instructions"
+                - "compiled knowledge"
+                - "durable memory"
+                - "historical sessions"
+                - "inference"
+
+  budget:
+    type: object
+    required: true
+    description: >
+      Bounded context budget. At least one concrete limit should be set
+      by the runtime/policy for a real Context Pack instance.
+    properties:
+      max_tokens:
+        type: integer
+        required: false
+        minimum: 1
+        description: "Maximum token budget when token accounting is available."
+      max_characters:
+        type: integer
+        required: false
+        minimum: 1
+        description: "Maximum character budget when token accounting is unavailable."
+      max_items:
+        type: integer
+        required: false
+        minimum: 1
+        description: "Maximum number of context items."
+      reserved_output_tokens:
+        type: integer
+        required: false
+        minimum: 0
+        description: "Optional budget reserved for model output where applicable."
+      per_layer_limits:
+        type: array
+        required: false
+        description: "Optional caps preventing one context layer from dominating the pack."
+        items:
+          type: object
+          required_fields:
+            - layer
+          properties:
+            layer:
+              type: string
+              required: true
+              allowed_values:
+                - "identity"
+                - "user context"
+                - "durable memory"
+                - "project instructions"
+                - "compiled knowledge"
+                - "historical sessions"
+                - "current verified state"
+                - "working context"
+                - "child-agent packet"
+            max_tokens:
+              type: integer
+              required: false
+              minimum: 1
+            max_items:
+              type: integer
+              required: false
+              minimum: 1
+
+  selection:
+    type: object
+    required: false
+    description: "Metadata explaining how this pack was compiled."
+    properties:
+      retrieval_query:
+        type: string
+        required: false
+        description: "Task-specific retrieval intent/question."
+      progressive_retrieval_used:
+        type: boolean
+        required: false
+        description: "Whether context was expanded only after a specific gap was identified."
+      duplicates_removed:
+        type: boolean
+        required: false
+        description: "Whether duplicate or redundant items were removed."
+      conflict_count:
+        type: integer
+        required: false
+        minimum: 0
+        description: "Number of source conflicts detected during composition."
+
+  items:
+    type: array
+    required: true
+    description: >
+      Selected context items included in the bounded Context Pack.
+      Items should contain references whenever full inline content is unnecessary.
+    items:
+      type: object
+
+      required_fields:
+        - id
+        - source_layer
+        - authority_rank
+        - status
+        - provenance
+        - relevance
+
+      properties:
+
+        id:
+          type: string
+          required: true
+          description: "Unique identifier for this context item within the pack."
+
+        source_layer:
+          type: string
+          required: true
+          description: "One of the nine canonical context layers."
+          allowed_values:
+            - "identity"
+            - "user context"
+            - "durable memory"
+            - "project instructions"
+            - "compiled knowledge"
+            - "historical sessions"
+            - "current verified state"
+            - "working context"
+            - "child-agent packet"
+
+        authority_rank:
+          type: integer
+          required: true
+          minimum: 1
+          maximum: 9
+          description: >
+            Authority rank for the claim represented by this item, using the
+            canonical S05 authority order. Rank is claim-specific, not a blanket
+            quality score for the entire source.
+
+        authority_name:
+          type: string
+          required: false
+          allowed_values:
+            - "runtime/repository reality"
+            - "explicit current spec"
+            - "verified current/handoff"
+            - "ADRs"
+            - "project instructions"
+            - "compiled knowledge"
+            - "durable memory"
+            - "historical sessions"
+            - "inference"
+          description: "Human-readable authority label matching authority_rank."
+
+        status:
+          type: string
+          required: true
+          allowed_values:
+            - "VERIFIED"
+            - "PROVIDED"
+            - "ASSUMED"
+            - "PROPOSED"
+            - "UNKNOWN"
+            - "BLOCKED"
+          description: "Existing Brain epistemic/operational status vocabulary."
+
+        relevance:
+          type: object
+          required: true
+          description: "Why the item deserves budget in this Context Pack."
+          required_fields:
+            - reason
+            - priority
+          properties:
+            reason:
+              type: string
+              required: true
+            priority:
+              type: string
+              required: true
+              allowed_values:
+                - "CRITICAL"
+                - "HIGH"
+                - "MEDIUM"
+                - "LOW"
+
+        provenance:
+          type: object
+          required: true
+          description: "Where this context item came from."
+          required_fields:
+            - source_type
+            - source_ref
+          properties:
+            source_type:
+              type: string
+              required: true
+              description: >
+                Generic source category, e.g. repository, runtime, spec, handoff,
+                ADR, project instruction, knowledge, memory, session, inference.
+            source_ref:
+              type: string
+              required: true
+              description: "Inspectable path, id, URI, artifact ref, Run ref, or equivalent locator."
+            observed_or_retrieved_at:
+              type: string
+              required: false
+              description: "Timestamp or equivalent freshness metadata when available."
+
+        evidence_ref:
+          type: string
+          required: false
+          description: >
+            Optional reference to an EVIDENCE_RECORD.yaml instance by its id.
+            Evidence fields are not duplicated inline.
+
+        content:
+          type: object
+          required: false
+          description: >
+            Inline content only when needed for execution. Prefer references
+            or bounded excerpts over full source duplication.
+          properties:
+            kind:
+              type: string
+              required: false
+              allowed_values:
+                - "INLINE"
+                - "EXCERPT"
+                - "SUMMARY"
+                - "REFERENCE_ONLY"
+            text:
+              type: string
+              required: false
+              description: "Bounded inline content or excerpt."
+            content_ref:
+              type: string
+              required: false
+              description: "Reference to the full canonical source."
+
+        budget_cost:
+          type: object
+          required: false
+          description: "Observed/estimated context cost for this item."
+          properties:
+            tokens:
+              type: integer
+              required: false
+              minimum: 0
+            characters:
+              type: integer
+              required: false
+              minimum: 0
+
+        conflict:
+          type: object
+          required: false
+          description: "Optional metadata when this item conflicts with another candidate context item."
+          properties:
+            conflicts_with:
+              type: array
+              required: false
+              items_type: string
+            resolution:
+              type: string
+              required: false
+              allowed_values:
+                - "WON_BY_AUTHORITY"
+                - "LOST_BY_AUTHORITY"
+                - "UNRESOLVED"
+                - "NOT_APPLICABLE"
+            resolution_reason:
+              type: string
+              required: false
+
+  excluded_candidates:
+    type: array
+    required: false
+    description: >
+      Optional audit list of candidate context intentionally excluded due to
+      low relevance, lower authority, duplication, staleness, or budget.
+    items:
+      type: object
+      required_fields:
+        - source_ref
+        - reason
+      properties:
+        source_ref:
+          type: string
+          required: true
+        reason:
+          type: string
+          required: true
+          allowed_values:
+            - "LOW_RELEVANCE"
+            - "DUPLICATE"
+            - "STALE"
+            - "LOWER_AUTHORITY_CONFLICT"
+            - "BUDGET"
+            - "OTHER"
+        notes:
+          type: string
+          required: false
+
+  final_status:
+    type: string
+    required: false
+    allowed_values:
+      - "READY"
+      - "BLOCKED"
+    description: "Whether the assembled Context Pack is sufficient for its bounded objective."
