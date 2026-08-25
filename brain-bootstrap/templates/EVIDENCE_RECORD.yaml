@@ -1,0 +1,83 @@
+# BRAIN Evidence Record
+# Represents one piece of Evidence supporting or contradicting a material claim.
+#
+# Design rationale:
+# The record separates the claim from the source/observation, preserves timing,
+# confidence and limitations, and makes reproducibility/inspection possible.
+# Status labels describe epistemic/operational state; they do not replace Evidence.
+
+id: "E-001"
+
+# Claim this Evidence supports, contradicts, or qualifies.
+claim:
+  ref: ""
+  statement: ""
+
+# SUPPORTS | CONTRADICTS | QUALIFIES
+relationship: "SUPPORTS | CONTRADICTS | QUALIFIES"
+
+# Existing Brain status vocabulary.
+# VERIFIED requires inspectable Evidence.
+status: "VERIFIED | PROVIDED | ASSUMED | PROPOSED | UNKNOWN | BLOCKED"
+
+source:
+  # DIRECT_OBSERVATION: command/test/runtime/repository/system observation.
+  # PRIMARY: authoritative first-party or original source.
+  # SECONDARY: independent analysis or derived source.
+  # STAKEHOLDER: information supplied by an authorized stakeholder.
+  # OTHER: explain below.
+  type: "DIRECT_OBSERVATION | PRIMARY | SECONDARY | STAKEHOLDER | OTHER"
+
+  title: ""
+  locator: ""
+  authority_or_owner: ""
+
+  # For commands/runtime Evidence, record enough to reproduce or inspect.
+  command_or_method: ""
+
+# When the source was published, observed, or produced.
+observed_or_published_at: ""
+
+# When Brain retrieved or recorded it.
+recorded_at: ""
+
+recency:
+  # CURRENT | ACCEPTABLE | POSSIBLY_STALE | STALE | NOT_TIME_SENSITIVE
+  status: "CURRENT | ACCEPTABLE | POSSIBLY_STALE | STALE | NOT_TIME_SENSITIVE"
+  rationale: ""
+
+# Confidence is a judgment about how strongly this Evidence supports the claim.
+# It is not a substitute for Evidence.
+confidence: "HIGH | MEDIUM | LOW"
+
+# Explain what this Evidence does NOT establish or where it may fail.
+limitations:
+  - ""
+
+# Optional conflicting Evidence that should remain visible.
+contradictions:
+  present: false
+  evidence_refs: []
+  notes: ""
+
+# Can another reviewer reproduce or inspect this Evidence?
+reproducibility:
+  reproducible: false
+  instructions: ""
+
+# Optional hash, commit SHA, run ID, artifact path, or other immutable reference.
+artifact_ref: ""
+
+# Decision or acceptance criterion affected by this Evidence.
+decision_relevance:
+  decision_ref: ""
+  acceptance_criterion_ref: ""
+  impact: ""
+
+# If revalidation will be needed later, record the trigger.
+revalidation:
+  required: false
+  trigger: ""
+  owner: ""
+
+notes: ""

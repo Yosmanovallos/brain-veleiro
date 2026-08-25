@@ -1,0 +1,134 @@
+# BRAIN Quality Contract
+# Fill this template for a specific task, Spec, decision, or bounded work item.
+# Existing canonical skeleton fields are preserved exactly.
+# Additional fields are additive only.
+
+id: "QC-001"
+version: "1.0"
+
+# Reference to the Spec, task, decision, or work item governed by this contract.
+applies_to:
+  type: "SPEC | TASK | DECISION | RESEARCH | IMPLEMENTATION | OTHER"
+  ref: ""
+  title: ""
+
+# Canonical depth selected for this work.
+# FAST: trivial, low-risk, low-ambiguity, low-novelty, reversible, local context sufficient.
+# STANDARD: features, integrations, auth, DB, API, simple agent, meaningful engineering work.
+# DEEP: new architecture, autonomous agents, security, money, sensitive data, infrastructure,
+# difficult-to-reverse decisions, unknown domains, or materially high consequences.
+depth: "FAST | STANDARD | DEEP"
+
+# Canonical selection factors. Do not rename.
+risk: "LOW | MEDIUM | HIGH"
+ambiguity: "LOW | MEDIUM | HIGH"
+novelty: "LOW | MEDIUM | HIGH"
+irreversibility: "LOW | MEDIUM | HIGH"
+
+# Short explanation of why this depth was selected.
+selection_rationale: ""
+
+# Optional reason a minimum depth is mandatory even if other factors look lower.
+mandatory_depth_floor:
+  applied: false
+  depth: ""
+  reason: ""
+
+# Known execution constraints. These may reduce scope but must not silently reduce required rigor.
+resource_constraints:
+  time_limit: ""
+  token_or_compute_limit: ""
+  tooling_limit: ""
+  scope_reduction_if_needed: ""
+
+evidence:
+  # Canonical field: whether material claims require Evidence.
+  required: true
+
+  # Canonical field: prefer direct/authoritative primary sources where available.
+  primary_sources_preferred: true
+
+  # Canonical field: whether material claims must be checked against independent Evidence.
+  cross_validation: false
+
+  # Additive: whether Evidence must satisfy a freshness requirement.
+  recency_required: false
+
+  # Additive: describe the required freshness when applicable.
+  recency_expectation: ""
+
+  # Additive: minimum acceptable Evidence/source quality.
+  minimum_source_quality: "ANY_RELEVANT | AUTHORITATIVE_PREFERRED | AUTHORITATIVE_REQUIRED"
+
+  # Additive: minimum traceability expectation for Evidence records.
+  claim_traceability_required: true
+
+research:
+  # Canonical field: explicitly identify decision-relevant Knowledge Gaps.
+  knowledge_gaps_required: true
+
+  # Canonical field: compare meaningful alternatives.
+  alternatives_required: false
+
+  # Canonical field: actively seek Evidence that could contradict the favored conclusion.
+  contradictory_evidence_required: false
+
+  # Additive: stop research when further information is unlikely to change the decision
+  # and required Evidence thresholds are satisfied.
+  value_of_information_stop_rule: true
+
+implementation:
+  # Canonical field: tests or equivalent executable checks are required when applicable.
+  tests_required: true
+
+  # Canonical field: deterministic checks must execute before LLM/semantic review is trusted.
+  deterministic_checks_required: true
+
+  # Canonical field: implementation/architecture trade-offs must be made explicit.
+  tradeoffs_required: false
+
+  # Additive: explicit handling for cases where tests are genuinely not applicable.
+  tests_not_applicable_requires_reason: true
+
+challenge:
+  # Additive: run the Challenger protocol on material decisions/findings.
+  required: false
+
+  # Additive: identify the target of the challenge.
+  targets:
+    - "RESEARCH"
+    - "SPEC"
+    - "ARCHITECTURE"
+    - "IMPLEMENTATION"
+
+verification:
+  # Additive: require independent verification where practical.
+  independent_review_required: false
+
+  # Additive: PASS must reference Evidence.
+  evidence_backed_pass_required: true
+
+uncertainty:
+  # Canonical field: uncertainty must be surfaced rather than hidden.
+  explicit: true
+
+  # Additive: record remaining unknowns that could still affect the result.
+  residual_unknowns_required: true
+
+  # Additive: limitations must be explicit for material claims.
+  limitations_required: true
+
+definition_of_done:
+  # Fill with the concrete acceptance requirements for this work.
+  requirements:
+    - ""
+
+  # Optional reference to the applicable FAST/STANDARD/DEEP Definition of Done
+  # in QUALITY_ARCHITECTURE_v1.md.
+  depth_policy_ref: "QUALITY_ARCHITECTURE_v1.md#definition-of-done"
+
+approval:
+  selected_by: ""
+  approved_by: ""
+  approved_at: ""
+  notes: ""
