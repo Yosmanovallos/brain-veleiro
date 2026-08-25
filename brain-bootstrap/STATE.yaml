@@ -1,0 +1,72 @@
+bootstrap_version: 1.2.0
+current_step: S00
+status: PASS
+primary_builder: claude-code
+independent_verifier: chatgpt-manual
+researcher: chatgpt-manual
+backup_builder: claude-code
+started_at: "2026-08-25T00:00:00Z"
+last_verified_at: "2026-08-25T00:12:00Z"
+steps:
+  S00: PASS
+  S01: NOT_STARTED
+  S02: NOT_STARTED
+  S03: NOT_STARTED
+  S04: NOT_STARTED
+  S05: NOT_STARTED
+  S06: NOT_STARTED
+  S07: NOT_STARTED
+  S08: NOT_STARTED
+  S09: NOT_STARTED
+  S10: NOT_STARTED
+  S11: NOT_STARTED
+  S12: NOT_STARTED
+  S13A: NOT_STARTED
+  S13B: NOT_STARTED
+  S13C: NOT_STARTED
+  S13D: NOT_STARTED
+  S13E: NOT_STARTED
+  S13F: NOT_STARTED
+  S13G: NOT_STARTED
+  S13H: NOT_STARTED
+  S13I: NOT_STARTED
+  S13J: NOT_STARTED
+  S13K: NOT_STARTED
+  S13L: NOT_STARTED
+  S13M: NOT_STARTED
+  S13N: NOT_STARTED
+  S13O: NOT_STARTED
+  S13P: NOT_STARTED
+  S13Q: NOT_STARTED
+  S13R: NOT_STARTED
+  S14: NOT_STARTED
+  S15: NOT_STARTED
+  S16: NOT_STARTED
+  S17: NOT_STARTED
+  S18: NOT_STARTED
+  S19: NOT_STARTED
+  S20: NOT_STARTED
+  S21: NOT_STARTED
+  S22: NOT_STARTED
+  S23: NOT_STARTED
+
+repository:
+  verified_root: "/mnt/c/Users/yosma.DESKTOP-RQ0SDF3/Documents/brain-veleiro"
+  confirmed_by_user: true
+  note: "Existe otro proyecto no relacionado en Documents/Brain (distinto git repo, distintas skills, sin brain-build-day-bootstrap). El usuario confirmo explicitamente que brain-veleiro es la raiz correcta para este Build Day; Documents/Brain no fue modificado."
+  git_initialized: true
+  default_branch: main
+  origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
+  origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
+  commits: 0
+
+build_day:
+  date: "2026-08-29"
+  time_start: "08:00"
+  time_end: "17:00"
+  timezone: "America/Bogota"
+
+known_constraints:
+  os: "Linux DESKTOP-RQ0SDF3 6.18.33.2-microsoft-standard-WSL2 (WSL2 on Windows, mount /mnt/c)"
+  tooling_gap: "No hay CLI de Codex ni Gemini instalado en este entorno; ChatGPT se usa solo via copy/paste manual (sin API/CLI detectada)."
+  docker: "Docker CLI detected, Docker runtime unavailable from current WSL environment. KNOWN_ISSUE / NON_BLOCKING_FOR_S00."
