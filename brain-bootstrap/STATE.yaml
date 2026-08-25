@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
-current_step: S08
+current_step: S09
 status: PASS
 primary_builder: claude-code
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-25T12:05:00Z"
+last_verified_at: "2026-08-25T14:00:00Z"
 steps:
   S00: PASS
   S01: PASS
@@ -17,7 +17,7 @@ steps:
   S06: PASS
   S07: PASS
   S08: PASS
-  S09: NOT_STARTED
+  S09: PASS
   S10: NOT_STARTED
   S11: NOT_STARTED
   S12: NOT_STARTED
@@ -58,8 +58,8 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 8
-  head_sha: "3d3bf8687b98013f3ab9c5e9b1ff955deb079851"
+  commits: 9
+  head_sha: "f40a8d62e3a318aa82356ae2506ea97ca2f2da81"
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -88,6 +88,16 @@ repository:
     knowledge_provider_implementation: "NOT_STARTED (architecture-only step, mirrors S07 Part A vs Part B split; concrete KnowledgeProvider adapter is a future step, explicitly out of scope for S08 per the ChatGPT authoring non-goals)"
     verification: "brain-bootstrap/reports/S08-knowledge-architecture-verification.md — real ingest/compile/retrieve/immutability exercise performed against genuine repository evidence (the S07 FTS5 hyphen bug), not fabricated content. Origin file hash unchanged before/after (f215c66886cd7db02de076782b1b8cc19b3b21052fcc02ad2033b7a5d3d82a17). Bounded retrieval demonstrated via grep returning only the 2 relevant files out of 9 knowledge/ files. typecheck/test re-run and unchanged (16/16 PASS) since S08 is docs-only."
     note: "Committed via the S08 closure commit alongside this STATE.yaml update."
+  agent_runtime:
+    status: PASS
+    implemented_at: "2026-08-25T14:00:00Z"
+    paths: [brain-bootstrap/specs/AGENT_RUNTIME_LOOP_v1.md, brain-bootstrap/decisions/ADR-agent-runtime-model-provider.md, src/core/agent/types.ts, src/core/agent/runtime.ts, src/core/agent/index.ts, src/providers/model/deterministicReferenceModelProvider.ts, src/providers/capability/referenceCapabilityProvider.ts, tests/agent/fixtures.ts, tests/agent/agentRuntime.test.ts]
+    decided_via: "brain-bootstrap/decisions/ADR-agent-runtime-model-provider.md (ChatGPT-authored, integrated verbatim)"
+    model_provider_reference: "DeterministicReferenceModelProvider — no external LLM, no network, no credentials. Real LLM integration explicitly deferred to a future step behind the same ModelProvider contract."
+    capability_provider_reference: "ReferenceCapabilityProvider — exposes one real deterministic Tool (word_count) that actually computes a result, not a canned answer."
+    contract_tests: "T1-T12 all PASS (31/31 vitest assertions total, 16 unchanged from S07 + 15 new), see brain-bootstrap/reports/S09-agent-runtime-verification.md"
+    quality_checks: "typecheck PASS, build PASS, test PASS (pre- and post-build), no provider/vendor leakage into src/core/agent (T9, automated), no Core import of src/providers/ (grep-verified)"
+    note: "Committed via the S09 closure commit alongside this STATE.yaml update."
 
 build_day:
   date: "2026-08-29"
