@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
-current_step: S06
+current_step: S07
 status: PASS
 primary_builder: claude-code
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-25T04:15:00Z"
+last_verified_at: "2026-08-25T07:15:00Z"
 steps:
   S00: PASS
   S01: PASS
@@ -15,7 +15,7 @@ steps:
   S04: PASS
   S05: PASS
   S06: PASS
-  S07: NOT_STARTED
+  S07: PASS
   S08: NOT_STARTED
   S09: NOT_STARTED
   S10: NOT_STARTED
@@ -58,8 +58,26 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 6
-  head_sha: "65239eaa2e0d6552d292180b142a7414cc833c1f"
+  commits: 7
+  head_sha: "b76db73c3a9888b2987e1522ca07f123fca58c97"
+  runtime_foundation:
+    status: PASS
+    runtime: "Node.js 24 LTS"
+    language: TypeScript
+    module_system: ESM
+    package_manager: npm
+    test_runner: Vitest
+    decided_via: "brain-bootstrap/decisions/ADR-runtime-foundation.md (ChatGPT-authored, integrated verbatim)"
+    decided_at: "2026-08-25T06:45:00Z"
+    node_activation: "Installed and activated via nvm ('nvm install 24' / 'nvm use 24') isolated to the working shell only. Global nvm default NOT changed, no .nvmrc created, no sudo used, no system-wide Node install modified. Verified: node v24.19.0, npm v11.17.0 at /home/yosman/.nvm/versions/node/v24.19.0/bin. Must be re-activated (PATH export) in any new shell/session until a persistence mechanism is explicitly approved."
+  reference_memory_provider:
+    status: PASS
+    implemented_at: "2026-08-25T07:15:00Z"
+    paths: [package.json, package-lock.json, tsconfig.json, src/core/memory/types.ts, src/core/memory/index.ts, src/providers/memory/localReferenceMemoryProvider.ts, tests/fakeMemoryProvider.ts, tests/memoryProvider.test.ts]
+    dependencies: {runtime: ["better-sqlite3@13.0.3"], dev: ["typescript@7.0.2", "vitest@4.1.11", "@types/node@26.3.0", "@types/better-sqlite3@9.6.0"]}
+    contract_tests: "T1-T10 all PASS (16/16 vitest assertions), see brain-bootstrap/reports/S07-reference-memory-provider-verification.md"
+    quality_checks: "typecheck PASS, build PASS, test PASS, no Core storage leakage (T9, also enforced mechanically as an automated test)"
+    note: "Not committed/pushed yet. dist/ and node_modules/ correctly gitignored (pre-existing .gitignore from S00)."
 
 build_day:
   date: "2026-08-29"
@@ -71,3 +89,6 @@ known_constraints:
   os: "Linux DESKTOP-RQ0SDF3 6.18.33.2-microsoft-standard-WSL2 (WSL2 on Windows, mount /mnt/c)"
   tooling_gap: "No hay CLI de Codex ni Gemini instalado en este entorno; ChatGPT se usa solo via copy/paste manual (sin API/CLI detectada)."
   docker: "Docker CLI detected, Docker runtime unavailable from current WSL environment. KNOWN_ISSUE / NON_BLOCKING_FOR_S00."
+  hermes_identity_unresolved: "RESOLVED at product-identity level (2026-08-25). Hermes = Hermes Agent by Nous Research (github.com/NousResearch/hermes-agent), independently verified via 'gh api repos/NousResearch/hermes-agent' (real, active repo, 236347 stars, pushed 2026-08-25T19:50:40Z, official docs at hermes-agent.nousresearch.com with dedicated Memory and MCP Integration pages). S07 Part A (MemoryProvider contract spec) is complete and verified."
+  hermes_integration_research_spike: "COMPLETE (2026-08-25), report at brain-bootstrap/reports/S07-partB-hermes-integration-research.md. Executive decision: C (ONLY_AS_DEVELOPMENT_SESSION_SYSTEM) - Hermes Agent itself is not a suitable direct backing for Brain's MemoryProvider contract; superseded by the ChatGPT architecture decision below."
+  s07_architecture_decision: "ACCEPTED (2026-08-25) via brain-bootstrap/decisions/ADR-hermes-memory-role.md (ChatGPT-authored, integrated verbatim). Hermes Agent reclassified as OPTIONAL DEVELOPMENT/SESSION SYSTEM, not Brain's concrete MemoryProvider. First concrete provider approved: LocalReferenceMemoryProvider backed by SQLite+FTS5 (implementation detail behind the MemoryProvider contract only, not a Core dependency and not a mandate for future Brain-built applications). S07 section of SKILL.md amended in place (title, objective, architecture, contract, reference-adapter responsibilities, required tests T1-T8 equivalents, PASS criteria) - verified via git diff to be scoped exactly to the S07 section, rest of skill untouched (41 '## S0x' sections still present)."

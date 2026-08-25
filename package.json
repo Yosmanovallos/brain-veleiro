@@ -1,0 +1,32 @@
+{
+  "name": "brain",
+  "version": "1.0.0",
+  "description": "Brain Build Day runtime (minimal S07 scaffold)",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yosmanovallos/brain-veleiro.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Yosmanovallos/brain-veleiro/issues"
+  },
+  "homepage": "https://github.com/Yosmanovallos/brain-veleiro#readme",
+  "private": true,
+  "dependencies": {
+    "better-sqlite3": "^13.0.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.3.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}

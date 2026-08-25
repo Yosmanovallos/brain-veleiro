@@ -763,45 +763,75 @@ La segunda sesión puede continuar correctamente y detectar un handoff deliberad
 
 ---
 
-## S07 — Hermes Adapter
+## S07 — MemoryProvider Reference Adapter + Hermes Role
 
-### Objetivo
-Integrar Hermes como proveedor de memoria/sesiones sin acoplar Brain a Hermes.
+### Objective
 
-### Contrato esperado
+Prove Brain's replaceable MemoryProvider contract with one deterministic persistent reference adapter, while keeping Hermes Agent optional and outside Brain Core.
 
-```text
-MemoryProvider
-  retrieve()
-  remember_candidate()
-  commit_verified_memory()
-  search_history()
-```
+### Approved architecture
 
-### Reglas
+Brain Core
+→ MemoryProvider
+→ LocalReferenceMemoryProvider (SQLite + FTS5)
 
-- memoria durable pequeña;
-- histórico recuperable bajo demanda;
-- no guardar temporalidades irrelevantes;
-- memoria permanente requiere criterio/verificación;
-- provider sustituible.
+Hermes Agent:
+optional development/session system; not required for Brain runtime.
 
-### Artefactos
+### Contract
 
-- `specs/MEMORY_PROVIDER.md`
-- adapter/config de Hermes;
-- tests de contract.
+The canonical MemoryProvider methods remain:
 
-### Verificación
+- retrieve()
+- remember_candidate()
+- commit_verified_memory()
+- search_history()
 
-- guardar un hecho durable;
-- abrir nueva sesión;
-- recuperarlo;
-- buscar un dato histórico que no esté en hot memory;
-- probar que un dato temporal no se promueve automáticamente.
+### Reference adapter responsibilities
+
+The reference adapter must support:
+
+1. small durable committed memory;
+2. candidate memory separated from committed memory;
+3. explicit verified promotion;
+4. bounded history retrieval/search;
+5. persistence across sessions/processes;
+6. provenance/status sufficient for Brain's Context Authority rules;
+7. disabled mode without Core failure.
+
+### Required tests
+
+Contract tests must prove:
+
+1. store a verified durable fact;
+2. instantiate/open a new session/process context;
+3. retrieve that durable fact;
+4. record/search historical information not in hot durable memory;
+5. prove temporary/candidate information is not promoted automatically;
+6. prove ASSUMED/PROPOSED/UNKNOWN/BLOCKED candidates cannot become committed durable memory without valid promotion;
+7. disable the provider and prove Brain remains operational;
+8. prove no provider-specific types leak into Brain Core.
+
+### Hermes result
+
+Hermes Agent research result:
+
+ONLY_AS_DEVELOPMENT_SESSION_SYSTEM
+
+This is not a failure of Brain's MemoryProvider architecture.
+
+It is evidence that provider substitution boundaries are working correctly.
 
 ### PASS
-Hermes funciona detrás del contrato y Brain puede operar aunque el adapter sea deshabilitado.
+
+S07 passes when:
+
+- MemoryProvider contract is implemented by LocalReferenceMemoryProvider;
+- all contract tests pass;
+- disabled-mode test passes;
+- persistence works across a fresh session/process;
+- the Core has no SQLite-specific dependency;
+- Hermes remains optional and no Hermes-specific behavior leaks into Brain Core.
 
 ---
 
