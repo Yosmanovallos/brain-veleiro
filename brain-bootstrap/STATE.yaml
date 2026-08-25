@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
-current_step: S07
+current_step: S08
 status: PASS
 primary_builder: claude-code
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-25T07:15:00Z"
+last_verified_at: "2026-08-25T12:05:00Z"
 steps:
   S00: PASS
   S01: PASS
@@ -16,7 +16,7 @@ steps:
   S05: PASS
   S06: PASS
   S07: PASS
-  S08: NOT_STARTED
+  S08: PASS
   S09: NOT_STARTED
   S10: NOT_STARTED
   S11: NOT_STARTED
@@ -58,8 +58,8 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 7
-  head_sha: "b76db73c3a9888b2987e1522ca07f123fca58c97"
+  commits: 8
+  head_sha: "3d3bf8687b98013f3ab9c5e9b1ff955deb079851"
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -78,6 +78,16 @@ repository:
     contract_tests: "T1-T10 all PASS (16/16 vitest assertions), see brain-bootstrap/reports/S07-reference-memory-provider-verification.md"
     quality_checks: "typecheck PASS, build PASS, test PASS, no Core storage leakage (T9, also enforced mechanically as an automated test)"
     note: "Not committed/pushed yet. dist/ and node_modules/ correctly gitignored (pre-existing .gitignore from S00)."
+  knowledge_layer:
+    status: PASS
+    implemented_at: "2026-08-25T12:05:00Z"
+    paths: [brain-bootstrap/specs/KNOWLEDGE_ARCHITECTURE_v1.md, brain-bootstrap/decisions/ADR-notion-knowledge-adapter.md, knowledge/index.md, knowledge/sources/README.md, knowledge/concepts/README.md, knowledge/decisions/README.md, knowledge/architecture-patterns/README.md, knowledge/agent-patterns/README.md, knowledge/failure-modes/README.md, knowledge/sources/s07-fts5-match-hyphen-bug-source.md, knowledge/failure-modes/fts5-match-syntax-collision.md]
+    decided_via: "brain-bootstrap/decisions/ADR-notion-knowledge-adapter.md (ChatGPT-authored, integrated verbatim)"
+    notion_role: "OPTIONAL HUMAN-FACING KNOWLEDGE SURFACE / ADAPTER, not a Core dependency, not the canonical source of truth. Brain must remain operational with Notion disconnected."
+    canonical_representation: "Markdown + Git"
+    knowledge_provider_implementation: "NOT_STARTED (architecture-only step, mirrors S07 Part A vs Part B split; concrete KnowledgeProvider adapter is a future step, explicitly out of scope for S08 per the ChatGPT authoring non-goals)"
+    verification: "brain-bootstrap/reports/S08-knowledge-architecture-verification.md — real ingest/compile/retrieve/immutability exercise performed against genuine repository evidence (the S07 FTS5 hyphen bug), not fabricated content. Origin file hash unchanged before/after (f215c66886cd7db02de076782b1b8cc19b3b21052fcc02ad2033b7a5d3d82a17). Bounded retrieval demonstrated via grep returning only the 2 relevant files out of 9 knowledge/ files. typecheck/test re-run and unchanged (16/16 PASS) since S08 is docs-only."
+    note: "Committed via the S08 closure commit alongside this STATE.yaml update."
 
 build_day:
   date: "2026-08-29"
