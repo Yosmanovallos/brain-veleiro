@@ -1,0 +1,115 @@
+# BRAIN Quality Contract instance
+# S13A — requirements-discovery
+#
+# Uses canonical S04 Quality Contract field names unchanged.
+
+id: "QC-S13A-REQUIREMENTS-DISCOVERY-STANDARD"
+version: "1.0"
+
+applies_to:
+  type: "REQUIREMENTS_DISCOVERY"
+  ref: "S13A"
+  title: "Requirements discovery from an ambiguous client request"
+
+depth: "STANDARD"
+
+risk: "MEDIUM"
+ambiguity: "HIGH"
+novelty: "MEDIUM"
+irreversibility: "LOW"
+
+selection_rationale: >-
+  S13A operates specifically on ambiguous client requests. The output is still
+  reversible and pre-implementation, but hidden assumptions at this stage can
+  materially distort scope, architecture, cost, and acceptance. STANDARD depth
+  is therefore required: stronger than FAST, without pulling in the DEEP
+  research/challenge burden reserved for higher-risk or harder-to-reverse work.
+
+mandatory_depth_floor:
+  applied: true
+  depth: "STANDARD"
+  reason: >-
+    Requirements discovery directly influences downstream scope and acceptance.
+    Ambiguity is HIGH by construction, so the work must make unknowns and
+    assumptions explicit before implementation begins.
+
+resource_constraints:
+  time_limit: >-
+    The discovery run is bounded by the executing AgentDefinition limits.
+    Time pressure must reduce scope or preserve unknowns; it must never justify
+    inventing missing requirements.
+  token_or_compute_limit: >-
+    Use only the current raw request and bounded relevant context. Do not load
+    the full Skill catalog, wiki, historical sessions, or unrelated project corpus.
+  tooling_limit: >-
+    S13A requires no capability/tool calls. It operates on the raw request and
+    bounded context already supplied to the Agent.
+  scope_reduction_if_needed: >-
+    If the request is too incomplete, return fewer goals and more explicit
+    unknowns rather than fabricating a detailed specification.
+
+evidence:
+  required: true
+  primary_sources_preferred: true
+  cross_validation: false
+  recency_required: false
+  recency_expectation: >-
+    The primary evidence source is the current client/stakeholder request.
+    Recency is represented by current-task authority rather than publication age.
+  minimum_source_quality: "CURRENT_REQUEST"
+  claim_traceability_required: true
+
+research:
+  knowledge_gaps_required: false
+  alternatives_required: false
+  contradictory_evidence_required: false
+  value_of_information_stop_rule: false
+
+implementation:
+  tests_required: true
+  deterministic_checks_required: true
+  tradeoffs_required: false
+  tests_not_applicable_requires_reason: true
+
+challenge:
+  required: true
+  targets:
+    - "REQUIREMENTS_DISCOVERY"
+
+verification:
+  independent_review_required: true
+  evidence_backed_pass_required: true
+
+uncertainty:
+  explicit: true
+  residual_unknowns_required: true
+  limitations_required: true
+
+definition_of_done:
+  requirements:
+    - "The raw request is preserved and represented explicitly in the discovery result."
+    - "Goals are outcome-oriented and distinguish EXPLICIT from DERIVED origin."
+    - "Explicit items retain traceability to the raw request."
+    - "No user, constraint, deadline, budget, integration, scale target, or business rule is fabricated."
+    - "Missing decision-relevant information is represented as explicit unknowns."
+    - "Every assumption includes rationale, risk, must_validate, and related goal references."
+    - "Constraints distinguish explicit from derived origin."
+    - "Every acceptance criterion is testable and links to at least one existing goal."
+    - "Blocking unknowns appear in handoff.unresolved_blockers."
+    - "The result contains a stable handoff for S13B without performing S13B classification itself."
+    - "The canonical positive fixture passes deterministic validation."
+    - "The canonical underspecified negative fixture does not fabricate unsupported requirements."
+    - "The Skill-assisted run demonstrates measurable improvement over the no-Skill baseline using the same generic Agent runtime."
+    - "No capability/tool is required by the S13A Skill."
+    - "The Skill executes through S12 discovery/lazy loading and the existing S10/S09 Agent path."
+    - "No Skill-name-specific Core branching is introduced."
+    - "Typecheck, full tests, build, and post-build regression all pass."
+
+approval:
+  selected_by: "ChatGPT S13A semantic authoring gate"
+  approved_by: "PENDING_S13A_INDEPENDENT_VERIFIER"
+  approved_at: "PENDING_S13A_CLOSURE"
+  notes: >-
+    This file defines the required S13A quality bar but does not itself grant PASS.
+    PASS requires Part B implementation, deterministic fixtures, baseline comparison,
+    independent verification, and repository evidence.

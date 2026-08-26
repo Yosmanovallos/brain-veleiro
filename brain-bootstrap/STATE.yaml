@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
-current_step: S12
-status: PASS
+current_step: S13A
+status: IN_PROGRESS
 primary_builder: claude-code
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-26T09:40:00Z"
+last_verified_at: "2026-08-26T10:00:33Z"
 steps:
   S00: PASS
   S01: PASS
@@ -21,7 +21,7 @@ steps:
   S10: PASS
   S11: PASS
   S12: PASS
-  S13A: NOT_STARTED
+  S13A: IN_PROGRESS
   S13B: NOT_STARTED
   S13C: NOT_STARTED
   S13D: NOT_STARTED
@@ -147,6 +147,19 @@ repository:
     test_coverage_gaps_found_and_fixed: "Independent (advisor) review, run before declaring PASS per the S11 precedent, found two test-coverage gaps (not implementation bugs): (1) the original T11 used `.not.toBe(...)` assertions that would pass vacuously if discovery silently returned nothing, fixed to assert the positive expected Skill id instead; (2) section 26's central anti-over-fetch invariant, and the production researcherDefinition.skills allowlist itself, were never exercised through the real selectSkillForTask() path (T11/T12 only used mutated clones) — fixed by adding T13B, which proves only-the-selected-Skill-is-loaded both for the unmodified researcherDefinition and for an allowlist covering all 3 catalog Skills. See brain-bootstrap/reports/S12-skill-registry-verification.md sections 2 and 10."
     deferred_non_blocking: "researchEvidenceGroundedS11's output_schema/context_sources and toSkillDescriptor()'s applies_when are shared by reference rather than defensively copied (no current mutator, so not a live defect); load_definition() closures are thunk-level laziness over statically-imported constants, not dynamic import() (explicitly permitted by SKILL_CONTRACT_v1.md section 22 -- the invariant proven is loader-call counts, not module-load timing); section 24 step 5's loaded-id-mismatch guard has no dedicated test (unreachable by the current reference catalog, and not required by the T1-T20 contract). All documented in brain-bootstrap/reports/S12-skill-registry-verification.md section 9."
     note: "S12 fully closed: Part A (ChatGPT semantic authoring) + Part B (Claude Code implementation, tests, verification, plus one advisor-driven test-coverage fix) all PASS. Skill Contract v1 proven end-to-end through the real production Researcher AgentDefinition, with zero Skill-name or role-specific Core branching."
+
+  requirements_discovery_part_a:
+    status: INTEGRATED_PART_A_ONLY
+    integrated_at: "2026-08-26T09:58:00Z"
+    paths:
+      - brain-bootstrap/skills/REQUIREMENTS_DISCOVERY_SKILL_S13A.md
+      - brain-bootstrap/quality-contracts/S13A_REQUIREMENTS_DISCOVERY_STANDARD.yaml
+      - brain-bootstrap/specs/REQUIREMENTS_DISCOVERY_AGENT_v1.md
+    decided_via: "ChatGPT S13A authoring gate response (1 file delivered by user with three '## File:' sections, integrated verbatim via mechanical sed extraction on exact line boundaries, verified byte-identical via diff against the extracted regions of the root transfer copy before deletion; embedded YAML blocks in both the Skill and Quality Contract files independently parsed with js-yaml to confirm structural validity)."
+    field_shape_cross_check: "Before integration, cross-checked every AgentDefinition field ChatGPT's proposed requirements-discoverer-v1 uses (model_policy, context_policy, state_schema, tools/skills/capabilities, memory_policy, permissions, delegation, limits, termination, output_schema, rubric, evals) against the real src/core/agent/definition.ts AgentDefinition interface, and every SkillDefinition field against src/core/skill/types.ts -- zero mismatches found (routing_class/context-source/side-effect enum values all valid; rule level values MUST/SHOULD both valid subset of SkillRuleLevel; verification kind values DETERMINISTIC/SEMANTIC both valid subset of SkillVerificationKind)."
+    resolves_ambiguities: "All 8 open items from Claude Code's S13A handoff prompt are explicitly resolved in REQUIREMENTS_DISCOVERY_AGENT_v1.md's Decision Summary: (1) new minimal requirements-discoverer-v1 AgentDefinition, not a researcher-v1 extension; (2) zero capabilities -- raw request is bounded current-task context, not an external operation; (3) dedicated STANDARD Quality Contract (S13A_REQUIREMENTS_DISCOVERY_STANDARD.yaml); (4) concrete RequirementsDiscoveryResult output model (request/goals/users/unknowns/assumptions/constraints/acceptance_criteria/handoff); (5) a lighter discovery-stage impact+blocking unknown representation, explicitly NOT reusing the full S04/S13B known/told/proven/assumed/needs-research/unknowable taxonomy; (6) mandatory deterministic Skill-vs-baseline comparison, same runtime/provider/limits, only the Skill-selection differs; (7) negative case = intentionally underspecified request where fabricating users/constraints/acceptance would be the failure mode; (8) S13B handoff = full RequirementsDiscoveryResult plus ready_for_gap_analysis + unresolved_blockers, with S13A explicitly forbidden from pre-classifying into S13B's taxonomy."
+    implementation_status: "PART_B_NOT_STARTED -- no TypeScript code (typed SkillDefinition, requirements-discoverer-v1 AgentDefinition, materialization bridge, result validator, baseline-comparison metrics module) or tests exist yet for S13A. Only the three canonical semantic artifacts are integrated. Regression check: npm run typecheck (0 errors) and npm test (121/121, unchanged from S12) re-run after integration since this was a docs-only change."
+    note: "brain-bootstrap/STATE.yaml status set to IN_PROGRESS (not PASS) -- S13A PASS requires Part B implementation (T1-T22 per REQUIREMENTS_DISCOVERY_AGENT_v1.md section 18), a deterministic Skill-vs-baseline comparison proven through the real S09/S10/S12 runtime (not fabricated), a verification report, and independent review, per REQUIREMENTS_DISCOVERY_AGENT_v1.md sections 19-20."
 
 build_day:
   date: "2026-08-29"
