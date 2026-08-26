@@ -4,11 +4,13 @@ import { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroun
 import { referenceSummarize } from "./definitions/referenceSummarize.js";
 import { referenceFormatCheck } from "./definitions/referenceFormatCheck.js";
 import { requirementsDiscoveryS13A } from "./definitions/requirementsDiscoveryS13A.js";
+import { knowledgeGapAnalysisS13B } from "./definitions/knowledgeGapAnalysisS13B.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
 export { referenceFormatCheck } from "./definitions/referenceFormatCheck.js";
 export { requirementsDiscoveryS13A } from "./definitions/requirementsDiscoveryS13A.js";
+export { knowledgeGapAnalysisS13B } from "./definitions/knowledgeGapAnalysisS13B.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -40,5 +42,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(requirementsDiscoveryS13A),
     load_definition: async () => requirementsDiscoveryS13A,
+  },
+  {
+    descriptor: toSkillDescriptor(knowledgeGapAnalysisS13B),
+    load_definition: async () => knowledgeGapAnalysisS13B,
   },
 ];
