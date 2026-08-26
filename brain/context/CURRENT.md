@@ -6,37 +6,37 @@
 
 ## Current Objective
 
-Close S10 (AgentDefinition v1) and begin S11 (Primer agente real: Researcher) in the Brain Build Day bootstrap.
+Implement S13A (requirements-discovery) Part B in the Brain Build Day bootstrap. Part A (ChatGPT semantic authoring) is integrated; Part B (Claude Code implementation) has not started.
 
 ## Current Repository State
 
-**Branch:**  
+**Branch:**
 `main`
 
-**HEAD:**  
-`[verify independently — recorded as of this update in the referenced Handoff]`
+**HEAD:**
+`8d7512ed07635200e1b37f8403d67163df2789ca`
 
-**Worktree status:**  
-`CLEAN expected after this session's S10 closure commit/push; verify independently`
+**Worktree status:**
+`CLEAN as of this update; verify independently`
 
-**Last independently verified at:**  
-`2026-08-26T11:04:04Z`
+**Last independently verified at:**
+`2026-08-26T15:08:57Z`
 
 ## Current Handoff
 
-**Handoff file:**  
-`brain/context/handoffs/2026-08-26T110404Z-s10-to-s11-handoff.md`
+**Handoff file:**
+`brain/context/handoffs/2026-08-26T150857Z-s13a-part-a-to-part-b-handoff.md`
 
-**Handoff status:**  
+**Handoff status:**
 `VERIFIED`
 
 ## Current Status
 
-S00-S10 are all PASS in `brain-bootstrap/STATE.yaml`; S11 has not started; the full test suite (46/46) and typecheck/build were green at last verification.
+S00–S12 are all `PASS` in `brain-bootstrap/STATE.yaml`. S13A is `IN_PROGRESS`: Part A (`brain-bootstrap/skills/REQUIREMENTS_DISCOVERY_SKILL_S13A.md`, `brain-bootstrap/quality-contracts/S13A_REQUIREMENTS_DISCOVERY_STANDARD.yaml`, `brain-bootstrap/specs/REQUIREMENTS_DISCOVERY_AGENT_v1.md`) is integrated and verified; Part B is `NOT_STARTED`. Baseline at last verification: typecheck 0 errors, full test suite 121/121 PASS.
 
 ## Next Exact Action
 
-Obtain ChatGPT Part A / semantic contract for S11 before implementation (S11 requires a new "Research Skill" Intelligence artifact — treat this as ChatGPT-Authoring-Gate territory, same reasoning as S07/S09/S10, even though S11 is not on the explicit "especially mandatory" list).
+Implement S13A Part B from the canonical Part A artifacts, then execute T1–T22, full regression, a verification report, and independent review, then close S13A with PASS. Do not start S13B.
 
 ### Operating Rule
 
