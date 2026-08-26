@@ -170,3 +170,38 @@ export class DelayedCapabilityProvider implements CapabilityProvider {
     return this.inner.invoke(request);
   }
 }
+
+/**
+ * Configurable CapabilityProvider exposing an arbitrary fixed set of
+ * descriptors, all trivially "successful" on invoke. Used by the S10
+ * AgentDefinition capability-restriction tests (T7-T9), which need a
+ * provider that legitimately exposes more than one capability.
+ */
+export class MultiCapabilityProvider implements CapabilityProvider {
+  constructor(private readonly descriptors: ToolDescriptor[]) {}
+
+  async list_capabilities(_request?: CapabilityListRequest): Promise<ToolDescriptor[]> {
+    return this.descriptors;
+  }
+
+  async invoke(request: ToolInvocationRequest): Promise<ToolInvocationResult> {
+    const start = Date.now();
+    const descriptor = this.descriptors.find((d) => d.capability_id === request.capability_id);
+    if (!descriptor) {
+      return {
+        status: "FAIL",
+        call_id: request.call_id,
+        capability_id: request.capability_id,
+        error: { code: "NOT_FOUND", message: `Unknown capability '${request.capability_id}'.`, retryable: false },
+        duration_ms: Date.now() - start,
+      };
+    }
+    return {
+      status: "SUCCESS",
+      call_id: request.call_id,
+      capability_id: request.capability_id,
+      output: { invoked: descriptor.capability_id },
+      duration_ms: Date.now() - start,
+    };
+  }
+}

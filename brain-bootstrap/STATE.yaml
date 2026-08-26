@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
-current_step: S09
+current_step: S10
 status: PASS
 primary_builder: claude-code
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-25T14:00:00Z"
+last_verified_at: "2026-08-25T16:00:00Z"
 steps:
   S00: PASS
   S01: PASS
@@ -18,7 +18,7 @@ steps:
   S07: PASS
   S08: PASS
   S09: PASS
-  S10: NOT_STARTED
+  S10: PASS
   S11: NOT_STARTED
   S12: NOT_STARTED
   S13A: NOT_STARTED
@@ -58,8 +58,8 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 9
-  head_sha: "f40a8d62e3a318aa82356ae2506ea97ca2f2da81"
+  commits: 10
+  head_sha: "fbd5af95fb1938c2cb0d5de8bfe896ec27bd594c"
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -98,6 +98,16 @@ repository:
     contract_tests: "T1-T12 all PASS (31/31 vitest assertions total, 16 unchanged from S07 + 15 new), see brain-bootstrap/reports/S09-agent-runtime-verification.md"
     quality_checks: "typecheck PASS, build PASS, test PASS (pre- and post-build), no provider/vendor leakage into src/core/agent (T9, automated), no Core import of src/providers/ (grep-verified)"
     note: "Committed via the S09 closure commit alongside this STATE.yaml update."
+  agent_definition:
+    status: PASS
+    implemented_at: "2026-08-25T16:00:00Z"
+    paths: [brain-bootstrap/specs/AGENT_DEFINITION_v1.md, src/core/agent/definition.ts, src/core/agent/validateDefinition.ts, src/core/agent/restrictedCapabilityProvider.ts, src/core/agent/compileDefinition.ts, src/intelligence/agent-definitions/referenceDefinitions.ts, tests/agent/agentDefinition.test.ts]
+    decided_via: "brain-bootstrap/specs/AGENT_DEFINITION_v1.md (ChatGPT-authored, integrated verbatim) — resolved all 6 flagged ambiguities (tools/capabilities identity, inert delegation, termination-as-policy-not-new-outcomes, rubric/evals as references, state_schema reusing JsonSchemaLike, policy-not-provider-selection)"
+    reference_definitions: "referenceResearcher, referenceBuilder, referenceVerifier — three illustrative AgentDefinition configs differing in policy/limits/permissions, all sharing the S09 word_count reference capability; NOT production S11 agents"
+    contract_tests: "T1-T14 all PASS (46/46 vitest assertions total, 31 unchanged from S07+S09 + 15 new), see brain-bootstrap/reports/S10-agent-definition-verification.md"
+    quality_checks: "typecheck PASS, build PASS, test PASS (pre- and post-build), no role-conditional branching in src/core/agent (T12, automated), no provider names in AgentDefinition config values (T14, automated), no Core import of src/providers//src/intelligence (grep-verified)"
+    architecture_note: "First Intelligence-layer TypeScript module in the repo: src/intelligence/agent-definitions/ holds concrete AgentDefinition values, distinct from src/core/agent/ (schema+compiler infrastructure) and src/providers/ (concrete provider implementations), per the S02 Core/Intelligence/Providers boundary."
+    note: "Committed via the S10 closure/session-handoff commit alongside this STATE.yaml update."
 
 build_day:
   date: "2026-08-29"

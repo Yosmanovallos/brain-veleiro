@@ -125,6 +125,8 @@ export interface CapabilityProvider {
   invoke(request: ToolInvocationRequest): Promise<ToolInvocationResult>;
 }
 
+export type ToolSideEffectClass = "NONE" | "LOCAL" | "EXTERNAL";
+
 export interface ToolDescriptor {
   capability_id: string;
   name: string;
@@ -133,7 +135,7 @@ export interface ToolDescriptor {
   input_schema: JsonSchemaLike;
   output_schema?: JsonSchemaLike;
 
-  side_effects: "NONE" | "LOCAL" | "EXTERNAL";
+  side_effects: ToolSideEffectClass;
 
   timeout_ms?: number;
 }

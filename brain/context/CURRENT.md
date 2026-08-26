@@ -2,41 +2,41 @@
 
 > This file is intentionally small. It points to the current verified operational frontier and must not duplicate the full Handoff.
 
-**Template status:** `UNINITIALIZED | ACTIVE | BLOCKED | COMPLETE`
+**Template status:** `ACTIVE`
 
 ## Current Objective
 
-`[one concise sentence describing the current active objective]`
+Close S10 (AgentDefinition v1) and begin S11 (Primer agente real: Researcher) in the Brain Build Day bootstrap.
 
 ## Current Repository State
 
 **Branch:**  
-`[branch or N/A]`
+`main`
 
 **HEAD:**  
-`[commit SHA or N/A]`
+`[verify independently — recorded as of this update in the referenced Handoff]`
 
 **Worktree status:**  
-`[CLEAN | DIRTY | UNKNOWN | N/A]`
+`CLEAN expected after this session's S10 closure commit/push; verify independently`
 
 **Last independently verified at:**  
-`[timestamp or N/A]`
+`2026-08-26T11:04:04Z`
 
 ## Current Handoff
 
 **Handoff file:**  
-`brain/context/handoffs/[handoff-file].md`
+`brain/context/handoffs/2026-08-26T110404Z-s10-to-s11-handoff.md`
 
 **Handoff status:**  
-`[VERIFIED | NEEDS_REVALIDATION | NONE]`
+`VERIFIED`
 
 ## Current Status
 
-`[one concise sentence describing where the work currently stands]`
+S00-S10 are all PASS in `brain-bootstrap/STATE.yaml`; S11 has not started; the full test suite (46/46) and typecheck/build were green at last verification.
 
 ## Next Exact Action
 
-`[single next permitted action — not a future roadmap]`
+Obtain ChatGPT Part A / semantic contract for S11 before implementation (S11 requires a new "Research Skill" Intelligence artifact — treat this as ChatGPT-Authoring-Gate territory, same reasoning as S07/S09/S10, even though S11 is not on the explicit "especially mandatory" list).
 
 ### Operating Rule
 
