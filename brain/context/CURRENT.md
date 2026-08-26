@@ -14,7 +14,7 @@ Implement S13C (deep-research) Part B in the Brain Build Day bootstrap. Part A (
 `main`
 
 **HEAD:**
-`(set by this integration's commit — see the COMMIT section of the final response)`
+`677b5cc0b2ac3f6c12a1649af7ad51d12d683af6`
 
 **Worktree status:**
 `CLEAN as of this update; verify independently`
