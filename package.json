@@ -25,7 +25,9 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.3.0",
+    "js-yaml": "^5.4.0",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11"
   }

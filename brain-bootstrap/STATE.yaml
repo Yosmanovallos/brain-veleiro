@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
-current_step: S10
+current_step: S11
 status: PASS
 primary_builder: claude-code
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-25T16:00:00Z"
+last_verified_at: "2026-08-26T08:29:00Z"
 steps:
   S00: PASS
   S01: PASS
@@ -19,7 +19,7 @@ steps:
   S08: PASS
   S09: PASS
   S10: PASS
-  S11: NOT_STARTED
+  S11: PASS
   S12: NOT_STARTED
   S13A: NOT_STARTED
   S13B: NOT_STARTED
@@ -108,6 +108,20 @@ repository:
     quality_checks: "typecheck PASS, build PASS, test PASS (pre- and post-build), no role-conditional branching in src/core/agent (T12, automated), no provider names in AgentDefinition config values (T14, automated), no Core import of src/providers//src/intelligence (grep-verified)"
     architecture_note: "First Intelligence-layer TypeScript module in the repo: src/intelligence/agent-definitions/ holds concrete AgentDefinition values, distinct from src/core/agent/ (schema+compiler infrastructure) and src/providers/ (concrete provider implementations), per the S02 Core/Intelligence/Providers boundary."
     note: "Committed via the S10 closure/session-handoff commit alongside this STATE.yaml update."
+  researcher_agent:
+    status: PASS
+    part_a_integrated_at: "2026-08-26T07:58:00Z"
+    part_b_implemented_at: "2026-08-26T08:29:00Z"
+    paths_part_a: [brain-bootstrap/skills/RESEARCH_SKILL_S11.md, brain-bootstrap/quality-contracts/S11_RESEARCHER_STANDARD.yaml, brain-bootstrap/specs/RESEARCHER_AGENT_v1.md]
+    paths_part_b: [src/intelligence/research/types.ts, src/intelligence/research/researchSkill.ts, src/intelligence/research/materializeResearchTask.ts, src/intelligence/research/validateResearchResult.ts, src/intelligence/agent-definitions/researcherDefinition.ts, src/providers/capability/referenceResearchCapabilityProvider.ts, tests/research/fixtures/corpus.ts, tests/research/fixtures/deterministicResearchModelProvider.ts, tests/research/fixtures/scenarios.ts, tests/research/researcher.test.ts]
+    decided_via: "ChatGPT S11 authoring gate response (3 files delivered by user, integrated verbatim; verified via diff against root transfer copies before deletion — only trailing-whitespace/EOF-newline differences found, no semantic changes)"
+    resolves_ambiguities: "All 6 open items from brain/context/handoffs/2026-08-26T110404Z-s10-to-s11-handoff.md are explicitly resolved in brain-bootstrap/specs/RESEARCHER_AGENT_v1.md section 3: (1) Research Skill is provisional/S11-scoped, not S12's generic Skill Contract; (2) one new narrow read-only reference capability 'research.lookup' is introduced, not S14; (3) no real external LLM required, deterministic ModelProvider fixture must still prove evidence-dependent results; (4) StructuredAgentOutput mapping specified exactly (summary=decision_relevant_summary, data=ResearchResult, evidence_refs=dedup union); (5) Quality Contract instance is STANDARD depth per S04; (6) T1-T26 deterministic contract tests specified in full."
+    contract_tests: "T1-T26 all PASS (84/84 vitest assertions total, 46 unchanged from S07+S09+S10 + 38 new), see brain-bootstrap/reports/S11-researcher-verification.md"
+    quality_checks: "typecheck PASS, build PASS, test PASS (pre- and post-build), no role-conditional branching in src/core/agent (grep-verified), no Core import of src/providers//src/intelligence (grep-verified), no vendor/provider names in canonical AgentDefinition/Skill/Quality Contract values"
+    new_dependency: "js-yaml + @types/js-yaml added as devDependencies only (test-time YAML parsing for T2); zero references from src/ (grep-verified); not a production/architecture dependency."
+    material_bug_found_and_fixed: "Independent (advisor) review caught that the initial buildResult fixtures hardcoded decision_relevant_summary and research_status as fixed prose, violating RESEARCHER_AGENT_v1.md Decision 3 ('MUST NOT contain the final research answer as a canned constant'). Fixed by replacing both scenario builders with one shared synthesizeResearchResult() that derives every output field from the actual research.lookup observations; T23 strengthened accordingly. See brain-bootstrap/reports/S11-researcher-verification.md 'Bugs discovered and fixed during verification'."
+    deferred_non_blocking: "assertCapabilitiesExist() not called on the S11 path (pre-existing S09/S10 behavior, not an S11 regression); researcherDefinition.state_schema is declared but never populated/enforced by S09's runtime (same as S09/S10's existing, unenforced state_schema pattern). Both documented in the verification report, neither required by the S11 T1-T26 contract."
+    note: "S11 fully closed: Part A (ChatGPT semantic authoring) + Part B (Claude Code implementation, tests, verification) both PASS. First real production Brain agent (Researcher) proven end-to-end through the existing generic S09/S10 runtime, with zero role-specific Core branching."
 
 build_day:
   date: "2026-08-29"

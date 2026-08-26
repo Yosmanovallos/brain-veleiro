@@ -1,0 +1,139 @@
+# BRAIN Quality Contract instance
+# S11 — First real Agent: Researcher
+#
+# This is an instance of brain-bootstrap/templates/QUALITY_CONTRACT.yaml.
+# Canonical field names from S04 are preserved.
+
+id: "QC-S11-RESEARCHER-STANDARD"
+version: "1.0"
+
+applies_to:
+  type: "RESEARCH"
+  ref: "S11"
+  title: "Evidence-grounded Researcher real-agent behavior"
+
+depth: "STANDARD"
+
+risk: "MEDIUM"
+ambiguity: "MEDIUM"
+novelty: "MEDIUM"
+irreversibility: "LOW"
+
+selection_rationale: >-
+  S11 introduces the first real Agent behavior and therefore exceeds FAST,
+  but it remains a bounded, reversible bootstrap implementation rather than
+  autonomous multi-agent, security-sensitive, financial, infrastructure, or
+  difficult-to-reverse production behavior. S04 classifies a simple Agent as
+  STANDARD work. The reference execution is deliberately bounded and provider-neutral.
+
+mandatory_depth_floor:
+  applied: true
+  depth: "STANDARD"
+  reason: >-
+    S04 places simple Agent behavior at a STANDARD minimum, and S11 explicitly
+    requires Knowledge Gap Analysis, evidence grounding, cross-checking,
+    contradiction handling, and value-of-information stopping.
+
+resource_constraints:
+  time_limit: >-
+    Execution is bounded by the Researcher AgentDefinition AgentRunLimits.
+    Resource pressure must reduce scope or produce explicit uncertainty/BLOCKED;
+    it must not lower the evidence standard.
+  token_or_compute_limit: >-
+    Context and evidence retrieval are bounded. The S11 reference research.lookup
+    capability returns at most 5 results per call and the Researcher must not
+    load the full corpus by default.
+  tooling_limit: >-
+    S11 reference verification uses existing generic S09 ModelProvider and
+    CapabilityProvider boundaries plus one read-only S11-scoped research.lookup
+    capability over a deterministic local source corpus. No external network,
+    external credentials, MCP, Capability Registry, or hosted model is required.
+  scope_reduction_if_needed: >-
+    If the available bounded evidence cannot satisfy a decision-critical evidence
+    requirement, preserve the gap as UNKNOWN/BLOCKED and reduce the claim scope.
+    Never convert insufficient evidence into a verified claim.
+
+evidence:
+  required: true
+  primary_sources_preferred: true
+  cross_validation: true
+
+  recency_required: true
+
+  recency_expectation: >-
+    Every material evidence item must expose observed_or_published_at.
+    Time-sensitive claims require evidence whose age is acceptable for the
+    question. Stable claims may use older authoritative evidence when the
+    limitation explains why age does not materially weaken the claim.
+
+  minimum_source_quality: "AUTHORITATIVE_PREFERRED"
+
+  claim_traceability_required: true
+
+research:
+  knowledge_gaps_required: true
+
+  alternatives_required: false
+
+  contradictory_evidence_required: true
+
+  value_of_information_stop_rule: true
+
+implementation:
+  tests_required: true
+
+  deterministic_checks_required: true
+
+  tradeoffs_required: false
+
+  tests_not_applicable_requires_reason: true
+
+challenge:
+  required: true
+
+  targets:
+    - "RESEARCH"
+
+verification:
+  independent_review_required: true
+
+  evidence_backed_pass_required: true
+
+uncertainty:
+  explicit: true
+
+  residual_unknowns_required: true
+
+  limitations_required: true
+
+definition_of_done:
+  requirements:
+    - "The research question is explicit and non-empty."
+    - "Knowledge Gap Analysis is visible and material subquestions are classified."
+    - "DECISION_CRITICAL gaps are resolved, explicitly accepted as uncertainty, or visibly BLOCKED; none disappear silently."
+    - "Every material EVIDENCED finding contains at least one inspectable evidence item."
+    - "STANDARD cross-validation is attempted for every DECISION_CRITICAL or DECISION_RELEVANT finding and uses independent evidence when feasible."
+    - "When independent cross-validation is unavailable, that limitation is explicit."
+    - "Evidence items expose source reference, source title, source type, authority, date, locator, and relationship to the claim."
+    - "Every material finding exposes confidence and epistemic_status."
+    - "INFERENCE and UNCERTAIN findings are explicitly marked and include limitations."
+    - "Material contradictory evidence is surfaced rather than silently discarded."
+    - "Residual decision-relevant unknowns are surfaced with decision impact."
+    - "The value-of-information stop decision is explicit, with state and reason."
+    - "StructuredAgentOutput.summary equals the decision_relevant_summary returned in StructuredAgentOutput.data."
+    - "StructuredAgentOutput.evidence_refs is the deterministic de-duplicated union of evidence_ref values used by findings and contradictions."
+    - "No DECISION_CRITICAL claim lacks evidence unless it is explicitly marked INFERENCE or UNCERTAIN."
+    - "No provider/vendor implementation name is required by the Research Skill, AgentDefinition, or Quality Contract."
+    - "The Researcher executes through the existing S09 runAgent path and S10 compileAgentDefinition path without role-specific Core branching."
+    - "Required deterministic S11 tests pass before semantic/independent verification is trusted."
+
+  depth_policy_ref: "brain-bootstrap/specs/QUALITY_ARCHITECTURE_v1.md#9-definition-of-done"
+
+approval:
+  selected_by: "ChatGPT S11 semantic authoring gate"
+  approved_by: "PENDING_S11_INDEPENDENT_VERIFIER"
+  approved_at: "PENDING_S11_CLOSURE"
+  notes: >-
+    These approval fields record the required S11 authority path; they do not
+    constitute PASS. Actual approval is granted only after Part B implementation,
+    deterministic checks, evidence review, and independent S11 verification.
