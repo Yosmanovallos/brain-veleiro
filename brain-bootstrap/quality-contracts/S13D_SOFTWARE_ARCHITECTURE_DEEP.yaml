@@ -1,0 +1,122 @@
+# BRAIN Quality Contract instance
+# S13D — software-architecture
+
+id: "QC-S13D-SOFTWARE-ARCHITECTURE-DEEP"
+version: "1.0"
+
+applies_to:
+  type: "SOFTWARE_ARCHITECTURE_DECISION"
+  ref: "S13D"
+  title: "Evidence-traceable software architecture comparison and proposed ADR"
+
+depth: "DEEP"
+
+risk: "HIGH"
+ambiguity: "HIGH"
+novelty: "HIGH"
+irreversibility: "HIGH"
+
+selection_rationale: >-
+  Architecture decisions are cross-cutting and can impose long-lived cost,
+  operational burden, security exposure, migration difficulty, and failure modes.
+  S13D explicitly compares those dimensions and produces an ADR intended to become
+  durable architectural authority only after human approval. DEEP is therefore
+  the canonical minimum depth for this bootstrap step.
+
+mandatory_depth_floor:
+  applied: true
+  depth: "DEEP"
+  reason: >-
+    The step compares alternatives across failure modes, cost, operations,
+    security, and reversibility. A shallow one-option recommendation would create
+    significant architecture risk and would not satisfy the S13D objective.
+
+resource_constraints:
+  time_limit: >-
+    Use the executing AgentDefinition limits. When the decision cannot be supported
+    within bounded context, return NEEDS_MORE_EVIDENCE or BLOCKED rather than
+    manufacturing certainty.
+  token_or_compute_limit: >-
+    Use one architecture question, two to four alternatives, relevant S13B items,
+    relevant S13C evidence, selected Skill content, and this Quality Contract only.
+  tooling_limit: >-
+    S13D uses no capabilities. It synthesizes existing decision context and does
+    not perform another research phase.
+  scope_reduction_if_needed: >-
+    Reduce the number of generated optional alternatives while preserving at least
+    two genuinely distinct alternatives and all mandatory decision dimensions.
+
+evidence:
+  required: true
+  primary_sources_preferred: true
+  cross_validation: false
+  recency_required: false
+  recency_expectation: >-
+    S13D preserves the evidence quality/recency qualifications already established
+    upstream. It must not silently upgrade stale or weak evidence.
+  minimum_source_quality: "TRACEABLE_UPSTREAM_OR_EXPLICIT_CONTEXT"
+  claim_traceability_required: true
+
+research:
+  knowledge_gaps_required: true
+  alternatives_required: true
+  contradictory_evidence_required: true
+  value_of_information_stop_rule: false
+
+implementation:
+  tests_required: true
+  deterministic_checks_required: true
+  tradeoffs_required: true
+  tests_not_applicable_requires_reason: true
+
+challenge:
+  required: true
+  targets:
+    - "ARCHITECTURE_RECOMMENDATION"
+    - "ALTERNATIVE_COMPARISON"
+    - "FAILURE_MODE_ANALYSIS"
+    - "HARD_CONSTRAINT_FIT"
+    - "SECURITY_ANALYSIS"
+
+verification:
+  independent_review_required: true
+  evidence_backed_pass_required: true
+
+uncertainty:
+  explicit: true
+  residual_unknowns_required: true
+  limitations_required: true
+
+definition_of_done:
+  requirements:
+    - "A non-blocked decision compares at least two and at most four genuinely distinct architecture alternatives."
+    - "Every alternative origin is explicitly PROVIDED or GENERATED."
+    - "Every viable alternative is evaluated against the same canonical dimensions."
+    - "Every hard constraint is evaluated for every alternative."
+    - "No recommended alternative has an unresolved hard-constraint FAIL."
+    - "Benefits and disadvantages are explicit for every viable alternative."
+    - "Material failure modes include trigger, impact, observable symptom, and mitigation/containment when known."
+    - "Cost distinguishes implementation, ongoing operations, and migration/exit cost without unsupported numeric precision."
+    - "Operations covers material deployment, observability, backup/recovery, failure handling, and operator burden."
+    - "Security analysis is architecture-specific and not generic boilerplate."
+    - "Reversibility and lock-in are explicit."
+    - "Material claims preserve traceability to S13B/S13C or explicit fixture context."
+    - "Generated assumptions remain explicit."
+    - "Decision-critical unresolved gaps prevent READY_FOR_HUMAN_APPROVAL when they materially affect the decision."
+    - "S13D does not mutate S13B or S13C state."
+    - "ADR status is PROPOSED."
+    - "ADR approval_required is true."
+    - "Markdown ADR is deterministically rendered from the structured ADR."
+    - "The canonical negative fixture cannot recommend a hard-constraint-violating alternative."
+    - "The Skill-assisted run improves canonical architecture metrics versus a no-Skill baseline through the same generic Agent runtime."
+    - "S13D introduces no capability, MCP, research provider, or role-specific Core runtime."
+    - "S13E agent-engineering is not implemented."
+    - "Typecheck, full tests, clean build, and post-build regression all pass."
+
+approval:
+  selected_by: "ChatGPT S13D semantic authoring gate"
+  approved_by: "PENDING_S13D_INDEPENDENT_VERIFIER"
+  approved_at: "PENDING_S13D_CLOSURE"
+  notes: >-
+    This contract authorizes a proposed ADR only. Human approval remains required
+    before any generated ADR becomes accepted architectural authority.
