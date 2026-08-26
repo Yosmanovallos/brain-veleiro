@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
-current_step: S13A
+current_step: S13B
 status: IN_PROGRESS
 primary_builder: claude-code
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-26T16:42:28Z"
+last_verified_at: "2026-08-26T17:03:06Z"
 steps:
   S00: PASS
   S01: PASS
@@ -22,7 +22,7 @@ steps:
   S11: PASS
   S12: PASS
   S13A: PASS
-  S13B: NOT_STARTED
+  S13B: IN_PROGRESS
   S13C: NOT_STARTED
   S13D: NOT_STARTED
   S13E: NOT_STARTED
@@ -175,6 +175,19 @@ repository:
     test_coverage_gaps_found_and_fixed: "Independent (advisor) review, run before declaring PASS per the S11/S12 precedent, found two Part B implementation/test gaps (not Part A semantic defects): (1) the original acceptance_testability_ratio scored only testable===true, which both the Skill run and the naive baseline satisfy trivially, so the required strict skill>baseline inequality could never hold -- fixed by also requiring a non-empty verification_hint, grounded in REQUIREMENTS_DISCOVERY_SKILL_S13A.md section 9's paired acceptance rule; (2) RD-V4 traceability was checked only for a non-empty source_excerpt, not that it was actually a literal trace back to the raw request -- fixed by requiring result.request.includes(source_excerpt) for every EXPLICIT item, which immediately caught and corrected vacuously-passing hand-written test fixtures. See brain-bootstrap/reports/S13A-requirements-discovery-verification.md section 11."
     deferred_non_blocking: "fabricated_fact_count's watchlist is the same fixed token set the naive baseline fixture emits (lifted from the Skill's own section-12 'Incorrect behavior' example), so it is a fixture-specific check, not a general fabrication detector -- the general anti-fabrication invariant is the RD-V4 containment check. The naive baseline is a fixed, input-blind completion pattern (not a second general extractor), though it does run for real through the identical generic Agent architecture. required_section_coverage's margin on the positive fixture is 7 vs 6 (one section: the baseline never produces unknowns). The verification 'model' is a deterministic Spanish-cue rule-based extractor, not a real LLM (explicitly permitted by REQUIREMENTS_DISCOVERY_AGENT_v1.md section 14); a real ModelProvider can replace it without any Core/Intelligence change. All documented in brain-bootstrap/reports/S13A-requirements-discovery-verification.md section 12."
     note: "S13A fully closed: Part A (ChatGPT semantic authoring) + Part B (Claude Code implementation, tests, verification, plus two advisor-driven fixes) both PASS. Requirements Discovery Agent v1 proven end-to-end through the real S12 discovery/lazy-load + S10 compiler + S09 runtime, with zero Skill-name or role-specific Core branching and no S13B semantics pulled forward. S13B (knowledge-gap analysis) remains NOT_STARTED and was not started by this closure."
+
+  knowledge_gap_analysis:
+    status: INTEGRATED_PART_A_ONLY
+    integrated_at: "2026-08-26T17:03:06Z"
+    paths:
+      - brain-bootstrap/skills/KNOWLEDGE_GAP_ANALYSIS_SKILL_S13B.md
+      - brain-bootstrap/quality-contracts/S13B_KNOWLEDGE_GAP_ANALYSIS_STANDARD.yaml
+      - brain-bootstrap/specs/KNOWLEDGE_GAP_ANALYSIS_AGENT_v1.md
+    decided_via: "ChatGPT S13B authoring gate response (1 file delivered by user with three '## File:' sections, integrated verbatim via mechanical sed extraction on exact line boundaries [Skill: lines 29-876; Quality Contract YAML fence content: lines 883-1002; Agent spec: lines 1009-2579 of the root transfer copy], verified byte-identical via diff against those exact regions before deletion; embedded YAML block in the Skill file and the standalone Quality Contract YAML file independently parsed with js-yaml to confirm structural validity -- Skill: 20 rules / 10 procedure steps / 11 verification checks; Quality Contract: id=QC-S13B-KNOWLEDGE-GAP-ANALYSIS-STANDARD, depth=STANDARD)."
+    field_shape_cross_check: "Every AgentDefinition field the proposed knowledge-gap-analyzer-v1 uses (model_policy, context_policy, state_schema, tools/skills/capabilities, memory_policy, permissions, delegation, limits, termination, output_schema, rubric, evals) cross-checked against src/core/agent/definition.ts -- zero mismatches (routing_class BALANCED, context_sources CURRENT_TASK/EXPLICIT_SPEC/VERIFIED_HANDOFF/ADR, promotion_policy DISABLED, allowed_side_effects [NONE] all valid enum members; tools==[] and capabilities==[] are the same normalized set). Every SkillDefinition field cross-checked against src/core/skill/types.ts -- zero mismatches (all 20 rules use level MUST, a valid SkillRuleLevel; all 11 verification checks use DETERMINISTIC or SEMANTIC, valid SkillVerificationKind values; requires.context_sources values are all valid AgentContextSource members)."
+    resolves_ambiguities: "All 10 open items from Claude Code's S13B authoring-gate handoff prompt (S13B_AUTHORING_PREFLIGHT.md) are explicitly resolved in KNOWLEDGE_GAP_ANALYSIS_AGENT_v1.md's Decision Summary: (1) new minimal knowledge-gap-analyzer-v1 AgentDefinition, not a requirements-discoverer-v1 or researcher-v1 reuse; (2) input = the entire S13A RequirementsDiscoveryResult plus an optional bounded context_facts[] collection, no separate raw-request field; (3) three orthogonal axes -- S13B epistemic_status (KNOWN/TOLD/PROVEN/ASSUMED/NEEDS_RESEARCH/UNKNOWABLE), S04 decision_impact (DECISION_CRITICAL/DECISION_RELEVANT/CONTEXTUAL/TRIVIA), and an independent nullable S04 closure_state -- none replaces another; (4) S13B may assign an S04 closure state only when current bounded evidence/authority already justifies it, open NEEDS_RESEARCH items normally have none, S13C owns actual research-based closure; (5) zero capabilities -- PROVEN requires evidence already present in bounded context, not a research.lookup call; (6) dedicated STANDARD Quality Contract; (7) a normalized KnowledgeGapAnalysisResult (items/buckets/research_queue/handoff/decision_readiness_summary); (8) 8 required deterministic comparison metrics with 4 strict-improvement inequalities plus 2 zero-count requirements on the negative fixture; (9) negative case = an unverified stakeholder assertion that must stay TOLD (not PROVEN) plus a future contingent choice that must become UNKNOWABLE (not NEEDS_RESEARCH); (10) Part B implements classification/validation/prioritized-research-handoff/fixtures/metrics/T1-T24 only, it does not resolve NEEDS_RESEARCH items or implement S13C."
+    implementation_status: "PART_B_NOT_STARTED -- no TypeScript code (typed SkillDefinition, knowledge-gap-analyzer-v1 AgentDefinition, materialization bridge, result validator, baseline-comparison metrics module) or tests exist yet for S13B. Only the three canonical semantic artifacts are integrated. Regression check: npm run typecheck (0 errors) and npm test (166/166, unchanged from S13A closure) re-run after integration since this was a docs-only change."
+    note: "brain-bootstrap/STATE.yaml status set to IN_PROGRESS (not PASS) -- S13B PASS requires Part B implementation (T1-T24 per KNOWLEDGE_GAP_ANALYSIS_AGENT_v1.md section 26), a deterministic Skill-vs-baseline comparison proven through the real S09/S10/S12 runtime (not fabricated), a verification report, and independent review, per KNOWLEDGE_GAP_ANALYSIS_AGENT_v1.md sections 27 and 30. S13C remains NOT_STARTED."
 
 build_day:
   date: "2026-08-29"

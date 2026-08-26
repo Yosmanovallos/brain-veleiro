@@ -1,0 +1,120 @@
+# BRAIN Quality Contract instance
+# S13B — knowledge-gap-analysis
+#
+# Uses canonical S04 Quality Contract field names unchanged.
+
+id: "QC-S13B-KNOWLEDGE-GAP-ANALYSIS-STANDARD"
+version: "1.0"
+
+applies_to:
+  type: "KNOWLEDGE_GAP_ANALYSIS"
+  ref: "S13B"
+  title: "Epistemic classification and research-gap prioritization"
+
+depth: "STANDARD"
+
+risk: "MEDIUM"
+ambiguity: "HIGH"
+novelty: "MEDIUM"
+irreversibility: "LOW"
+
+selection_rationale: >-
+  S13B classifies ambiguous requirements knowledge before deep research or
+  implementation. The output is reversible, but a wrong epistemic classification
+  can cause fabricated certainty, wasted research, or implementation based on
+  assumptions. STANDARD depth is required to make classification and overclaim
+  prevention deterministic without pulling S13C deep-research scope forward.
+
+mandatory_depth_floor:
+  applied: true
+  depth: "STANDARD"
+  reason: >-
+    Knowledge-gap classification directly determines which items are treated as
+    established, assumed, researchable, or unknowable. This requires deterministic
+    validation and independent review before downstream use.
+
+resource_constraints:
+  time_limit: >-
+    The run is bounded by the executing AgentDefinition limits. If classification
+    cannot be justified from bounded context, preserve uncertainty rather than
+    upgrading the item.
+  token_or_compute_limit: >-
+    Use S13A RequirementsDiscoveryResult plus bounded relevant context facts only.
+    Do not load unrelated historical context, full Skill catalog, or research corpus.
+  tooling_limit: >-
+    S13B uses no capabilities. It classifies information already present in bounded
+    context and prepares a handoff for S13C.
+  scope_reduction_if_needed: >-
+    Prefer fewer defensible classifications with explicit open states over
+    overconfident classification or premature deep research.
+
+evidence:
+  required: true
+  primary_sources_preferred: true
+  cross_validation: false
+  recency_required: true
+  recency_expectation: >-
+    Authority/evidence used to classify KNOWN or PROVEN must be current enough for
+    the decision. Historical facts may be retained only when their validity window
+    remains appropriate.
+  minimum_source_quality: "CURRENT_AUTHORITY_OR_DIRECT_EVIDENCE"
+  claim_traceability_required: true
+
+research:
+  knowledge_gaps_required: true
+  alternatives_required: false
+  contradictory_evidence_required: false
+  value_of_information_stop_rule: false
+
+implementation:
+  tests_required: true
+  deterministic_checks_required: true
+  tradeoffs_required: false
+  tests_not_applicable_requires_reason: true
+
+challenge:
+  required: true
+  targets:
+    - "KNOWLEDGE_GAP_ANALYSIS"
+    - "EPISTEMIC_CLASSIFICATION"
+
+verification:
+  independent_review_required: true
+  evidence_backed_pass_required: true
+
+uncertainty:
+  explicit: true
+  residual_unknowns_required: true
+  limitations_required: true
+
+definition_of_done:
+  requirements:
+    - "Every normalized knowledge item has exactly one epistemic status."
+    - "Every normalized knowledge item has exactly one canonical S04 decision-impact classification."
+    - "Epistemic status and decision impact are represented as separate axes."
+    - "Closure state is nullable and is assigned only when a canonical S04 closure state is justified."
+    - "Every PROVEN item has inspectable evidence references."
+    - "Every KNOWN item has a sufficient canonical authority reference."
+    - "Stakeholder assertions are not silently upgraded from TOLD to PROVEN."
+    - "S13A assumptions remain ASSUMED unless current bounded context explicitly justifies a different status."
+    - "NEEDS_RESEARCH items are researchable and decision-relevant."
+    - "UNKNOWABLE items are not placed in the research queue."
+    - "Open NEEDS_RESEARCH items are not falsely marked resolved."
+    - "The research queue contains only NEEDS_RESEARCH items and is prioritized by decision impact."
+    - "The S13C handoff preserves decision blockers and unknowable items separately."
+    - "The positive fixture demonstrates KNOWN, PROVEN, ASSUMED/UNKNOWABLE, and NEEDS_RESEARCH distinctions."
+    - "The negative fixture keeps an unverified stakeholder assertion as TOLD and a future contingent choice as UNKNOWABLE."
+    - "The Skill-assisted run improves deterministic epistemic-classification metrics versus a no-Skill baseline through the same generic Agent runtime."
+    - "S13B introduces no capability/tool requirement."
+    - "S13B does not execute deep research."
+    - "No role-specific or Skill-id-specific Core branching is introduced."
+    - "Typecheck, full tests, build, and post-build regression all pass."
+
+approval:
+  selected_by: "ChatGPT S13B semantic authoring gate"
+  approved_by: "PENDING_S13B_INDEPENDENT_VERIFIER"
+  approved_at: "PENDING_S13B_CLOSURE"
+  notes: >-
+    This Quality Contract defines the S13B quality bar but does not grant PASS.
+    PASS requires Part B implementation, deterministic positive/negative fixtures,
+    Skill-vs-baseline evidence, independent review, and repository verification.
