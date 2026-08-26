@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S13B (knowledge-gap-analysis) is fully closed `PASS` (Part A + Part B) in the Brain Build Day bootstrap. S13C (deep research) has not started.
+Implement S13C (deep-research) Part B in the Brain Build Day bootstrap. Part A (ChatGPT semantic authoring) is integrated; Part B (Claude Code implementation) has not started.
 
 ## Current Repository State
 
@@ -14,29 +14,29 @@ S13B (knowledge-gap-analysis) is fully closed `PASS` (Part A + Part B) in the Br
 `main`
 
 **HEAD:**
-`(set by this closure's commit — see the COMMIT section of the final STEP_STATUS response)`
+`(set by this integration's commit — see the COMMIT section of the final response)`
 
 **Worktree status:**
 `CLEAN as of this update; verify independently`
 
 **Last independently verified at:**
-`2026-08-26T18:20:00Z`
+`2026-08-26T18:35:00Z`
 
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-26T182000Z-s13b-to-s13c-handoff.md`
+`brain/context/handoffs/2026-08-26T183500Z-s13c-part-a-to-part-b-handoff.md`
 
 **Handoff status:**
 `VERIFIED`
 
 ## Current Status
 
-S00–S13B: `PASS`. S13C: `NOT_STARTED`. Baseline: typecheck 0 errors, full test suite 210/210 PASS (166 pre-S13B + 44 new).
+S00–S13B: `PASS`. S13C: `IN_PROGRESS` — Part A integrated (`brain-bootstrap/skills/DEEP_RESEARCH_SKILL_S13C.md`, `brain-bootstrap/quality-contracts/S13C_DEEP_RESEARCH_DEEP.yaml`, `brain-bootstrap/specs/DEEP_RESEARCH_AGENT_v1.md`), Part B `NOT_STARTED`. S13D: `NOT_STARTED`. Baseline: typecheck 0 errors, full test suite 210/210 PASS.
 
 ## Next Exact Action
 
-Do not start S13C automatically. When authorized, begin S13C (deep research) from `brain-bootstrap/specs/KNOWLEDGE_GAP_ANALYSIS_AGENT_v1.md` section 14 (S13C receives `research_queue` + `handoff` from a `KnowledgeGapAnalysisResult` and owns resolving NEEDS_RESEARCH items, including any `research.lookup`/capability integration S13B was explicitly forbidden from using).
+Implement S13C Part B from the canonical Part A artifacts, then execute T1–T28, full regression, a verification report, and independent review, then close S13C with PASS. Do not start S13D.
 
 ### Operating Rule
 

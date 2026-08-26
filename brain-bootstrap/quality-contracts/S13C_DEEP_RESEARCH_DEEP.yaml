@@ -1,0 +1,129 @@
+# BRAIN Quality Contract instance
+# S13C — deep-research
+#
+# Uses canonical S04 Quality Contract field names unchanged.
+
+id: "QC-S13C-DEEP-RESEARCH-DEEP"
+version: "1.0"
+
+applies_to:
+  type: "DEEP_RESEARCH"
+  ref: "S13C"
+  title: "Bounded deep research over S13B NEEDS_RESEARCH queue items"
+
+depth: "DEEP"
+
+risk: "HIGH"
+ambiguity: "HIGH"
+novelty: "HIGH"
+irreversibility: "MEDIUM"
+
+selection_rationale: >-
+  S13C exists specifically to perform deep evidence gathering on unresolved,
+  decision-relevant gaps that survived requirements discovery and knowledge-gap
+  analysis. Incorrect closure can directly distort downstream architecture,
+  implementation, or acceptance decisions. DEEP is therefore the minimum S13C
+  research depth even though S11's foundational Researcher operates at STANDARD.
+
+mandatory_depth_floor:
+  applied: true
+  depth: "DEEP"
+  reason: >-
+    S13C is the bootstrap's explicit deep-research step. It handles prioritized
+    NEEDS_RESEARCH items, requires stronger source-quality and contradiction
+    checks than the S11 STANDARD foundation, and may recommend closure of
+    decision-critical gaps.
+
+resource_constraints:
+  time_limit: >-
+    Use the AgentDefinition runtime timeout and value-of-information stop rule.
+    Time pressure must produce MORE_RESEARCH_NEEDED or
+    EXHAUSTED_WITH_UNCERTAINTY rather than unsupported closure.
+  token_or_compute_limit: >-
+    Process one research item by default and no more than three queue items per
+    run. Use bounded retrieval and do not load unrelated Skill catalog entries,
+    historical sessions, or a whole knowledge base.
+  tooling_limit: >-
+    Use only the existing read-only research.lookup capability. S13C does not
+    introduce web/MCP/provider infrastructure.
+  scope_reduction_if_needed: >-
+    Research fewer highest-priority queue items and defer the remainder rather
+    than reducing evidence quality for all items.
+
+evidence:
+  required: true
+  primary_sources_preferred: true
+  cross_validation: true
+  recency_required: true
+  recency_expectation: >-
+    Current-state claims require evidence current enough for the question.
+    Stable historical facts may use older authoritative sources when their
+    validity is explicitly justified.
+  minimum_source_quality: "AUTHORITATIVE_PREFERRED"
+  claim_traceability_required: true
+
+research:
+  knowledge_gaps_required: true
+  alternatives_required: false
+  contradictory_evidence_required: true
+  value_of_information_stop_rule: true
+
+implementation:
+  tests_required: true
+  deterministic_checks_required: true
+  tradeoffs_required: true
+  tests_not_applicable_requires_reason: true
+
+challenge:
+  required: true
+  targets:
+    - "DEEP_RESEARCH"
+    - "EVIDENCE_QUALITY"
+    - "CROSS_VALIDATION"
+    - "CONTRADICTION_HANDLING"
+    - "CLOSURE_RECOMMENDATION"
+
+verification:
+  independent_review_required: true
+  evidence_backed_pass_required: true
+
+uncertainty:
+  explicit: true
+  residual_unknowns_required: true
+  limitations_required: true
+
+definition_of_done:
+  requirements:
+    - "Only S13B research_queue items are researched."
+    - "UNKNOWABLE items are never researched."
+    - "Default batch size is one and maximum batch size is three."
+    - "Selected items preserve S13B queue order."
+    - "Each processed item preserves knowledge_item_id, research_question, decision_impact, and blocking."
+    - "Each item contains a canonical S11 ResearchResult that passes the existing S11 validator."
+    - "Material claims have evidence or are explicitly INFERENCE/UNCERTAIN with limitations."
+    - "Decision-critical and decision-relevant evidenced claims seek independent cross-validation when reasonably available."
+    - "Duplicate independence_group values are never counted as multiple independent sources."
+    - "Primary or authoritative evidence is preferred and source-quality limitations are explicit."
+    - "Question-relative recency is checked for current-state claims."
+    - "Contradictory or qualifying evidence remains visible."
+    - "S11 research_status semantics are preserved unchanged."
+    - "S13C closure recommendations do not mutate S13B closure_state."
+    - "RESOLVED_WITH_EVIDENCE recommendations are evidence-backed."
+    - "RESOLVED_BY_AUTHORITY recommendations cite sufficient authority."
+    - "MORE_RESEARCH_NEEDED normally recommends null closure."
+    - "EXHAUSTED_WITH_UNCERTAINTY does not become false evidence closure."
+    - "No automatic durable-memory promotion occurs."
+    - "The Skill-assisted run improves evidence quality and epistemic safety versus a no-Skill baseline through the same generic Agent runtime."
+    - "The canonical negative fixture exposes duplicate-source independence and contradictory evidence."
+    - "No new capability, MCP, hosted search integration, or provider-specific model dependency is introduced."
+    - "No role-specific Core runtime or Skill-id-specific Core branching is introduced."
+    - "Typecheck, full tests, build, and post-build regression all pass."
+
+approval:
+  selected_by: "ChatGPT S13C semantic authoring gate"
+  approved_by: "PENDING_S13C_INDEPENDENT_VERIFIER"
+  approved_at: "PENDING_S13C_CLOSURE"
+  notes: >-
+    This Quality Contract defines the S13C quality bar but does not grant PASS.
+    PASS requires Part B implementation, T1-T28, deterministic Skill-vs-baseline
+    evidence, independent review, verification report, and repository closure.
