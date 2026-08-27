@@ -1,0 +1,443 @@
+id: S13G_TASK_PROMPT_COMPILER_DEEP
+version: 1.0.0
+step: S13G
+name: task-prompt-compiler
+depth: DEEP
+status: CANONICAL
+
+purpose: >-
+  Verify that S13G compiles exactly one READY S13F plan task plus approved,
+  bounded, provider-neutral supporting inputs into a traceable structured
+  Execution Package without composing context, executing tools, creating an
+  Agent, weakening acceptance/evidence, or pulling later runtime/provider scope
+  forward.
+
+rationale:
+  risk: HIGH
+  ambiguity: HIGH
+  novelty: HIGH
+  downstream_impact: HIGH
+  irreversibility: MEDIUM
+  explanation: >-
+    The Execution Package is the direct transition from planning semantics into
+    work that a later executor can act on. Compilation defects can broaden scope,
+    omit acceptance/evidence, grant unavailable capabilities, leak untrusted
+    context into instructions, distort limits, or create provider coupling.
+
+hard_invariants:
+  - id: HI-001
+    rule: one_ready_task_only
+    pass: "Exactly one task is compiled and task.compilation_readiness is READY_FOR_S13G."
+
+  - id: HI-002
+    rule: blocked_task_no_package
+    pass: "A non-ready task returns BLOCKED and package is null."
+
+  - id: HI-003
+    rule: bounded_spec_projection
+    pass: >-
+      TaskCompilationSpecSnapshot contains only task-material source refs plus
+      Spec identity/version/approval, and every ref resolves to upstream Spec data.
+
+  - id: HI-004
+    rule: spec_approval_preserved
+    pass: "Compilation never treats a non-approved Spec projection as executable."
+
+  - id: HI-005
+    rule: agent_definition_supplied
+    pass: "Every READY package references a validated caller-supplied AgentDefinition."
+
+  - id: HI-006
+    rule: task_agent_ref_match
+    pass: >-
+      If task.agent_definition_ref exists it exactly matches the supplied
+      AgentDefinition id.
+
+  - id: HI-007
+    rule: selected_skills_allowlisted
+    pass: >-
+      Every selected target Skill is already loaded, unique by id/version, valid,
+      and allowed by AgentDefinition.skills.
+
+  - id: HI-008
+    rule: no_target_skill_discovery
+    pass: "S13G does not discover/select target task Skills or load the full Skill catalog."
+
+  - id: HI-009
+    rule: capability_compatibility
+    pass: >-
+      Every target capability is in the bounded capability input and allowed by
+      the target AgentDefinition and applicable selected Skill requirements/policy.
+
+  - id: HI-010
+    rule: tools_unbound
+    pass: >-
+      ExecutionPackage.tools contains provider-neutral unbound declarations only;
+      no connector/provider/runtime handle exists.
+
+  - id: HI-011
+    rule: context_precomposed
+    pass: >-
+      Context Pack item membership and semantic contents are preserved; S13G does
+      not retrieve, add, drop, rank, or re-compose context.
+
+  - id: HI-012
+    rule: context_provenance_valid
+    pass: >-
+      Required Context Pack authority/status/provenance metadata exists and is
+      internally valid for every item.
+
+  - id: HI-013
+    rule: context_budget_preserved
+    pass: "ExecutionPackage context budget comes from the supplied Context Pack."
+
+  - id: HI-014
+    rule: instruction_provenance
+    pass: "Every ExecutionInstruction has at least one valid allowed source ref."
+
+  - id: HI-015
+    rule: no_data_instruction_escalation
+    pass: >-
+      Non-normative context data cannot become an instruction solely because its
+      text is imperative.
+
+  - id: HI-016
+    rule: objective_fidelity
+    pass: "Execution objective preserves the bounded S13F task outcome and does not broaden scope."
+
+  - id: HI-017
+    rule: acceptance_exactness
+    pass: >-
+      Explicit compilation acceptance equals normalized task.acceptance and the
+      package preserves it without weakening or invention.
+
+  - id: HI-018
+    rule: evidence_exactness
+    pass: >-
+      Explicit compilation evidence requirements equal normalized
+      task.evidence_required and the package preserves them.
+
+  - id: HI-019
+    rule: limits_source_derived
+    pass: >-
+      ExecutionPackage.limits contains only AgentDefinition limits and supplied
+      Context Pack budget metadata; no new runtime budget is invented.
+
+  - id: HI-020
+    rule: output_schema_inherited
+    pass: "ExecutionPackage.output_schema is semantically identical to AgentDefinition.output_schema."
+
+  - id: HI-021
+    rule: no_secret_values
+    pass: "Known explicit secret-value fixtures never enter a READY Execution Package."
+
+  - id: HI-022
+    rule: no_new_compiler_agent
+    pass: "S13G creates no task-prompt-compiler AgentDefinition or role-specific runtime."
+
+  - id: HI-023
+    rule: no_execution
+    pass: >-
+      S13G invokes no target capability/tool and emits no claim that target
+      implementation/acceptance/evidence has executed or passed.
+
+  - id: HI-024
+    rule: future_stage_boundary
+    pass: >-
+      S13G implements no Capability Registry, provider binding, MCP, Task Executor,
+      Workflow Runtime, BUILD execution, S13H workflow, or execution graph.
+
+  - id: HI-025
+    rule: structured_package
+    pass: >-
+      A READY Execution Package contains all required semantic output categories:
+      objective, instructions, context, tools, limits, output_schema, acceptance,
+      evidence.
+
+  - id: HI-026
+    rule: upstream_immutability
+    pass: >-
+      Task, Spec snapshot source, AgentDefinition, Context Pack, selected Skills,
+      acceptance and evidence input objects are not mutated during compilation.
+
+semantic_dimensions:
+  - id: SD-001
+    name: objective_and_scope_fidelity
+    checks:
+      - "Exactly one task outcome is represented."
+      - "No unrelated requirement or implementation scope is introduced."
+      - "Task refs remain traceable."
+
+  - id: SD-002
+    name: instruction_quality_and_provenance
+    checks:
+      - "Instructions are concise and non-duplicative."
+      - "All material task/spec/constraint/Skill rules are represented when applicable."
+      - "Every instruction cites allowed sources."
+      - "Conflicting normative instructions block rather than silently choose a lower-authority instruction."
+
+  - id: SD-003
+    name: context_fidelity_and_boundedness
+    checks:
+      - "Supplied frozen Context Pack is preserved."
+      - "No unrelated context is added."
+      - "No essential context is silently removed."
+      - "Authority/provenance/status/budget remain inspectable."
+
+  - id: SD-004
+    name: skill_compilation_correctness
+    checks:
+      - "Only already-selected Skills are consumed."
+      - "Skill MUST rules relevant to task are preserved."
+      - "No full catalog injection occurs."
+
+  - id: SD-005
+    name: capability_tool_safety
+    checks:
+      - "No invented capability."
+      - "No provider binding."
+      - "Target AgentDefinition allowlist is respected."
+      - "Compiler itself performs no capability side effect."
+
+  - id: SD-006
+    name: limits_and_schema_fidelity
+    checks:
+      - "Limits are inherited only."
+      - "Output schema is inherited."
+      - "Missing incompatible source contract blocks."
+
+  - id: SD-007
+    name: acceptance_evidence_fidelity
+    checks:
+      - "Acceptance input matches task."
+      - "Evidence input matches task."
+      - "Package does not weaken either."
+      - "Evidence requirements are not confused with evidence results."
+
+  - id: SD-008
+    name: security_and_instruction_separation
+    checks:
+      - "Imperative untrusted context remains data."
+      - "Eligible project instructions require provenance/status."
+      - "Secret values are not propagated."
+      - "No destructive/runtime authority is invented."
+
+  - id: SD-009
+    name: stage_boundary_and_provider_neutrality
+    checks:
+      - "No task execution."
+      - "No Capability Registry/provider/MCP binding."
+      - "No Workflow Runtime/Task Executor."
+      - "No S13H work."
+      - "No provider-specific prompt format."
+
+fixtures:
+  minimum_positive_evaluable: 4
+  minimum_negative: 10
+
+  canonical_positive:
+    - id: FX-POS-001
+      title: skill_only_no_tools
+      required_assertions:
+        - "Result READY."
+        - "Task outcome preserved exactly."
+        - "tools is empty."
+        - "Context Pack preserved."
+        - "Agent limits inherited."
+        - "Agent output schema inherited."
+        - "Acceptance/evidence preserved."
+        - "At least one traceable Skill instruction exists when selected Skill is material."
+        - "No provider binding."
+        - "No execution result."
+
+    - id: FX-POS-002
+      title: one_unbound_capability
+      required_assertions:
+        - "Result READY."
+        - "Exactly one allowed target capability ref."
+        - "Exactly one matching unbound tool declaration."
+        - "No provider/connector/MCP/credential field."
+        - "Compiler performs zero target tool calls."
+
+    - id: FX-POS-003
+      title: approved_task_specific_agent
+      required_assertions:
+        - "task.agent_definition_ref matches supplied AgentDefinition."
+        - "Result READY."
+        - "No new AgentDefinition."
+        - "Limits/output schema come from supplied AgentDefinition."
+
+    - id: FX-POS-004
+      title: context_instruction_separation
+      required_assertions:
+        - "Valid project-instruction item may contribute a POLICY instruction with source ref."
+        - "Imperative working-context item remains context data."
+        - "No instruction is sourced solely from working-context imperative data."
+        - "Context item membership is unchanged."
+
+  canonical_negative:
+    - id: FX-NEG-001
+      condition: "task.compilation_readiness is BLOCKED_PENDING_APPROVAL"
+      expected: "BLOCKED; package null"
+
+    - id: FX-NEG-002
+      condition: "task references unknown Spec material ref"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-003
+      condition: "explicit acceptance differs from task.acceptance"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-004
+      condition: "explicit evidence differs from task.evidence_required"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-005
+      condition: "selected Skill is not in AgentDefinition.skills"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-006
+      condition: "selected Skill requires capability absent from bounded capability input"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-007
+      condition: "target capability is absent from AgentDefinition allowed tool/capability set"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-008
+      condition: "task.agent_definition_ref differs from supplied AgentDefinition id"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-009
+      condition: "Context Pack is materially misaligned or missing required provenance/budget metadata"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-010
+      condition: "candidate package invents provider-bound tool"
+      expected: "package validator rejects"
+
+    - id: FX-NEG-011
+      condition: "candidate package invents a runtime limit"
+      expected: "package validator rejects"
+
+    - id: FX-NEG-012
+      condition: "candidate package changes AgentDefinition.output_schema"
+      expected: "package validator rejects"
+
+    - id: FX-NEG-013
+      condition: "working-context imperative data is promoted to instruction without eligible normative provenance"
+      expected: "package validator rejects"
+
+    - id: FX-NEG-014
+      condition: "candidate package drops acceptance or evidence requirement"
+      expected: "package validator rejects"
+
+    - id: FX-NEG-015
+      condition: "candidate package contains Task Executor / Workflow state / runtime provider handle / target execution result"
+      expected: "package validator rejects"
+
+    - id: FX-NEG-016
+      condition: "known explicit secret-value fixture would be copied into package"
+      expected: "BLOCKED"
+
+ground_truth_policy:
+  construction: FROZEN_BEFORE_EXECUTION
+  basis: >-
+    Source-derived task/spec/AgentDefinition/Context Pack/Skill/constraint/
+    acceptance/evidence invariants plus hand-authored fixture assertions.
+  model_visibility: FORBIDDEN
+  provider_visibility: FORBIDDEN
+  post_hoc_denominator_changes: FORBIDDEN
+  fixture_id_branching: FORBIDDEN
+  skill_id_branching_in_model_provider: FORBIDDEN
+
+skill_vs_no_skill_evaluation:
+  same_bounded_input: true
+  same_agent_definition: true
+  same_model_provider_implementation: true
+  same_capability_provider: true
+  same_runtime: true
+  same_validator_and_evaluator: true
+  only_semantic_difference: "S13G Skill content selected/lazily loaded versus absent"
+  minimum_evaluable_positive_fixtures: 4
+  hard_invariant_score_with_skill: 1.0
+  maximum_stage_boundary_violations_with_skill: 0
+  maximum_invented_authority_tool_limit_schema_refs_with_skill: 0
+  minimum_additional_correct_assertions_total: 6
+  improvement_distribution:
+    minimum_distinct_dimensions: 3
+    minimum_additional_correct_assertions_per_improved_dimension: 2
+  hard_invariant_regression_allowed: false
+  perfect_baseline_fixture_policy: >-
+    A fixture with a perfect no-Skill baseline remains regression coverage and
+    contributes zero strict-improvement evidence.
+  forbidden_baseline_design:
+    - "separate intentionally-bad baseline compiler"
+    - "branch on withSkill boolean"
+    - "branch on S13G Skill id"
+    - "branch on fixture id"
+    - "expose frozen truth to provider/model"
+
+reference_model_policy:
+  allowed: true
+  requirements:
+    - "Must genuinely execute inside S09 runAgent."
+    - "Must not receive frozen evaluator truth."
+    - "Must not branch on Skill id, fixture id, or with-Skill flag."
+    - "Evidence must label it deterministic/reference and not a production external LLM."
+
+pass_criteria:
+  - "All hard invariants pass."
+  - "All canonical negative cases fail in the required way."
+  - "At least four positive/evaluable fixtures pass."
+  - "Skill-vs-no-Skill strict improvement threshold passes."
+  - "No task is executed by S13G."
+  - "No Context Pack is composed by S13G."
+  - "No new AgentDefinition is created."
+  - "No provider/tool binding is implemented."
+  - "No future-stage scope is pulled forward."
+  - "typecheck passes."
+  - "full tests pass."
+  - "clean build passes."
+  - "post-build tests pass."
+  - "independent verification passes."
+  - "verification report records exact reproducible evidence."
+
+failure_policy:
+  semantic:
+    action: RETURN_TO_CHATGPT_AUTHORING_GATE
+    examples:
+      - "change to Execution Package meaning"
+      - "change to context ownership"
+      - "change to instruction provenance policy"
+      - "change to approval/readiness policy"
+      - "change to capability/tool boundary"
+      - "change to evaluation threshold"
+      - "change to Agent necessity"
+      - "change to future-stage boundary"
+
+  mechanical:
+    action: CLAUDE_MAY_REPAIR_LOCALLY
+    constraint: "Repair must preserve Part A semantics."
+
+evidence_required:
+  - "Part A integration integrity."
+  - "Execution Package type/validator evidence."
+  - "Context Pack immutability evidence."
+  - "Instruction provenance evidence."
+  - "Prompt-injection separation negative evidence."
+  - "Selected-Skill allowlist/lazy-loading evidence."
+  - "Target capability/tool provider-neutrality evidence."
+  - "No target tool execution evidence."
+  - "No new AgentDefinition evidence."
+  - "S12 → S10 → S09 real runtime trace."
+  - "Positive fixture results."
+  - "Negative fixture results."
+  - "Skill-vs-no-Skill per-dimension raw counts."
+  - "Frozen ground-truth isolation evidence."
+  - "typecheck result."
+  - "pre-build test count."
+  - "clean build result."
+  - "post-build test count."
+  - "independent verification."
+  - "S13H remains NOT_STARTED."
