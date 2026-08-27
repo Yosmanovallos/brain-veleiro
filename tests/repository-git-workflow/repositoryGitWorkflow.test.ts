@@ -916,9 +916,15 @@ describe("T64 — no S14 Capability Registry / provider implementation is introd
 });
 
 describe("T65 — no S13I backend-api-engineering implementation is introduced", () => {
-  it("no backend-api-engineering skill / route / controller artifact exists", () => {
+  it("no backend-api-engineering Part B implementation module exists", () => {
+    // Mechanical relaxation for S13I Part A: integrating ChatGPT's S13I Part A
+    // creates the canonical doc-only artifact
+    // brain-bootstrap/skills/BACKEND_API_ENGINEERING_SKILL_S13I.md (+ the QC and
+    // contract specs). That is the Authoring-Gate deliverable and precedes Part B.
+    // Mirrors the S13D->E, S13E->F, S13F->G and S13G->H prior-test relaxations.
+    // NOT an S13H semantic change. T65 still guards that no S13I Part B
+    // implementation module has been introduced.
     expect(() => statSync("src/intelligence/backend-api-engineering")).toThrow();
-    expect(() => statSync("brain-bootstrap/skills/BACKEND_API_ENGINEERING_SKILL_S13I.md")).toThrow();
   });
 });
 

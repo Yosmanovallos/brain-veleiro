@@ -1,0 +1,542 @@
+id: S13I_BACKEND_API_ENGINEERING_DEEP
+version: 1.0.0
+step: S13I
+name: backend-api-engineering
+depth: DEEP
+status: CANONICAL
+
+purpose: >-
+  Verify that S13I converts one bounded backend HTTP API task into a
+  framework-neutral, provider-neutral engineering decision with fail-closed
+  request validation, thin transport, explicit auth/resource boundaries,
+  abstract data ports, safe response/error contracts, endpoint-local
+  observability, and acceptance/evidence traceability without pulling S13J,
+  S13L, S13O, S13P, S14, framework bindings, or live server execution forward.
+
+rationale:
+  risk: HIGH
+  ambiguity: HIGH
+  novelty: MEDIUM
+  downstream_impact: HIGH
+  irreversibility: HIGH
+  explanation: >-
+    API contract defects can expose protected data, bypass authorization,
+    duplicate side effects, leak secrets/internal details, or create breaking
+    consumer-facing behavior that is expensive to reverse.
+
+hard_invariants:
+  - id: HI-001
+    rule: one_bounded_operation
+    pass: "A decision represents exactly one bounded API operation/task."
+
+  - id: HI-002
+    rule: skill_only_no_new_agent
+    pass: "S13I remains SKILL_ONLY with no new AgentDefinition or Core special branch."
+
+  - id: HI-003
+    rule: no_live_server_in_skill
+    pass: "Canonical S13I Skill runtime starts no server and performs no live HTTP/network side effect."
+
+  - id: HI-004
+    rule: framework_provider_neutral
+    pass: "Decision contains no concrete web framework/router/controller/server/auth-provider/ORM/logger-vendor binding."
+
+  - id: HI-005
+    rule: request_fields_declared
+    pass: "Every consumed PATH/QUERY/HEADER/BODY field is declared by the request contract."
+
+  - id: HI-006
+    rule: unknown_fields_fail_closed
+    pass: "Unknown object fields reject unless explicitly allowed by request contract."
+
+  - id: HI-007
+    rule: no_implicit_coercion
+    pass: "Normalization/coercion occurs only through an explicit field rule."
+
+  - id: HI-008
+    rule: body_content_type_bounded
+    pass: "Every body-bearing operation declares accepted content types."
+
+  - id: HI-009
+    rule: body_size_bounded
+    pass: "Every body-bearing operation declares max_body_bytes."
+
+  - id: HI-010
+    rule: thin_transport
+    pass: "Transport contains no domain/business decision logic."
+
+  - id: HI-011
+    rule: no_direct_persistence_in_transport
+    pass: "Transport contains no SQL/ORM/provider persistence operation."
+
+  - id: HI-012
+    rule: service_framework_neutral
+    pass: "Application-service contract contains no framework request/response type or live transport handle."
+
+  - id: HI-013
+    rule: data_port_abstract
+    pass: "Data requirements are provider-neutral logical operations with no schema/SQL/index/migration detail."
+
+  - id: HI-014
+    rule: s13j_boundary
+    pass: "S13I implements no PostgreSQL schema, migration, index, query plan or transaction mechanism."
+
+  - id: HI-015
+    rule: auth_mode_explicit
+    pass: "Every operation explicitly declares PUBLIC or AUTHENTICATED."
+
+  - id: HI-016
+    rule: protected_authz_before_effect
+    pass: "Protected disclosure/mutation requires authorization before protected service side effects."
+
+  - id: HI-017
+    rule: client_identity_not_authority
+    pass: "Client-supplied user/tenant/owner fields are never treated as proof of identity/authorization."
+
+  - id: HI-018
+    rule: scope_explicit_when_applicable
+    pass: "OWNER/TENANT/RESOURCE/CUSTOM scope declares trusted scope source and authorization location."
+
+  - id: HI-019
+    rule: response_variants_schema_bound
+    pass: "Every externally reachable success/error response variant has an explicit schema."
+
+  - id: HI-020
+    rule: output_validation_required
+    pass: "External response emission is contractually gated by declared response variant validation/mapping."
+
+  - id: HI-021
+    rule: stable_safe_error_contract
+    pass: "External errors have stable code/status/safe message and no internal cause."
+
+  - id: HI-022
+    rule: no_response_secret_internal_leak
+    pass: "Response contract cannot expose stack, SQL, credentials, tokens, internal paths or undeclared upstream payload."
+
+  - id: HI-023
+    rule: side_effect_classified
+    pass: "Every operation has an explicit side-effect class."
+
+  - id: HI-024
+    rule: duplicate_prone_idempotency_boundary
+    pass: "Retryable duplicate-prone mutation/external effect declares idempotency requirement or S13O handoff."
+
+  - id: HI-025
+    rule: no_s13o_runtime_pull_forward
+    pass: "S13I implements no retry/backoff/idempotency store/job/failure-recovery system."
+
+  - id: HI-026
+    rule: endpoint_observability_declared
+    pass: "Operation declares endpoint-local request/operation/duration/outcome/error observability requirements."
+
+  - id: HI-027
+    rule: safe_logging
+    pass: "S13I sanctions no raw secret/token/cookie/auth header/private-key/sensitive body logging."
+
+  - id: HI-028
+    rule: no_s13p_provider_pull_forward
+    pass: "S13I binds no logger/tracer/metrics/exporter/observability vendor."
+
+  - id: HI-029
+    rule: compatibility_explicit
+    pass: "Existing external operation changes declare compatibility mode."
+
+  - id: HI-030
+    rule: unapproved_breaking_change_blocks
+    pass: "A breaking external API change without explicit approval cannot be READY."
+
+  - id: HI-031
+    rule: unbounded_collection_control
+    pass: "Potentially unbounded list has pagination or explicit bounded-cardinality rationale."
+
+  - id: HI-032
+    rule: filter_sort_allowlist
+    pass: "Filter/sort fields are explicitly allowlisted when applicable."
+
+  - id: HI-033
+    rule: rate_limit_reference_only
+    pass: "S13I may carry a rate-limit requirement ref but implements no enforcement provider/system."
+
+  - id: HI-034
+    rule: openapi_non_authoritative
+    pass: "OpenAPI/docs are optional derivative; S13I structured contract remains authoritative."
+
+  - id: HI-035
+    rule: acceptance_evidence_preserved
+    pass: "Decision preserves supplied acceptance/evidence requirements without weakening or invention."
+
+  - id: HI-036
+    rule: input_immutability
+    pass: "S13I does not mutate bounded input objects."
+
+  - id: HI-037
+    rule: no_s13l_broad_pull_forward
+    pass: "No auth provider, tenant platform, secret manager, prompt-injection or system-wide guardrails engine is introduced."
+
+  - id: HI-038
+    rule: no_s14_pull_forward
+    pass: "No Capability Registry/tool/MCP implementation is introduced."
+
+  - id: HI-039
+    rule: no_s13j_start
+    pass: "S13J artifacts/source remain NOT_STARTED during S13I."
+
+  - id: HI-040
+    rule: anti_self_certification
+    pass: "Hard invariants/status are recomputed from bounded input and candidate fields are not trusted as proof."
+
+semantic_dimensions:
+  - id: SD-001
+    name: operation_and_transport_contract
+    checks:
+      - "Operation method/path/compatibility semantics are explicit."
+      - "No live framework/server binding."
+      - "Transport responsibility stays bounded."
+
+  - id: SD-002
+    name: request_validation_and_input_safety
+    checks:
+      - "Consumed fields are declared."
+      - "Unknown fields fail closed."
+      - "Coercion requires explicit rules."
+      - "Body content type and size are bounded."
+
+  - id: SD-003
+    name: auth_and_resource_scope_boundary
+    checks:
+      - "Auth mode is explicit."
+      - "Authorization precedes protected effect/disclosure."
+      - "Client identity fields are non-authoritative."
+      - "Scope source is trusted when applicable."
+
+  - id: SD-004
+    name: service_and_data_port_separation
+    checks:
+      - "Transport has no business logic."
+      - "Service contract is transport-neutral."
+      - "Data access is abstract."
+      - "No SQL/ORM/schema modeling leaks in."
+
+  - id: SD-005
+    name: response_and_error_contract
+    checks:
+      - "Every response variant has schema/status/condition."
+      - "Output validation is explicit."
+      - "Error code/message are safe/stable."
+      - "No stack/SQL/secret/internal-path leak."
+
+  - id: SD-006
+    name: side_effect_and_idempotency_boundary
+    checks:
+      - "Side effect class is explicit."
+      - "Duplicate-prone retryable effects require idempotency/handoff."
+      - "No S13O runtime mechanics are implemented."
+
+  - id: SD-007
+    name: observability_and_safe_logging
+    checks:
+      - "Endpoint-local observability fields are declared."
+      - "Raw sensitive payload/header logging is not sanctioned."
+      - "No observability vendor binding."
+
+  - id: SD-008
+    name: compatibility_and_collection_contracts
+    checks:
+      - "Breaking change approval is explicit."
+      - "Potentially unbounded list uses pagination/rationale."
+      - "Filter/sort fields are allowlisted."
+      - "Rate-limit behavior is requirement-only."
+
+  - id: SD-009
+    name: acceptance_evidence_traceability
+    checks:
+      - "Acceptance is preserved."
+      - "Evidence categories are preserved/source-backed."
+      - "No completion evidence is fabricated."
+
+  - id: SD-010
+    name: framework_provider_and_future_stage_boundary
+    checks:
+      - "No framework/auth/DB/observability provider binding."
+      - "No S13J/S13L/S13O/S13P/S14 implementation."
+      - "OpenAPI/docs remain derivative/out-of-scope."
+
+fixtures:
+  minimum_positive_evaluable: 6
+  minimum_negative: 18
+
+  canonical_positive:
+    - id: FX-POS-001
+      title: public_paginated_read
+      expected:
+        - "READY"
+        - "PUBLIC auth mode"
+        - "no body contract required"
+        - "pagination declared"
+        - "response variants schema-bound"
+        - "safe observability"
+
+    - id: FX-POS-002
+      title: authenticated_create
+      expected:
+        - "READY"
+        - "AUTHENTICATED + POLICY_REQUIRED"
+        - "body content type/size declared"
+        - "abstract CREATE data port"
+        - "no direct persistence"
+        - "idempotency requirement/handoff present"
+
+    - id: FX-POS-003
+      title: resource_scoped_update
+      expected:
+        - "READY"
+        - "RESOURCE_REQUIRED"
+        - "trusted scope source"
+        - "client owner/tenant field is non-authoritative"
+        - "authorization precedes mutation"
+
+    - id: FX-POS-004
+      title: external_side_effect_handoff
+      expected:
+        - "READY"
+        - "EXTERNAL_SIDE_EFFECT"
+        - "idempotency requirement or DEFERRED_TO_S13O"
+        - "no retry/backoff implementation"
+
+    - id: FX-POS-005
+      title: backward_compatible_change
+      expected:
+        - "READY"
+        - "BACKWARD_COMPATIBLE_CHANGE"
+        - "request/response contract remains compatible"
+        - "output validation required"
+
+    - id: FX-POS-006
+      title: builtin_node_http_realism
+      expected:
+        - "Temporary loopback-only Node built-in HTTP fixture"
+        - "Valid request matches declared success contract"
+        - "Invalid request matches declared error contract"
+        - "No new dependency"
+        - "No persistent Brain server"
+
+  canonical_negative:
+    - id: FX-NEG-001
+      condition: "invalid or undeclared request field is accepted"
+      expected: "BLOCKED or validator reject"
+
+    - id: FX-NEG-002
+      condition: "unknown object field accepted under REJECT policy"
+      expected: "validator reject"
+
+    - id: FX-NEG-003
+      condition: "implicit coercion without explicit rule"
+      expected: "validator reject"
+
+    - id: FX-NEG-004
+      condition: "body-bearing operation lacks content-type policy"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-005
+      condition: "body-bearing operation lacks max_body_bytes"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-006
+      condition: "protected operation lacks auth boundary"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-007
+      condition: "authorization occurs after protected side effect"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-008
+      condition: "client tenant/user/owner field is treated as authority"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-009
+      condition: "transport embeds business/domain rule"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-010
+      condition: "transport embeds SQL/ORM/concrete persistence call"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-011
+      condition: "candidate contains DB schema/table/index/migration detail"
+      expected: "validator reject"
+
+    - id: FX-NEG-012
+      condition: "service contract contains framework request/response object"
+      expected: "validator reject"
+
+    - id: FX-NEG-013
+      condition: "raw internal error/stack is exposed"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-014
+      condition: "response/log contract leaks SQL/token/credential/internal path"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-015
+      condition: "response variant lacks schema or output-validation contract"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-016
+      condition: "raw auth header/cookie/token/body PII logging is sanctioned"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-017
+      condition: "duplicate-prone retryable side effect has no idempotency requirement/handoff"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-018
+      condition: "candidate implements retry/backoff/job/idempotency-store mechanics"
+      expected: "validator reject"
+
+    - id: FX-NEG-019
+      condition: "breaking external API change lacks approval"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-020
+      condition: "potentially unbounded list has no pagination/rationale"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-021
+      condition: "filter/sort field is not allowlisted"
+      expected: "BLOCKED"
+
+    - id: FX-NEG-022
+      condition: "framework/router/controller/live-server binding is embedded"
+      expected: "validator reject"
+
+    - id: FX-NEG-023
+      condition: "auth-provider-specific binding is embedded"
+      expected: "validator reject"
+
+    - id: FX-NEG-024
+      condition: "DB/ORM/provider-specific binding is embedded"
+      expected: "validator reject"
+
+    - id: FX-NEG-025
+      condition: "logger/tracer/metrics vendor binding is embedded"
+      expected: "validator reject"
+
+    - id: FX-NEG-026
+      condition: "rate-limit enforcement provider/system is implemented"
+      expected: "validator reject"
+
+    - id: FX-NEG-027
+      condition: "OpenAPI/docs projection is treated as authoritative source"
+      expected: "validator reject"
+
+    - id: FX-NEG-028
+      condition: "acceptance/evidence is dropped or invented"
+      expected: "validator reject"
+
+ground_truth_policy:
+  construction: FROZEN_BEFORE_EXECUTION
+  provider_visibility: FORBIDDEN
+  model_visibility: FORBIDDEN
+  fixture_id_branching: FORBIDDEN
+  skill_id_branching: FORBIDDEN
+  with_skill_flag_branching: FORBIDDEN
+  post_hoc_denominator_changes: FORBIDDEN
+
+skill_vs_no_skill_evaluation:
+  same_input: true
+  same_agent_definition: true
+  same_model_provider: true
+  same_capability_provider: true
+  same_s09_s10_runtime: true
+  same_parser_validator_evaluator: true
+  only_semantic_difference: "S13I Skill content present versus absent"
+  minimum_evaluable_positive_fixtures: 6
+  hard_invariant_score_with_skill: 1.0
+  maximum_auth_boundary_unsafe_recommendations_with_skill: 0
+  maximum_secret_pii_leak_recommendations_with_skill: 0
+  maximum_direct_persistence_in_transport_recommendations_with_skill: 0
+  maximum_framework_provider_bindings_with_skill: 0
+  maximum_future_stage_pull_forward_violations_with_skill: 0
+  minimum_additional_correct_dimension_specific_assertions_total: 12
+  improvement_distribution:
+    minimum_distinct_dimensions: 5
+    minimum_additional_dimension_specific_assertions_per_improved_dimension: 2
+    minimum_dimension_specific_scored_assertions_per_improved_dimension: 3
+    maximum_single_assertion_share_of_dimension_improvement: 0.5
+  cross_cutting_assertions:
+    may_count_toward_total_regression_score: true
+    may_count_toward_improved_dimension_threshold: false
+    examples:
+      - "overall status correct"
+      - "candidate object present"
+      - "validator says valid"
+  hard_invariant_regression_allowed: false
+  perfect_baseline_fixture_policy: "Regression-only; contributes zero strict-improvement evidence."
+
+reference_model_policy:
+  allowed: true
+  requirements:
+    - "Must execute through real S09 runAgent."
+    - "Must not import frozen truth."
+    - "Must not branch on fixture id, S13I Skill id, or with-Skill flag."
+    - "Must be labeled deterministic/reference, not production external LLM."
+
+realism_fixture_policy:
+  builtin_node_http_fixture_required: true
+  requirements:
+    - "Node built-in HTTP primitives only."
+    - "Loopback only."
+    - "Ephemeral port."
+    - "No external network."
+    - "No new runtime dependency."
+    - "Disposable fixture lifecycle."
+    - "Must not create a persistent Brain HTTP server."
+
+pass_criteria:
+  - "All hard invariants pass."
+  - "All canonical positives pass."
+  - "All canonical negatives fail as specified."
+  - "Skill-vs-no-Skill OI-A-safe threshold passes."
+  - "No framework/provider binding is introduced."
+  - "No auth bypass or client-identity authority recommendation occurs."
+  - "No secret/PII/internal error leakage recommendation occurs."
+  - "No direct persistence/SQL in transport recommendation occurs."
+  - "No S13J/S13L/S13O/S13P/S14 implementation is introduced."
+  - "Real S12 → S10 → S09 runtime path passes."
+  - "Built-in Node HTTP realism fixture passes."
+  - "typecheck passes."
+  - "full tests pass."
+  - "clean build passes."
+  - "post-build tests pass."
+  - "fresh independent verification passes."
+
+failure_policy:
+  semantic:
+    action: RETURN_TO_CHATGPT_AUTHORING_GATE
+  mechanical:
+    action: CLAUDE_MAY_REPAIR_LOCALLY
+    constraint: "Part A semantics remain unchanged."
+
+evidence_required:
+  - "Part A integrity."
+  - "Skill Contract validation."
+  - "Input/output contract validation."
+  - "Anti-self-certification hard-invariant recompute."
+  - "Request-validation evidence."
+  - "Auth/resource-boundary evidence."
+  - "Service/data-port separation evidence."
+  - "Response/error/no-leak evidence."
+  - "Side-effect/idempotency-boundary evidence."
+  - "Observability/safe-logging evidence."
+  - "Compatibility/pagination evidence."
+  - "Positive fixture results."
+  - "Negative fixture results."
+  - "Built-in Node HTTP realism fixture evidence."
+  - "S12 → S10 → S09 runtime evidence."
+  - "Provider-source/frozen-truth isolation audit."
+  - "Skill-vs-no-Skill raw per-dimension dimension-specific counts."
+  - "Cross-cutting-assertion exclusion proof for improved-dimension counting."
+  - "typecheck/tests/build/post-build results."
+  - "builder-side independent review."
+  - "fresh independent verification."
+  - "S13J remains NOT_STARTED."
