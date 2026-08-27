@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
-current_step: S13G
+current_step: S13H
 status: PASS
 primary_builder: claude-code
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-27T10:45:00Z"
+last_verified_at: "2026-08-27T18:45:00Z"
 steps:
   S00: PASS
   S01: PASS
@@ -28,7 +28,7 @@ steps:
   S13E: PASS
   S13F: PASS
   S13G: PASS
-  S13H: NOT_STARTED
+  S13H: PASS
   S13I: NOT_STARTED
   S13J: NOT_STARTED
   S13K: NOT_STARTED
@@ -58,9 +58,9 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 32
-  head_sha: "e6c7bbb3cb21dfaa2b5c29e6ce703bffe8b31224"
-  head_sha_note: "S13G close (feat) commit; a follow-up docs commit records this same sha. Block refreshed at S13G closure -- was stale (commits: 10, head_sha: fbd5af95...) since before S13F (OI-S13G-06)."
+  commits: 36
+  head_sha: "0a4f6cf96b4e8ff345c150a69cb7375da461f9bc"
+  head_sha_note: "0a4f6cf is the S13H Part A commit (docs: integrate Brain S13H Part A). The S13H close (feat) commit sha and the final commit count are recorded by the follow-up 'docs: record real HEAD sha in CURRENT.md after S13H close' commit, matching the S13G pattern."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -376,6 +376,54 @@ repository:
     review_fixes: "Independent (advisor) review, run before declaring PASS per the S11/S12/S13A-S13F precedent, found one blocking Part B defect (not a Part A semantic defect): validateExecutionPackage recomputed objective/context/tools/limits/output_schema/acceptance/evidence but only SPOT-CHECKED instructions per-instruction -- a lazy compile could drop every SPEC/CONSTRAINT/SKILL instruction and still validate. Spec 7.2 makes completeness normative. Fixed (D-060): HI-014 now asserts every task-material Spec/NFR ref, every cited constraint ref, and every selected-Skill MUST rule id is represented by some instruction, plus a TASK instruction citing task:<id>. Regression added to T23 (strip to TASK+SAFETY -> valid:false with HI-014 completeness error); negative control run at closure -- test fails at expect(v.valid).toBe(false) with the completeness block disabled, passes with it restored, git status clean again. Also wired three previously-decorative frozen-truth fields into live assertions (non_normative_context_item_ids -> A06/A23 independence check, has_secret_bearing_input -> A22, expected_status -> T41-T44); minor cleanups (FX_POS_004 own pack id CP-AUTH-004, removed dead void NAIVE_INSTRUCTION_PROFILE + unused import, T46 single file read). Full suite + clean build + post-build re-run after the fix: 533/533."
     deferred_non_blocking: "T12 (capability absent from AgentDefinition.tools) is exercised by a direct validateTargetExecutionCompatibility call, not the end-to-end path -- structurally unreachable because src/core/agent/validateDefinition.ts enforces set(tools)==set(capabilities) (disclosed, report section 8 + OI-S13G-01); the verification 'model' is a deterministic rule-based ModelProvider fixture, not a real LLM (permitted by QC reference_model_policy; runs genuinely inside runAgent()); the Skill-vs-no-Skill comparison is a content-derived maximal contrast (one synthesizer, profile derived by regex from rule text), same accepted pattern as S13A-S13F; deriveAssemblyProfileFromRules uses phrase/word-boundary regex, not semantic understanding (same class as S13C's disclosed cue checks); fixtures.ts and fixtureTruth.ts land in the same implementation commit (as S13F), mitigated by the recorded fixtureTruth sha256, T46 (non-import) and T47 (no separate baseline compiler). All in brain-bootstrap/reports/S13G-task-prompt-compiler-verification.md section 11."
     note: "S13G fully closed: Part A (ChatGPT semantic authoring, commit f7ef335) + Part B (Claude Code implementation, 81 tests, verification, plus one advisor-driven blocking validator fix) both PASS. TASK COMPILATION (SPEC_CONTRACT.md Stage 11, lines 595-641) proven end-to-end through the real S12 discovery/lazy-load + S10 compiler + S09 runtime, as SKILL_ONLY execution via a caller-supplied harness AgentDefinition -- NO new registered compiler agent, no Workflow Runtime, no Task Executor, no execution graph, no Context Pack compiler, no Capability Registry, no provider/tool/MCP binding, no S13H repository-git-workflow, no Agent Factory, no Skill Factory. One S13F ImplementationPlanTask + a bounded task-local Spec projection consumed read-only. The deterministic HI-001..HI-026 validator recomputes every Execution Package field from the bounded input; gateTaskCompilation never trusts the model's claimed status. Skill-vs-no-Skill improvement (56 -> 108, +52, all 9 dimensions, hard invariants 48/48, 0 boundary violations) proven against frozen independent ground truth. S13H (repository-git-workflow) remains NOT_STARTED and was not started, inspected, or authored by this closure. S13G is not considered independently verified until a fresh read-only session returns VERIFICATION RESULT / Step: S13G / Status: PASS."
+
+  repository_git_workflow:
+    status: PASS
+    part_a_integrated_at: "2026-08-27T16:00:00Z"
+    part_b_implemented_at: "2026-08-27T18:45:00Z"
+    part_a_commit: "0a4f6cf96b4e8ff345c150a69cb7375da461f9bc"
+    paths_part_a:
+      - brain-bootstrap/skills/REPOSITORY_GIT_WORKFLOW_SKILL_S13H.md
+      - brain-bootstrap/quality-contracts/S13H_REPOSITORY_GIT_WORKFLOW_DEEP.yaml
+      - brain-bootstrap/specs/REPOSITORY_GIT_WORKFLOW_CONTRACT_S13H.md
+    paths_part_b:
+      - src/intelligence/repository-git-workflow/constants.ts
+      - src/intelligence/repository-git-workflow/types.ts
+      - src/intelligence/repository-git-workflow/sharedNormalization.ts
+      - src/intelligence/repository-git-workflow/classifyRepositoryState.ts
+      - src/intelligence/repository-git-workflow/classifyGitOperation.ts
+      - src/intelligence/repository-git-workflow/classifyChangedPaths.ts
+      - src/intelligence/repository-git-workflow/validateSensitivePaths.ts
+      - src/intelligence/repository-git-workflow/validateChangeIsolation.ts
+      - src/intelligence/repository-git-workflow/validateValidationEvidence.ts
+      - src/intelligence/repository-git-workflow/decideWorkspaceStrategy.ts
+      - src/intelligence/repository-git-workflow/buildCommitPlan.ts
+      - src/intelligence/repository-git-workflow/buildPushPlan.ts
+      - src/intelligence/repository-git-workflow/buildRemoteReviewHandoff.ts
+      - src/intelligence/repository-git-workflow/synthesizeRepositoryWorkflowDecision.ts
+      - src/intelligence/repository-git-workflow/validateRepositoryWorkflowDecision.ts
+      - src/intelligence/repository-git-workflow/planRepositoryGitWorkflow.ts
+      - src/intelligence/repository-git-workflow/compareRepositoryGitWorkflowRuns.ts
+      - src/intelligence/repository-git-workflow/index.ts
+      - src/intelligence/skills/definitions/repositoryGitWorkflowS13H.ts
+      - src/intelligence/skills/index.ts (modified: registers repositoryGitWorkflowS13H in the shared reference Skill catalog, now 11 entries)
+      - tests/repository-git-workflow/gitFixtures.ts
+      - tests/repository-git-workflow/fixtures.ts
+      - tests/repository-git-workflow/fixtureTruth.ts
+      - tests/repository-git-workflow/repositoryGitWorkflow.test.ts
+      - tests/task-prompt-compiler/taskCompilation.test.ts (modified: one mechanical prior-test count relaxation `toEqual([10 ids])` -> `slice(0,10)` equality + `length >= 10`; no S13G semantic change)
+      - brain-bootstrap/reports/S13H-repository-git-workflow-verification.md
+    decided_via: "ChatGPT S13H authoring gate response (1 file delivered by user, S13H_CHATGPT_PART_A_CANONICAL.md sha256 3e3df7ad92c6df83565bfb16a8264cb96de69ed2bb8859f494387aca9320e2f5, three Verbatim-content sections; integrated verbatim via a Python outer-fence extractor, verified byte-identical via diff against the canonical file's line ranges, retained untracked. Standalone Quality Contract YAML independently parsed with js-yaml -- QC: id=S13H_REPOSITORY_GIT_WORKFLOW_DEEP, depth=DEEP, rationale.risk HIGH, 28 hard_invariants HI-001..HI-028, 10 semantic_dimensions SD-001..SD-010, fixtures.minimum_positive_evaluable 5 / minimum_negative 12. Part A committed at 0a4f6cf (docs: integrate Brain S13H Part A (ChatGPT authoring)); see brain-bootstrap/reports/S13H-repository-git-workflow-verification.md."
+    quality_depth: DEEP
+    execution_model: "SKILL_ONLY -- NO new AgentDefinition. Part A ARTIFACT 1 execution_mode: SKILL_ONLY, it does not execute git. The typed intelligence.repository-git-workflow.s13h Skill runs through the unchanged generic S12 discovery/lazy-load -> S10 compileAgentDefinition() -> S09 runAgent() path via a caller-supplied harness AgentDefinition (tests/repository-git-workflow/fixtures.ts `workflowHost`, generic role, not registered in src/intelligence/agent-definitions/). planRepositoryGitWorkflow() never defines, selects, catalogues, or activates a git-workflow agent, and never spawns a process (no child_process import anywhere in the module -- T48)."
+    field_shape_cross_check: "Every SkillDefinition field of repositoryGitWorkflowS13H cross-checked against src/core/skill/types.ts -- zero mismatches (24 rules RGW-R1..R24 level MUST; 16 procedure steps RGW-P1..P16; 12 verification checks RGW-V1..V12 DETERMINISTIC/SEMANTIC; requires.skills==[] requires.capabilities==[]; permissions.allowed_capabilities==[] allowed_side_effects [NONE]). The typed RepositoryGitWorkflowInput consumes a RepositoryStateSnapshot + RepositoryChangeIntent + RepositoryGitPolicy + validation requirements/evidence, read-only, never mutated or re-exported."
+    resolves_ambiguities: "S13H authoring-preflight OPEN_FOR_CHATGPT items (28) resolved by ChatGPT Part A. Four Part B determinizations recorded (report section 5): D-S13H-01 single synthesizeRepositoryWorkflowDecision parameterized by deriveWorkflowProfileFromRules (CONTENT-regex over rule text; no with-Skill flag / Skill-id / fixture-id branch); D-S13H-02 RepositoryGitWorkflowInput.requested_operations?: string[] is the authoritative operation-classification source (contract section 6), trusted verbatim when present, with the change_intent.summary prose scan kept only as a bounded documented fallback -- added by the independent review (R-2); D-S13H-03 frozen fixtureTruth carries deliberate slack (FX-POS-005 regression_only, FX-POS-004 protected-main faithful->FEATURE_BRANCH vs naive->KEEP_CURRENT); D-S13H-04 gateRepositoryGitWorkflow never reads candidate.status."
+    contract_tests: "SKILL-ARTIFACT-1..4 + T1-T66 (T54-T58 parameterized over the 5 positives, T59 over the 20 negatives) + 4 helper anchors = 105 it() cases, all PASS (tests/repository-git-workflow/repositoryGitWorkflow.test.ts). 638/638 total vitest tests (533 unchanged from S13G closure + 105 new)."
+    quality_checks: "npm run typecheck: 0 errors. npm test pre-build: 638/638. rm -rf dist && npm run build: succeeded. npm test post-build: 638/638, unchanged. npx vitest run tests/repository-git-workflow/: 105/105. Mechanical Core-boundary checks pass (no repository-git-workflow/RepositoryWorkflow/S13H identifier or git-workflow role branch in src/core/, no forbidden Core->providers/intelligence imports, src/intelligence/repository-git-workflow/ imports nothing from ../agent-definitions/ or ../../providers/ and no child_process, no new package.json/package-lock.json dependency, S11/S13A-S13G canonical artifacts -- markdown/YAML specs and TypeScript implementations -- fully unmodified per git status apart from the mechanical skills/index.ts registration and the one-line taskCompilation.test.ts catalog-count relaxation). git diff 0a4f6cf -- <the 3 Part A files> empty at closure. Transfer sha256 unchanged."
+    skill_vs_no_skill: "Measured through the Vitest suite (compareRepositoryGitWorkflowRuns over the 5 positive fixtures) against post-review source, then corroborated by a clean rm -rf dist && npm run build plus a post-build full-suite re-run producing identical results; figures pinned in T62: total assertions per arm 155; baseline (no-Skill) correct 136; with-Skill correct 155; additional correct total (excl. regression_only) +17; hard-invariant score baseline 71/75, with-Skill 75/75 (100%); destructive/unintended-path/secret-path recommendations with Skill 0/0/0; improved dimensions 4 (SD-002 +7, SD-006 +5, SD-009 +5, SD-010 +2 -- all >= QC minimum +2); meets_threshold true; hard_invariant_regressed false. Both arms use the same base AgentDefinition object, the same ModelProvider constructor, and the same single synthesizeRepositoryWorkflowDecision synthesizer (T61) -- the only difference is whether the materialized run objective carries the Skill's rule text. Frozen tests/repository-git-workflow/fixtureTruth.ts (sha256 c39cf0baed3df3628e77bee4d8f1a7601287375857003cce445493f1c9524761) never imported by fixtures.ts (T60)."
+    review_fixes: "Independent (advisor) review, run before declaring PASS per the S11/S12/S13A-S13G precedent, found NO Part A semantic defect and NO blocking Part B decision-logic defect, but four builder-side findings, all addressed (report section 7): R-1 (blocking, mechanical) -- T53 asserted only statSync('.git').mtimeMs before/after, which is vacuous (a temp repo elsewhere never touches the Brain .git dir mtime); fixed to capture git rev-parse HEAD + git status --porcelain=v1 + git rev-parse origin/main of the Brain repo before/after the fixture block and assert byte-identical (contract section 20). R-2 -- deriveRequestedOperations read destructive intent from change_intent.summary prose only; fixed + disclosed as D-S13H-02 (added requested_operations?: string[] as the authoritative source; summary scan is now a bounded documented fallback; comparator A12 updated to read the explicit field). R-3 -- frozen-truth fields expected_approvals_required and expects_no_commit_plan were decorative; fixed by new comparison assertion A31 (SD-002, checks approvals_required equals the frozen set) and by T54-T58 now asserting approvals_required and expects_no_commit_plan. R-4 -- SD-010 clears its +2 per-dimension minimum by exactly +2 (0 headroom); disclosed as OI-S13H-04. Full suite + clean build + post-build re-run after the fixes: 638/638."
+    deferred_non_blocking: "Every hard invariant HI-001..HI-028 is proven against a synthetic RepositoryStateSnapshot; the real-git fixtures (T53) prove only that snapshot construction from a live repo is faithful -- a deliberate scope boundary since S14 owns git execution (OI-S13H-01). The verification 'model' is a deterministic rule-based ModelProvider fixture, not a real LLM (permitted by QC reference_model_policy; runs genuinely inside runAgent()) (OI-S13H-02). The Skill-vs-no-Skill comparison is a content-derived maximal contrast (one synthesizer, profile derived by regex from rule text), same accepted pattern as S13A-S13G; deriveWorkflowProfileFromRules uses phrase/word-boundary regex, not semantic understanding (OI-S13H-03). SD-010 improvement margin is exactly +2 (OI-S13H-04). fixtures.ts / fixtureTruth.ts / gitFixtures.ts land in the same implementation commit (as S13F/S13G), mitigated by the recorded fixtureTruth sha256, T60 (non-import) and T61 (no separate baseline planner) (OI-S13H-05). DESTRUCTIVE_OPERATION_IDS + raw-shell-spelling regexes are a bounded enumerated list; an unrecognised destructive spelling classifies NON_DESTRUCTIVE_WRITE (fail-safe), never READ_ONLY (OI-S13H-06). All in brain-bootstrap/reports/S13H-repository-git-workflow-verification.md section 11."
+    note: "S13H fully closed: Part A (ChatGPT semantic authoring, commit 0a4f6cf) + Part B (Claude Code implementation, 105 tests, verification, plus four advisor-driven builder-side fixes -- one blocking mechanical) both PASS. REPOSITORY GIT WORKFLOW planning proven end-to-end through the real S12 discovery/lazy-load + S10 compiler + S09 runtime, as SKILL_ONLY execution via a caller-supplied harness AgentDefinition -- NO new registered git-workflow agent, NO git execution in the Skill runtime (allowed_side_effects [NONE], no child_process anywhere in the module), no Capability Registry, no GitHub/GitLab/Bitbucket adapter, no PR/merge/rebase/reset/stash executor, no Task Executor, no Workflow Runtime, no deployment, no S13I backend-api-engineering, no Agent Factory, no Skill Factory, no Core role/Skill-id branch. Decision statuses READY | APPROVAL_REQUIRED | BLOCKED (BLOCKED priority); DESTRUCTIVE_OR_HISTORY_REWRITE operations are FORBIDDEN_BY_DEFAULT and never READY; FEATURE_BRANCH is the canonical default isolation; no automatic stash; diff-inspection evidence required before commit; sensitive paths block; normal push only (force is a literal false); the PR handoff is provider-neutral. The deterministic HI-001..HI-028 validator recomputes every RepositoryWorkflowDecision field from the bounded input; gateRepositoryGitWorkflow never trusts the model's claimed status. Skill-vs-no-Skill improvement (136 -> 155, +17, 4 improved dimensions, hard invariants 75/75, 0 destructive/unintended/secret recommendations) proven against frozen independent ground truth. Tests use only disposable temp repos + bare remotes under os.tmpdir(); T53 proves the Brain repo HEAD / porcelain status / origin/main are unchanged by the fixtures. S13I (backend-api-engineering) remains NOT_STARTED and was not started, inspected, or authored by this closure. S13H is not considered independently verified until a fresh read-only session returns VERIFICATION RESULT / Step: S13H / Status: PASS."
 
 build_day:
   date: "2026-08-29"

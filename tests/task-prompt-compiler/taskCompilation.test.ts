@@ -822,9 +822,13 @@ describe("T50 — the full prior regression surface remains green", () => {
     }
   });
 
-  it("the reference Skill catalog has 10 entries and every pre-S13G entry is untouched", () => {
+  it("the reference Skill catalog's first 10 entries (through S13G) are untouched and in order", () => {
+    // Mechanical relaxation for S13H: it registers an 11th reference Skill.
+    // Mirrors the S13D->S13E, S13E->S13F and S13F->S13G prior-test relaxations.
+    // NOT an S13G semantic change.
     const ids = referenceSkillCatalogEntries.map((e) => e.descriptor.id);
-    expect(ids).toEqual([
+    expect(ids.length).toBeGreaterThanOrEqual(10);
+    expect(ids.slice(0, 10)).toEqual([
       "research.evidence-grounded.s11",
       "reference.summarize.v1",
       "reference.format-check.v1",

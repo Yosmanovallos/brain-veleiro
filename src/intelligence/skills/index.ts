@@ -10,6 +10,7 @@ import { softwareArchitectureS13D } from "./definitions/softwareArchitectureS13D
 import { agentEngineeringS13E } from "./definitions/agentEngineeringS13E.js";
 import { implementationPlanningS13F } from "./definitions/implementationPlanningS13F.js";
 import { taskPromptCompilerS13G } from "./definitions/taskPromptCompilerS13G.js";
+import { repositoryGitWorkflowS13H } from "./definitions/repositoryGitWorkflowS13H.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
@@ -21,6 +22,7 @@ export { softwareArchitectureS13D } from "./definitions/softwareArchitectureS13D
 export { agentEngineeringS13E } from "./definitions/agentEngineeringS13E.js";
 export { implementationPlanningS13F } from "./definitions/implementationPlanningS13F.js";
 export { taskPromptCompilerS13G } from "./definitions/taskPromptCompilerS13G.js";
+export { repositoryGitWorkflowS13H } from "./definitions/repositoryGitWorkflowS13H.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -76,5 +78,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(taskPromptCompilerS13G),
     load_definition: async () => taskPromptCompilerS13G,
+  },
+  {
+    descriptor: toSkillDescriptor(repositoryGitWorkflowS13H),
+    load_definition: async () => repositoryGitWorkflowS13H,
   },
 ];
