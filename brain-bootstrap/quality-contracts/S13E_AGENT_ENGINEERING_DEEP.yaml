@@ -1,0 +1,132 @@
+# BRAIN Quality Contract instance
+# S13E — agent-engineering
+
+id: "QC-S13E-AGENT-ENGINEERING-DEEP"
+version: "1.0"
+
+applies_to:
+  type: "AGENT_ENGINEERING"
+  ref: "S13E"
+  title: "Agent necessity and least-privilege Agent design"
+
+depth: "DEEP"
+
+risk: "HIGH"
+ambiguity: "HIGH"
+novelty: "HIGH"
+irreversibility: "HIGH"
+
+selection_rationale: >-
+  S13E decides whether autonomy is warranted and may propose an AgentDefinition
+  controlling tools/capabilities, permissions, memory, termination, and evals.
+  Over-agentification, excessive capability grants, unsafe memory, or weak stop
+  conditions can create durable downstream operational and security risk.
+  DEEP is therefore the minimum quality depth for this bootstrap step even though
+  the S13E executing Agent itself is read-only.
+
+mandatory_depth_floor:
+  applied: true
+  depth: "DEEP"
+  reason: >-
+    Agent necessity and authority design determine whether later execution becomes
+    adaptive, stateful, tool-using, and potentially persistent. These choices must
+    be challenged before a proposed AgentDefinition is approved.
+
+resource_constraints:
+  time_limit: >-
+    Use the executing agent-engineer-v1 limits. If safe design evidence is missing,
+    return BLOCKED instead of inventing capabilities, permissions, memory, output
+    schemas, Quality Contract refs, or iteration budgets.
+  token_or_compute_limit: >-
+    Use one bounded work unit, optional relevant architecture context, at most ten
+    existing Agent descriptors, twenty Skill IDs, and twenty capability descriptors.
+    Do not load full catalogs.
+  tooling_limit: >-
+    S13E uses zero tools/capabilities. It designs declared capabilities from bounded
+    metadata but never invokes, registers, or implements them.
+  scope_reduction_if_needed: >-
+    Return NO_AGENT or BLOCKED when the safe design contract cannot be completed
+    within bounded evidence. Do not compensate by widening autonomy.
+
+evidence:
+  required: true
+  primary_sources_preferred: true
+  cross_validation: false
+  recency_required: false
+  recency_expectation: >-
+    Current Agent/capability/Skill descriptors must reflect the current bounded
+    design context. S13E does not independently research catalog freshness.
+  minimum_source_quality: "EXPLICIT_WORK_UNIT_OR_VERIFIED_REPOSITORY_CONTEXT"
+  claim_traceability_required: true
+
+research:
+  knowledge_gaps_required: true
+  alternatives_required: true
+  contradictory_evidence_required: false
+  value_of_information_stop_rule: false
+
+implementation:
+  tests_required: true
+  deterministic_checks_required: true
+  tradeoffs_required: true
+  tests_not_applicable_requires_reason: true
+
+challenge:
+  required: true
+  targets:
+    - "AGENT_NECESSITY"
+    - "OVER_AGENTIFICATION"
+    - "LEAST_PRIVILEGE"
+    - "MEMORY_POLICY"
+    - "TERMINATION"
+    - "EVAL_DESIGN"
+
+verification:
+  independent_review_required: true
+  evidence_backed_pass_required: true
+
+uncertainty:
+  explicit: true
+  residual_unknowns_required: true
+  limitations_required: true
+
+definition_of_done:
+  requirements:
+    - "Agent necessity is decided before Agent design."
+    - "Complexity or LLM usage alone never triggers Agent creation."
+    - "Deterministic work can produce NO_AGENT + DETERMINISTIC_FUNCTION."
+    - "One-pass semantic-guidance work can produce NO_AGENT + SKILL_ONLY."
+    - "The canonical adaptive-loop fixture produces AGENT_REQUIRED."
+    - "Existing-Agent reuse is preferred when explicit compatibility evidence supports it."
+    - "A new Agent is designed only when no compatible supplied existing Agent is available."
+    - "agent-engineer-v1 itself has zero tools and zero capabilities."
+    - "Every candidate AgentDefinition passes the existing S10 validator."
+    - "Candidate tools and capabilities are identical."
+    - "Every selected capability exists in the bounded available-capability input."
+    - "Capability selection is least privilege."
+    - "Permissions are no broader than required side-effect classes."
+    - "Within-run state and cross-run memory remain distinct."
+    - "Cross-run memory is disabled unless explicitly required."
+    - "commit_verified_memory remains false for S13E v1 candidate designs."
+    - "Delegation remains false."
+    - "Termination uses canonical S09/S10 semantics."
+    - "Candidate limits do not exceed the explicit work-unit iteration budget."
+    - "Candidate output schema and rubric ref come from explicit work-unit input."
+    - "Candidate eval plan covers success, output, least privilege, termination, and negative/safety behavior."
+    - "Missing required capability/schema/rubric/bounds produces BLOCKED rather than fabrication."
+    - "Optional S13D input remains immutable."
+    - "Every S13E result is PROPOSED and requires human approval."
+    - "No candidate Agent is automatically registered, activated, committed, or deployed."
+    - "Skill-vs-baseline metrics use independent test-only fixture truth."
+    - "The Skill-assisted run strictly improves canonical necessity/design safety metrics versus the no-Skill baseline."
+    - "No Agent Factory, multi-agent runtime, Capability Registry, MCP, or later-step orchestration is introduced."
+    - "S13F remains NOT_STARTED at S13E closure."
+    - "Typecheck, full tests, clean build, and post-build regression all pass."
+
+approval:
+  selected_by: "ChatGPT S13E semantic authoring gate"
+  approved_by: "PENDING_S13E_INDEPENDENT_VERIFIER"
+  approved_at: "PENDING_S13E_CLOSURE"
+  notes: >-
+    This Quality Contract governs the S13E design proposal. It does not authorize
+    automatic activation of any candidate AgentDefinition.
