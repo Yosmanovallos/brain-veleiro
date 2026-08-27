@@ -14,7 +14,7 @@ S13E (agent-engineering) is fully closed with `PASS` (Part A + Part B). The next
 `main`
 
 **HEAD:**
-`(set by this closure's commit — see the COMMIT section of the final STEP_STATUS response)`
+`65ee71a33bedfd53a53fba1520bc76722bed3a97`
 
 **Worktree status:**
 `CLEAN as of this update; verify independently`
