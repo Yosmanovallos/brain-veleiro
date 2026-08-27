@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
-current_step: S13H
+current_step: S13I
 status: PASS
-primary_builder: claude-code
+primary_builder: codex
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-27T18:45:00Z"
+last_verified_at: "2026-08-27T21:45:00Z"
 steps:
   S00: PASS
   S01: PASS
@@ -29,7 +29,7 @@ steps:
   S13F: PASS
   S13G: PASS
   S13H: PASS
-  S13I: NOT_STARTED
+  S13I: PASS
   S13J: NOT_STARTED
   S13K: NOT_STARTED
   S13L: NOT_STARTED
@@ -58,9 +58,9 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 37
-  head_sha: "c4df69f25851b661a2b3456379dbc08d60fd58ca"
-  head_sha_note: "c4df69f is the S13H close (feat) commit 'feat: implement Brain Repository Git Workflow Skill Part B (S13H close)'; this same sha is recorded by the follow-up 'docs: record real HEAD sha in CURRENT.md after S13H close' commit (which carries this refreshed repository block). Part A was committed at 0a4f6cf. Matches the S13G pattern."
+  commits: 39
+  head_sha: "91bdc43e5eff5dd24355a9c0d2af2cefd2eeebfa"
+  head_sha_note: "This is the S13I Part B implementation commit; the follow-up documentation commit records this real implementation checkpoint. Part A was committed at 2963965."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -424,6 +424,33 @@ repository:
     review_fixes: "Independent (advisor) review, run before declaring PASS per the S11/S12/S13A-S13G precedent, found NO Part A semantic defect and NO blocking Part B decision-logic defect, but four builder-side findings, all addressed (report section 7): R-1 (blocking, mechanical) -- T53 asserted only statSync('.git').mtimeMs before/after, which is vacuous (a temp repo elsewhere never touches the Brain .git dir mtime); fixed to capture git rev-parse HEAD + git status --porcelain=v1 + git rev-parse origin/main of the Brain repo before/after the fixture block and assert byte-identical (contract section 20). R-2 -- deriveRequestedOperations read destructive intent from change_intent.summary prose only; fixed + disclosed as D-S13H-02 (added requested_operations?: string[] as the authoritative source; summary scan is now a bounded documented fallback; comparator A12 updated to read the explicit field). R-3 -- frozen-truth fields expected_approvals_required and expects_no_commit_plan were decorative; fixed by new comparison assertion A31 (SD-002, checks approvals_required equals the frozen set) and by T54-T58 now asserting approvals_required and expects_no_commit_plan. R-4 -- SD-010 clears its +2 per-dimension minimum by exactly +2 (0 headroom); disclosed as OI-S13H-04. Full suite + clean build + post-build re-run after the fixes: 638/638."
     deferred_non_blocking: "Every hard invariant HI-001..HI-028 is proven against a synthetic RepositoryStateSnapshot; the real-git fixtures (T53) prove only that snapshot construction from a live repo is faithful -- a deliberate scope boundary since S14 owns git execution (OI-S13H-01). The verification 'model' is a deterministic rule-based ModelProvider fixture, not a real LLM (permitted by QC reference_model_policy; runs genuinely inside runAgent()) (OI-S13H-02). The Skill-vs-no-Skill comparison is a content-derived maximal contrast (one synthesizer, profile derived by regex from rule text), same accepted pattern as S13A-S13G; deriveWorkflowProfileFromRules uses phrase/word-boundary regex, not semantic understanding (OI-S13H-03). SD-010 improvement margin is exactly +2 (OI-S13H-04). fixtures.ts / fixtureTruth.ts / gitFixtures.ts land in the same implementation commit (as S13F/S13G), mitigated by the recorded fixtureTruth sha256, T60 (non-import) and T61 (no separate baseline planner) (OI-S13H-05). DESTRUCTIVE_OPERATION_IDS + raw-shell-spelling regexes are a bounded enumerated list; an unrecognised destructive spelling classifies NON_DESTRUCTIVE_WRITE (fail-safe), never READ_ONLY (OI-S13H-06). All in brain-bootstrap/reports/S13H-repository-git-workflow-verification.md section 11."
     note: "S13H fully closed: Part A (ChatGPT semantic authoring, commit 0a4f6cf) + Part B (Claude Code implementation, 105 tests, verification, plus four advisor-driven builder-side fixes -- one blocking mechanical) both PASS. REPOSITORY GIT WORKFLOW planning proven end-to-end through the real S12 discovery/lazy-load + S10 compiler + S09 runtime, as SKILL_ONLY execution via a caller-supplied harness AgentDefinition -- NO new registered git-workflow agent, NO git execution in the Skill runtime (allowed_side_effects [NONE], no child_process anywhere in the module), no Capability Registry, no GitHub/GitLab/Bitbucket adapter, no PR/merge/rebase/reset/stash executor, no Task Executor, no Workflow Runtime, no deployment, no S13I backend-api-engineering, no Agent Factory, no Skill Factory, no Core role/Skill-id branch. Decision statuses READY | APPROVAL_REQUIRED | BLOCKED (BLOCKED priority); DESTRUCTIVE_OR_HISTORY_REWRITE operations are FORBIDDEN_BY_DEFAULT and never READY; FEATURE_BRANCH is the canonical default isolation; no automatic stash; diff-inspection evidence required before commit; sensitive paths block; normal push only (force is a literal false); the PR handoff is provider-neutral. The deterministic HI-001..HI-028 validator recomputes every RepositoryWorkflowDecision field from the bounded input; gateRepositoryGitWorkflow never trusts the model's claimed status. Skill-vs-no-Skill improvement (136 -> 155, +17, 4 improved dimensions, hard invariants 75/75, 0 destructive/unintended/secret recommendations) proven against frozen independent ground truth. Tests use only disposable temp repos + bare remotes under os.tmpdir(); T53 proves the Brain repo HEAD / porcelain status / origin/main are unchanged by the fixtures. S13I (backend-api-engineering) remains NOT_STARTED and was not started, inspected, or authored by this closure. S13H is not considered independently verified until a fresh read-only session returns VERIFICATION RESULT / Step: S13H / Status: PASS."
+
+  backend_api_engineering:
+    status: PASS
+    independent_verification: REQUIRED
+    part_a_integrated_at: "2026-08-27T20:10:00Z"
+    part_b_implemented_at: "2026-08-27T21:45:00Z"
+    part_a_commit: "29639651634d7ba38e6ee4dd61874a5bedbddafb"
+    part_b_commit: "91bdc43e5eff5dd24355a9c0d2af2cefd2eeebfa"
+    paths_part_a:
+      - brain-bootstrap/skills/BACKEND_API_ENGINEERING_SKILL_S13I.md
+      - brain-bootstrap/quality-contracts/S13I_BACKEND_API_ENGINEERING_DEEP.yaml
+      - brain-bootstrap/specs/BACKEND_API_ENGINEERING_CONTRACT_S13I.md
+    paths_part_b:
+      - src/intelligence/backend-api-engineering/
+      - src/intelligence/skills/definitions/backendApiEngineeringS13I.ts
+      - src/intelligence/skills/index.ts (modified: append-only 12th Skill registration)
+      - tests/backend-api-engineering/
+      - tests/repository-git-workflow/repositoryGitWorkflow.test.ts (mechanical prior-step relaxation only)
+      - brain-bootstrap/reports/S13I-backend-api-engineering-verification.md
+      - brain/context/handoffs/2026-08-27T214500Z-s13i-independent-verification-required.md
+    execution_model: "SKILL_ONLY through unchanged S12 metadata-only discovery/lazy load -> S10 compileAgentDefinition -> S09 runAgent with a caller-supplied generic host; no S13I AgentDefinition or Core branch."
+    contract_tests: "T1-T92 mapped to 66 executable focused tests: 6 canonical positives, 28 canonical negatives, built-in HTTP realism, runtime/gate/source audits and OI-A-safe scoring. Full suite 704/704 (638 prior + 66 S13I)."
+    quality_checks: "Part A diff from 2963965 empty; typecheck 0 errors; focused 66/66; full 704/704 before and after clean build; build PASS; git diff --check PASS; package manifests unchanged."
+    skill_vs_no_skill: "Same 6 inputs/host/provider/runtime/parser/gate; only rule prose differs. Baseline 71/186, Skill 186/186, dimension-specific delta +115, all 10 dimensions improved, 18 scored assertions per dimension, max single share <=0.20, hard invariants 120/120, unsafe auth/leak/direct-persistence/framework/future counters 0, threshold PASS, no hard-invariant regression. Cross-cutting XC-A excluded from dimension qualification."
+    review_fixes: "Builder read-only review fixed bounded SQL/ORM token matching and strengthened full decision recomputation for boundary_map, observability allowlist/redaction, compatibility pagination/rate-limit, blockers and injected multi-operation inputs. All QA rerun afterward."
+    boundaries: "No Brain HTTP server, web framework, auth provider, DB/ORM/schema/migration, retry/backoff/idempotency store, observability vendor, OpenAPI source inversion, Capability Registry, S13J/S13L/S13O/S13P/S14 implementation, new runtime dependency or persistent network handle."
+    note: "S13I builder closure PASS. Fresh independent read-only verification is mandatory before S13J; S13J remains NOT_STARTED."
 
 build_day:
   date: "2026-08-29"
