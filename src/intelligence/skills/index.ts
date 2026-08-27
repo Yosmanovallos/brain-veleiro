@@ -9,6 +9,7 @@ import { deepResearchS13C } from "./definitions/deepResearchS13C.js";
 import { softwareArchitectureS13D } from "./definitions/softwareArchitectureS13D.js";
 import { agentEngineeringS13E } from "./definitions/agentEngineeringS13E.js";
 import { implementationPlanningS13F } from "./definitions/implementationPlanningS13F.js";
+import { taskPromptCompilerS13G } from "./definitions/taskPromptCompilerS13G.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
@@ -19,6 +20,7 @@ export { deepResearchS13C } from "./definitions/deepResearchS13C.js";
 export { softwareArchitectureS13D } from "./definitions/softwareArchitectureS13D.js";
 export { agentEngineeringS13E } from "./definitions/agentEngineeringS13E.js";
 export { implementationPlanningS13F } from "./definitions/implementationPlanningS13F.js";
+export { taskPromptCompilerS13G } from "./definitions/taskPromptCompilerS13G.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -70,5 +72,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(implementationPlanningS13F),
     load_definition: async () => implementationPlanningS13F,
+  },
+  {
+    descriptor: toSkillDescriptor(taskPromptCompilerS13G),
+    load_definition: async () => taskPromptCompilerS13G,
   },
 ];
