@@ -14,7 +14,7 @@ S13F (implementation-planning) is fully closed with `PASS` (Part A + Part B). Th
 `main`
 
 **HEAD:**
-`recorded in the follow-up "docs: record real HEAD sha" commit; verify with git rev-parse HEAD`
+`0adae71a723187dca6531b8c8ec5924537ffcfd2` (the S13F close commit; this line is set by the follow-up "docs: record real HEAD sha" commit — verify with `git rev-parse HEAD`)
 
 **Worktree status:**
 `CLEAN as of this update; verify independently`
