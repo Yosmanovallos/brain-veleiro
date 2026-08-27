@@ -14,7 +14,7 @@ S13H (repository-git-workflow) is fully closed with `PASS` (Part A + Part B) by 
 `main`
 
 **HEAD:**
-`0a4f6cf96b4e8ff345c150a69cb7375da461f9bc` (the S13H Part A commit `docs: integrate Brain S13H Part A (ChatGPT authoring)`; this line is replaced with the S13H close `feat:` commit sha by the follow-up "docs: record real HEAD sha" commit — verify with `git rev-parse HEAD`)
+`c4df69f25851b661a2b3456379dbc08d60fd58ca` (the S13H close commit `feat: implement Brain Repository Git Workflow Skill Part B (S13H close)`; this line is set by the follow-up "docs: record real HEAD sha" commit — verify with `git rev-parse HEAD`)
 
 **Worktree status:**
 `CLEAN as of this update (apart from the retained untracked scaffolding .md files); verify independently`

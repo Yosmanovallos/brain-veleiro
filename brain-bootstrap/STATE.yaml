@@ -58,9 +58,9 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 36
-  head_sha: "0a4f6cf96b4e8ff345c150a69cb7375da461f9bc"
-  head_sha_note: "0a4f6cf is the S13H Part A commit (docs: integrate Brain S13H Part A). The S13H close (feat) commit sha and the final commit count are recorded by the follow-up 'docs: record real HEAD sha in CURRENT.md after S13H close' commit, matching the S13G pattern."
+  commits: 37
+  head_sha: "c4df69f25851b661a2b3456379dbc08d60fd58ca"
+  head_sha_note: "c4df69f is the S13H close (feat) commit 'feat: implement Brain Repository Git Workflow Skill Part B (S13H close)'; this same sha is recorded by the follow-up 'docs: record real HEAD sha in CURRENT.md after S13H close' commit (which carries this refreshed repository block). Part A was committed at 0a4f6cf. Matches the S13G pattern."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
