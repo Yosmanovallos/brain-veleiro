@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S13E (agent-engineering) is fully closed with `PASS` (Part A + Part B). The next objective is to begin S13F (implementation-planning) only when explicitly authorized — it has not been started.
+S13F (implementation-planning) is fully closed with `PASS` (Part A + Part B). The next objective is to begin S13G (task-prompt-compiler) only when explicitly authorized — it has not been started.
 
 ## Current Repository State
 
@@ -14,29 +14,29 @@ S13E (agent-engineering) is fully closed with `PASS` (Part A + Part B). The next
 `main`
 
 **HEAD:**
-`65ee71a33bedfd53a53fba1520bc76722bed3a97`
+`recorded in the follow-up "docs: record real HEAD sha" commit; verify with git rev-parse HEAD`
 
 **Worktree status:**
 `CLEAN as of this update; verify independently`
 
 **Last independently verified at:**
-`2026-08-27T05:19:00Z`
+`2026-08-27T06:29:59Z`
 
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-27T051900Z-s13e-to-s13f-handoff.md`
+`brain/context/handoffs/2026-08-27T063000Z-s13f-to-s13g-handoff.md`
 
 **Handoff status:**
 `VERIFIED`
 
 ## Current Status
 
-S00–S13E: `PASS`. S13E closed with Part A (ChatGPT semantic authoring, commit `fa064d6`) + Part B (Claude Code implementation: typed `agent-engineering.design.s13e` Skill, new independent `agent-engineer-v1` AgentDefinition, `AgentEngineeringInput`/`AgentEngineeringResult` types, Agent-necessity classifier, reuse selector, proposed-AgentDefinition builder + shared `computeDesignGaps`, deterministic result validator, suite-level Skill-vs-baseline comparison metrics, T1–T30, verification report, independent review with two advisor-driven validator fixes). S13F: `NOT_STARTED`. Baseline: typecheck 0 errors, full test suite 385/385 PASS (325 pre-existing + 60 new).
+S00–S13F: `PASS`. S13F closed with Part A (ChatGPT semantic authoring — `IMPLEMENTATION_PLANNING_SKILL_S13F.md`, `S13F_IMPLEMENTATION_PLANNING_DEEP.yaml`, `IMPLEMENTATION_PLANNING_AGENT_SPEC_S13F.md`, integrated verbatim) + Part B (Claude Code implementation: `src/intelligence/implementation-planning/` module — typed `ImplementationPlanningInput`/`ImplementationPlanResult`, ordered-predicate approval classifier, static DAG analyzer, input-derived coverage, deterministic Markdown renderer, HI-001..HI-018 validator with full anti-self-certification recompute, `planImplementation()` Skill-execution bridge; new typed `intelligence.implementation-planning.s13f` Skill registered as the 9th reference Skill; 25-assertion counted comparison model; `SKILL-ARTIFACT-1..4` + T1–T34 + one advisor-driven regression, `67` new tests; verification report; independent review with one validator fix). Execution is `SKILL_ONLY` — **no new AgentDefinition**; the Skill runs through the unchanged S12→S10→S09 path via a caller-supplied harness. S13G: `NOT_STARTED`. Baseline: typecheck 0 errors, full suite `452/452` PASS (`385` pre-existing + `67` new).
 
 ## Next Exact Action
 
-Do not start S13F automatically. When authorized, confirm S13F's exact canonical objective directly from `.claude/skills/brain-build-day-bootstrap/SKILL.md` (not from memory) before any authoring preflight.
+Do not start S13G. When authorized, confirm S13G's exact canonical objective and Entrada/Salida directly from `.claude/skills/brain-build-day-bootstrap/SKILL.md` (lines 1041–1063, not from memory) before any authoring preflight. S13G is inside the ChatGPT Authoring Gate (`3.1`, "todos los S13x").
 
 ### Operating Rule
 

@@ -903,8 +903,12 @@ describe("T30 — full regression", () => {
     expect(agentEngineerDefinition).toEqual(before);
   });
 
-  it("the reference Skill catalog now has 8 entries including agent-engineering.design.s13e, S13A-S13D untouched", () => {
-    expect(referenceSkillCatalogEntries.length).toBe(8);
+  it("the reference Skill catalog has at least 8 entries including agent-engineering.design.s13e, S13A-S13D untouched", () => {
+    // Count is >= 8: S13F later registered a 9th reference Skill
+    // (implementation-planning.s13f). The S13E guarantee is that its own entry
+    // is present and the S13A-S13D entries are untouched — mirrors the
+    // S13D->S13E `toBe(7)` -> `toBeGreaterThanOrEqual(7)` relaxation.
+    expect(referenceSkillCatalogEntries.length).toBeGreaterThanOrEqual(8);
     const ids = referenceSkillCatalogEntries.map((e) => e.descriptor.id);
     expect(ids).toContain(AGENT_ENGINEERING_SKILL_ID);
     expect(ids).toContain("software-architecture.adr.s13d");

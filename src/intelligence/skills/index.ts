@@ -8,6 +8,7 @@ import { knowledgeGapAnalysisS13B } from "./definitions/knowledgeGapAnalysisS13B
 import { deepResearchS13C } from "./definitions/deepResearchS13C.js";
 import { softwareArchitectureS13D } from "./definitions/softwareArchitectureS13D.js";
 import { agentEngineeringS13E } from "./definitions/agentEngineeringS13E.js";
+import { implementationPlanningS13F } from "./definitions/implementationPlanningS13F.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
@@ -17,6 +18,7 @@ export { knowledgeGapAnalysisS13B } from "./definitions/knowledgeGapAnalysisS13B
 export { deepResearchS13C } from "./definitions/deepResearchS13C.js";
 export { softwareArchitectureS13D } from "./definitions/softwareArchitectureS13D.js";
 export { agentEngineeringS13E } from "./definitions/agentEngineeringS13E.js";
+export { implementationPlanningS13F } from "./definitions/implementationPlanningS13F.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -64,5 +66,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(agentEngineeringS13E),
     load_definition: async () => agentEngineeringS13E,
+  },
+  {
+    descriptor: toSkillDescriptor(implementationPlanningS13F),
+    load_definition: async () => implementationPlanningS13F,
   },
 ];

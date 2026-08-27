@@ -1,0 +1,314 @@
+id: S13F_IMPLEMENTATION_PLANNING_DEEP
+version: 1.0.0
+step: S13F
+name: implementation-planning
+depth: DEEP
+status: CANONICAL
+
+purpose: >-
+  Verify that S13F converts an approved bounded Spec and upstream architecture /
+  agent-design decisions into a traceable P0/P1/P2 implementation plan made of
+  small verifiable tasks, without activating proposals or pulling Stage 11
+  task-compilation scope forward.
+
+rationale:
+  risk: HIGH
+  ambiguity: HIGH
+  novelty: HIGH
+  downstream_impact: HIGH
+  reversibility: MEDIUM
+  explanation: >-
+    Planning determines implementation scope, task boundaries, dependencies,
+    verification obligations, and the task units consumed by S13G. Semantic
+    defects propagate downstream and may multiply cost or invalidate evidence.
+
+hard_invariants:
+  - id: HI-001
+    rule: approved_spec_required
+    pass: "Spec approval status is APPROVED for READY or PROVISIONAL planning."
+  - id: HI-002
+    rule: no_rejected_material_decision
+    pass: "REJECTED architecture or applicable agent-design input produces BLOCKED."
+  - id: HI-003
+    rule: agent_design_applicability_complete
+    pass: "APPLICABLE requires AgentEngineeringResult plus ApprovalSnapshot."
+  - id: HI-004
+    rule: required_scope_covered
+    pass: "Every REQUIRED requirement is mapped to P0 or has an explicit blocker."
+  - id: HI-005
+    rule: p0_dependency_integrity
+    pass: "No P0 task depends on P1 or P2."
+  - id: HI-006
+    rule: p1_dependency_integrity
+    pass: "No P1 task depends on P2."
+  - id: HI-007
+    rule: dependency_dag_valid
+    pass: "All dependencies resolve, have no self-edge, no duplicate edge, and no cycle."
+  - id: HI-008
+    rule: one_milestone_per_task
+    pass: "Every task belongs to exactly one milestone."
+  - id: HI-009
+    rule: task_acceptance_present
+    pass: "Every non-blocker task has at least one acceptance criterion."
+  - id: HI-010
+    rule: task_evidence_present
+    pass: "Every non-blocker task has at least one evidence requirement."
+  - id: HI-011
+    rule: traceability_present
+    pass: "Every task has at least one material source ref and all refs resolve."
+  - id: HI-012
+    rule: pending_not_activated
+    pass: >-
+      Tasks materially depending on PENDING decisions and their transitive
+      dependents are BLOCKED_PENDING_APPROVAL.
+  - id: HI-013
+    rule: rejected_not_activated
+    pass: "No task is READY_FOR_S13G from a REJECTED material decision."
+  - id: HI-014
+    rule: p0_not_silently_descoped
+    pass: "Stop/de-scope rules protect P0 or explicitly stop/escalate."
+  - id: HI-015
+    rule: s13g_boundary_preserved
+    pass: >-
+      Output contains no Execution Package, task prompt, Context Pack, selected
+      Skills, tools, capabilities bindings, executor limits, executor output
+      contract, Task Executor, or Prompt Compiler.
+  - id: HI-016
+    rule: no_new_planning_agent
+    pass: "S13F does not create a new implementation-planning AgentDefinition."
+  - id: HI-017
+    rule: structured_output_authoritative
+    pass: "plan_markdown is a deterministic rendering of ImplementationPlanResult."
+  - id: HI-018
+    rule: source_denominator_fixed
+    pass: >-
+      Coverage denominators derive from bounded input refs or frozen fixture
+      assertions and are not chosen from planner output.
+
+semantic_dimensions:
+  - id: SD-001
+    name: scope_priority_correctness
+    checks:
+      - REQUIRED is represented in P0 or explicit blocker.
+      - SHOULD defaults to P1 unless a traceable rationale justifies otherwise.
+      - OPTIONAL defaults to P2 unless a traceable rationale justifies otherwise.
+      - Minimum successful outcome is represented by P0.
+  - id: SD-002
+    name: task_atomicity
+    checks:
+      - One observable primary outcome per task.
+      - Independently acceptable outcomes are split.
+      - Independent implementation surfaces are split unless atomicity is justified.
+  - id: SD-003
+    name: verifiability
+    checks:
+      - Acceptance conditions are binary enough for PASS/FAIL.
+      - Evidence is sufficient to demonstrate completion.
+      - Manual review carries a deterministic-insufficiency rationale.
+  - id: SD-004
+    name: dependency_quality
+    checks:
+      - Dependencies represent actual prerequisites.
+      - DAG is acyclic.
+      - Priority-direction invariants hold.
+      - Milestone order is dependency-consistent.
+  - id: SD-005
+    name: traceability_and_coverage
+    checks:
+      - Material refs resolve.
+      - No invented material refs.
+      - Unmapped material refs are explicit.
+      - Coverage counts use source-derived denominators.
+  - id: SD-006
+    name: approval_safety
+    checks:
+      - PENDING is never treated as approved.
+      - REJECTED blocks.
+      - PENDING blockers propagate transitively.
+      - Candidate AgentDefinitions are never activated by planning.
+  - id: SD-007
+    name: stage_boundary
+    checks:
+      - Plan items remain Stage 10 artifacts.
+      - No Stage 11 package fields appear.
+  - id: SD-008
+    name: risk_and_descope_quality
+    checks:
+      - Highest-risk assumptions are surfaced.
+      - Stop/de-scope rules are actionable.
+      - P2 is de-scoped before P1.
+      - P0 is protected.
+
+fixtures:
+  minimum_positive: 3
+  minimum_negative: 5
+
+  canonical_positive:
+    id: FX-POS-001
+    title: approved_spec_approved_decisions_ready_plan
+    input_shape:
+      spec:
+        approval: APPROVED
+        requirements:
+          - ref: R-001
+            priority: REQUIRED
+            statement: "Validate authenticated requests server-side."
+          - ref: R-002
+            priority: REQUIRED
+            statement: "Record auditable security-relevant events."
+          - ref: R-003
+            priority: SHOULD
+            statement: "Provide an operator-facing audit view."
+          - ref: R-004
+            priority: OPTIONAL
+            statement: "Export audit events for offline analysis."
+        non_functional_requirements:
+          - ref: NFR-001
+            statement: "Secrets must not appear in logs."
+        constraints:
+          - ref: C-001
+            statement: "Preserve the existing public API contract."
+        assumptions:
+          - ref: A-001
+            statement: "Existing request identity can be resolved before protected handlers."
+        acceptance_criteria:
+          - ref: AC-001
+            success_condition: "Unauthenticated protected requests are rejected."
+          - ref: AC-002
+            success_condition: "Security events are recorded without secret values."
+      architecture:
+        approval: APPROVED
+      agent_design_applicability: NOT_APPLICABLE
+    required_assertions:
+      - "Result status is READY."
+      - "R-001 is covered by P0."
+      - "R-002 is covered by P0."
+      - "R-003 is P1 by default."
+      - "R-004 is P2 by default."
+      - "No P0 task depends on P1 or P2."
+      - "Every task has acceptance."
+      - "Every task has evidence."
+      - "C-001 is traceable where material."
+      - "NFR-001 is traceable where material."
+      - "No S13G-forbidden field is emitted."
+
+  additional_positive_requirements:
+    - id: FX-POS-002
+      purpose: pending_architecture_produces_provisional_plan
+      required_assertions:
+        - "Spec is APPROVED."
+        - "Architecture approval is PENDING."
+        - "Result status is PROVISIONAL."
+        - "Architecture-dependent tasks are BLOCKED_PENDING_APPROVAL."
+        - "Transitive dependents are blocked."
+        - "The proposal is not activated."
+    - id: FX-POS-003
+      purpose: applicable_approved_agent_decision_is_referenced_not_activated
+      required_assertions:
+        - "Agent-design applicability is APPLICABLE."
+        - "AgentEngineeringResult is present and APPROVED."
+        - "Relevant tasks may carry agent decision refs."
+        - "AgentDefinition ref is present only when the approved decision requires one."
+        - "S13F does not create an AgentDefinition."
+
+  canonical_negative:
+    - id: FX-NEG-001
+      condition: "Spec approval is PENDING or REJECTED."
+      expected: "BLOCKED and no executable task plan."
+    - id: FX-NEG-002
+      condition: "Candidate plan contains A depends_on B and B depends_on A."
+      expected: "Validator rejects dependency cycle."
+    - id: FX-NEG-003
+      condition: "P0 task depends on P1 or P2."
+      expected: "Validator rejects priority dependency violation."
+    - id: FX-NEG-004
+      condition: "Task lacks acceptance or evidence."
+      expected: "Validator rejects task."
+    - id: FX-NEG-005
+      condition: "agent_design_applicability is APPLICABLE but AgentEngineeringResult is absent."
+      expected: "BLOCKED."
+    - id: FX-NEG-006
+      condition: "Plan emits tools, Context Pack, prompt instructions, or Execution Package fields."
+      expected: "Boundary validator rejects output."
+    - id: FX-NEG-007
+      condition: "Task cites an unknown material R-/NFR-/C-/A-/AC- ref."
+      expected: "Traceability validator rejects output."
+
+ground_truth_policy:
+  construction: HAND_AUTHORED_BEFORE_RUN
+  denominator: FROZEN_ASSERTION_SET
+  material_ref_policy: >-
+    Fixtures explicitly identify material refs. Incidental source mentions are
+    not silently promoted into the denominator.
+  omissions: FAIL
+  invented_material_refs: FAIL
+  post_hoc_denominator_changes: FORBIDDEN
+
+skill_vs_no_skill_evaluation:
+  same_model_provider_harness: true
+  same_bounded_input: true
+  same_frozen_ground_truth: true
+  minimum_evaluable_fixtures: 3
+  minimum_assertions_per_suite: 18
+  hard_invariant_score_with_skill: 1.0
+  s13g_boundary_violations_with_skill: 0
+  minimum_additional_correct_assertions_total: 4
+  improvement_distribution:
+    minimum_distinct_dimensions: 2
+    minimum_additional_correct_assertions_per_improved_dimension: 2
+  hard_invariant_regression_allowed: false
+  perfect_baseline_policy: >-
+    A fixture on which the no-Skill baseline is already perfect may remain as
+    a regression fixture but cannot be counted as evidence of strict Skill
+    improvement. Replace or add an evaluable fixture rather than manufacture a
+    one-item delta.
+
+reference_model_policy:
+  allowed: true
+  interpretation: >-
+    Deterministic or reference-model harnesses may verify contracts and fixtures.
+    Evidence MUST describe them accurately and MUST NOT claim they are a real
+    production LLM when they are not.
+
+pass_criteria:
+  - "All hard invariants pass."
+  - "All canonical negative fixtures fail in the required way."
+  - "At least three positive/evaluable fixtures satisfy frozen ground truth."
+  - "Skill-vs-no-Skill improvement threshold passes."
+  - "No material ref-resolution ambiguity remains hidden."
+  - "No S13G scope is pulled forward."
+  - "typecheck passes."
+  - "full test suite passes."
+  - "clean build passes."
+  - "post-build full test suite passes."
+  - "verification report records evidence and exact counts."
+
+failure_policy:
+  semantic:
+    action: RETURN_TO_CHATGPT_AUTHORING_GATE
+    examples:
+      - priority semantics change
+      - task-boundary semantics change
+      - approval policy change
+      - PASS threshold change
+      - fixture ground-truth change after evaluation
+      - S13G boundary change
+      - new AgentDefinition introduced
+  mechanical:
+    action: CLAUDE_MAY_REPAIR_LOCALLY
+    constraint: "Repair must not alter Part A semantics."
+
+evidence_required:
+  - "Part A byte-for-byte integration evidence."
+  - "Positive fixture evidence."
+  - "Negative fixture evidence."
+  - "Skill-vs-no-Skill ground-truth comparison by dimension."
+  - "DAG / cycle validation evidence."
+  - "Priority dependency validation evidence."
+  - "Approval propagation evidence."
+  - "S13G boundary rejection evidence."
+  - "typecheck result."
+  - "test count before and after."
+  - "clean build result."
+  - "post-build test count."
+  - "independent review result."
