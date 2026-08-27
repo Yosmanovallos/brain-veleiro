@@ -769,7 +769,9 @@ describe("T28 — full regression", () => {
   });
 
   it("S13A/S13B/S13C's own artifacts and tests remain unaffected by the S13D catalog registration", () => {
-    expect(referenceSkillCatalogEntries.length).toBe(7);
+    // Count is >= 7: S13E later registered an 8th reference Skill; the S13D
+    // guarantee is that its own entry is present and S13C's is untouched.
+    expect(referenceSkillCatalogEntries.length).toBeGreaterThanOrEqual(7);
     expect(referenceSkillCatalogEntries.map((e) => e.descriptor.id)).toContain("deep-research.evidence-grounded.s13c");
     expect(referenceSkillCatalogEntries.map((e) => e.descriptor.id)).toContain(SOFTWARE_ARCHITECTURE_SKILL_ID);
   });
