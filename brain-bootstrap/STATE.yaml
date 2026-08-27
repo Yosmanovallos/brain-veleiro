@@ -58,8 +58,9 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 10
-  head_sha: "fbd5af95fb1938c2cb0d5de8bfe896ec27bd594c"
+  commits: 32
+  head_sha: "e6c7bbb3cb21dfaa2b5c29e6ce703bffe8b31224"
+  head_sha_note: "S13G close (feat) commit; a follow-up docs commit records this same sha. Block refreshed at S13G closure -- was stale (commits: 10, head_sha: fbd5af95...) since before S13F (OI-S13G-06)."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"

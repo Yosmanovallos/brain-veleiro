@@ -14,7 +14,7 @@ S13G (task-prompt-compiler) is fully closed with `PASS` (Part A + Part B) by the
 `main`
 
 **HEAD:**
-`__S13G_CLOSE_HEAD__` (the S13G close commit; this line is set by the follow-up "docs: record real HEAD sha" commit — verify with `git rev-parse HEAD`)
+`e6c7bbb3cb21dfaa2b5c29e6ce703bffe8b31224` (the S13G close commit `feat: implement Brain Task Prompt Compiler Part B (S13G close)`; this line is set by the follow-up "docs: record real HEAD sha" commit — verify with `git rev-parse HEAD`)
 
 **Worktree status:**
 `CLEAN as of this update; verify independently`
