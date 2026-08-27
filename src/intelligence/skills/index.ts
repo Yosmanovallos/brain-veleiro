@@ -6,6 +6,7 @@ import { referenceFormatCheck } from "./definitions/referenceFormatCheck.js";
 import { requirementsDiscoveryS13A } from "./definitions/requirementsDiscoveryS13A.js";
 import { knowledgeGapAnalysisS13B } from "./definitions/knowledgeGapAnalysisS13B.js";
 import { deepResearchS13C } from "./definitions/deepResearchS13C.js";
+import { softwareArchitectureS13D } from "./definitions/softwareArchitectureS13D.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
@@ -13,6 +14,7 @@ export { referenceFormatCheck } from "./definitions/referenceFormatCheck.js";
 export { requirementsDiscoveryS13A } from "./definitions/requirementsDiscoveryS13A.js";
 export { knowledgeGapAnalysisS13B } from "./definitions/knowledgeGapAnalysisS13B.js";
 export { deepResearchS13C } from "./definitions/deepResearchS13C.js";
+export { softwareArchitectureS13D } from "./definitions/softwareArchitectureS13D.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -52,5 +54,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(deepResearchS13C),
     load_definition: async () => deepResearchS13C,
+  },
+  {
+    descriptor: toSkillDescriptor(softwareArchitectureS13D),
+    load_definition: async () => softwareArchitectureS13D,
   },
 ];

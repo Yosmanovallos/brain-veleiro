@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
 current_step: S13D
-status: IN_PROGRESS
+status: PASS
 primary_builder: claude-code
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-26T18:45:00Z"
+last_verified_at: "2026-08-26T20:15:00Z"
 steps:
   S00: PASS
   S01: PASS
@@ -24,7 +24,7 @@ steps:
   S13A: PASS
   S13B: PASS
   S13C: PASS
-  S13D: IN_PROGRESS
+  S13D: PASS
   S13E: NOT_STARTED
   S13F: NOT_STARTED
   S13G: NOT_STARTED
@@ -234,17 +234,33 @@ repository:
     note: "S13C fully closed: Part A (ChatGPT semantic authoring) + Part B (Claude Code implementation, tests, verification, plus two advisor-driven fixes) both PASS. Deep Research Agent v1 proven end-to-end through the real S12 discovery/lazy-load + S10 compiler + S09 runtime, as a new independent AgentDefinition (no reuse of researcher-v1/knowledge-gap-analyzer-v1/requirements-discoverer-v1), reusing S11's ResearchResult/validateResearchResult/research.lookup unchanged, never mutating S13B's KnowledgeGapAnalysisResult. S13D (next S13x sub-step) remains NOT_STARTED and was not started by this closure."
 
   software_architecture:
-    status: INTEGRATED_PART_A_ONLY
-    integrated_at: "2026-08-26T18:45:00Z"
-    paths:
+    status: PASS
+    part_a_integrated_at: "2026-08-26T18:45:00Z"
+    part_b_implemented_at: "2026-08-26T20:15:00Z"
+    paths_part_a:
       - brain-bootstrap/skills/SOFTWARE_ARCHITECTURE_SKILL_S13D.md
       - brain-bootstrap/quality-contracts/S13D_SOFTWARE_ARCHITECTURE_DEEP.yaml
       - brain-bootstrap/specs/SOFTWARE_ARCHITECTURE_AGENT_v1.md
+    paths_part_b:
+      - src/intelligence/software-architecture/types.ts
+      - src/intelligence/software-architecture/softwareArchitectureSkill.ts
+      - src/intelligence/software-architecture/materializeSoftwareArchitectureTask.ts
+      - src/intelligence/software-architecture/validateSoftwareArchitectureResult.ts
+      - src/intelligence/software-architecture/compareSoftwareArchitectureRuns.ts
+      - src/intelligence/software-architecture/renderArchitectureDecisionRecord.ts
+      - src/intelligence/agent-definitions/softwareArchitectDefinition.ts
+      - src/intelligence/skills/definitions/softwareArchitectureS13D.ts
+      - src/intelligence/skills/index.ts (modified: registers softwareArchitectureS13D in the shared reference Skill catalog)
+      - tests/software-architecture/fixtures.ts
+      - tests/software-architecture/softwareArchitecture.test.ts
     decided_via: "ChatGPT S13D authoring gate response (1 file delivered by user with three '# File:' sections, integrated verbatim via mechanical sed extraction on exact line boundaries [Skill: lines 83-1743; Quality Contract YAML fence content: lines 1750-1871; Agent spec: lines 1878-3242 of the root transfer copy], verified byte-identical via diff against those exact regions before deletion; embedded YAML block in the Skill file and the standalone Quality Contract YAML file independently parsed with js-yaml to confirm structural validity -- Skill: 24 rules (SA-R1..SA-R24) / 11 procedure steps (SA-P1..SA-P11) / 12 verification checks (SA-V1..SA-V12), requires.skills==[] (no S11/S13C Skill dependency, unlike S13C's dependency on S11); Quality Contract: id=QC-S13D-SOFTWARE-ARCHITECTURE-DEEP, depth=DEEP, risk=HIGH, ambiguity=HIGH, novelty=HIGH, irreversibility=HIGH."
     field_shape_cross_check: "Every AgentDefinition field the proposed software-architect-v1 uses (model_policy, context_policy, tools/skills/capabilities, memory_policy, permissions, delegation, limits, termination, rubric, evals) cross-checked against src/core/agent/definition.ts -- zero mismatches (routing_class QUALITY, context_sources CURRENT_TASK/EXPLICIT_SPEC/VERIFIED_HANDOFF/ADR/COMPILED_KNOWLEDGE all valid AgentContextSource members, retrieval_mode BOUNDED, promotion_policy EXPLICIT_VERIFIED_ONLY, allowed_side_effects [NONE] a valid ToolSideEffectClass, tools==capabilities==[] the same normalized empty set). Every SkillDefinition field cross-checked against src/core/skill/types.ts -- zero mismatches (all 24 rules use level MUST, a valid SkillRuleLevel; all 12 verification checks use DETERMINISTIC, a valid SkillVerificationKind value)."
     resolves_ambiguities: "All 11 open items from Claude Code's S13D authoring-gate handoff prompt are explicitly resolved in SOFTWARE_ARCHITECTURE_AGENT_v1.md's Decision Summary: (1) new independent software-architect-v1 AgentDefinition over the same S10/S09 runtime, does not modify requirements-discoverer-v1/knowledge-gap-analyzer-v1/researcher-v1/deep-researcher-v1; (2) new software-architecture.adr.s13d Skill with requires.skills==[] -- consumes prior evidence but declares no semantic dependency on S11/S13C Skills (unlike S13C's declared dependency on S11); (3) input = explicit architecture_question plus the full S13B KnowledgeGapAnalysisResult (required), optional S13C DeepResearchBatchResult (read-only, must be traceably compatible), optional 0-4 candidate_alternatives; (4) output = typed SoftwareArchitectureDecisionResult containing a structured proposed ADR plus a deterministic Markdown rendering of that same ADR; (5) zero capabilities/tools -- S13D synthesizes already-bounded requirements/knowledge/evidence, never calls research.lookup; (6) dedicated DEEP Quality Contract (risk/ambiguity/novelty/irreversibility all HIGH -- architecture choices are high-impact, cross-cutting, expensive to reverse); (7) the ADR is always PROPOSED with approval_required true, human approval required before ACCEPTED, recommendations remain evidence-traceable; (8) S13D does NOT apply or mutate S13B/S13C closure state -- recommended_closure_state may only inform decision readiness as read-only context, resolving the single most consequential boundary ambiguity the preflight flagged; (9) 9 required comparison metrics (architecture-dimension coverage, hard-constraint coverage, alternative balance, failure-mode coverage, evidence traceability, assumption visibility, security coverage, unsupported-recommendation count, hard-constraint-violation count); (10) canonical positive fixture = offline-capable retail kiosk data architecture (local SQLite+sync vs remote Postgres-only vs local JSON/file), canonical negative fixture = a cloud-only recommendation that ignores an explicit offline hard constraint, operations cost, security, and failure modes; (11) Part B implements typed Skill, software-architect-v1, input/output types, materialization, validator, ADR Markdown renderer, comparison metrics, fixtures, T1-T28, independent review, verification report -- does not implement S13E agent-engineering."
-    implementation_status: "PART_B_NOT_STARTED -- no TypeScript code (typed SkillDefinition, software-architect-v1 AgentDefinition, input/output types, materialization bridge, result validator, ADR Markdown renderer, baseline-comparison metrics module) or tests exist yet for S13D. Only the three canonical semantic artifacts are integrated. Regression check: npm run typecheck (0 errors) and npm test (268/268, unchanged from S13C closure) re-run after integration since this was a docs-only change."
-    note: "brain-bootstrap/STATE.yaml status set to IN_PROGRESS (not PASS) -- S13D PASS requires Part B implementation (T1-T28 per SOFTWARE_ARCHITECTURE_AGENT_v1.md section 25), a deterministic Skill-vs-baseline comparison proven through the real S09/S10/S12 runtime (not fabricated), a verification report, and independent review, per SOFTWARE_ARCHITECTURE_AGENT_v1.md sections 26-27. S11, S13B, and S13C canonical artifacts remain untouched by this integration. S13E remains NOT_STARTED."
+    contract_tests: "T1-T28 all PASS (57 concrete it() cases across 28 canonical test IDs, see brain-bootstrap/reports/S13D-software-architecture-verification.md). 325/325 total vitest assertions (268 unchanged from S13C closure + 57 new)."
+    quality_checks: "npm run typecheck: 0 errors. npm test pre-build: 325/325. rm -rf dist && npm run build: succeeded. npm test post-build: 325/325, unchanged. Mechanical Core-boundary checks pass (no software-architect role/S13D Skill-id conditionals in src/core/, no forbidden Core->providers/intelligence imports, no new package.json/package-lock.json dependency, S11/S13B/S13C canonical artifacts -- markdown/YAML specs and TypeScript implementations -- fully unmodified per git status)."
+    test_coverage_gaps_found_and_fixed: "Independent (advisor) review, run before declaring PASS per the S11/S12/S13A/S13B/S13C precedent, found two real Part B implementation gaps (not Part A semantic defects, so no S13D_FEEDBACK_REQUIRED was warranted): (1) validateSoftwareArchitectureResult() derived its hard-constraint set entirely from the result's own self-reported decision_drivers, so a result declaring decision_drivers: [] while claiming READY_FOR_HUMAN_APPROVAL bypassed both the hard-constraint coverage check (T14) and the recommended-alternative FAIL-rejection check (T15) -- fixed by requiring any non-BLOCKED result to declare >=1 decision_driver and any READY_FOR_HUMAN_APPROVAL result to declare >=1 hard driver; (2) neither the validator nor evidence_traceability_ratio ever checked that a cited evidence_ref resolved to anything real (a fabricated ref scored identically to a genuine S13B item id) -- fixed by adding computeResolvableEvidenceRefs() (S13B item ids union declared driver ids union driver source_refs union S13C evidence refs when supplied), shared by both the validator and the metric so they cannot drift apart. Both fixes verified with a second independent-review pass; 4 new regression tests added (2 rejection cases, 1 T12 S13C-immutability case, 1 T1 rule/procedure/verification id cross-check), raising 53 to 57 it() cases. See brain-bootstrap/reports/S13D-software-architecture-verification.md section 13."
+    deferred_non_blocking: "The Skill-vs-baseline comparison is a hand-authored maximal contrast (naive baseline vs. deliberately rich fixture content), not emergent measurement, matching S13A/S13B/S13C's own baseline pattern. hard_constraint_violation_count's ground-truth fallback (self-reported fit) cannot detect a violation a naive result never reports -- all formal assertions supply ground truth. failure_mode_coverage_ratio/assumption_visibility_ratio fall back to a vacuous ratio of 1 when their ground truth is omitted. GROUND_TRUTH.true_hard_constraint_fit_by_alternative is hardcoded for the C1-hard case and never applied to the mutated fixture by any current test. security_dimension_coverage_ratio's skill-arm value of 1 is structurally guaranteed by fixture content, not emergent. unsupported_recommendation_count is measured/reported but has no strict-inequality assertion. The verification model is a deterministic rule-based ModelProvider fixture, not a real LLM (explicitly permitted by spec; allow_provider_substitution: true). All documented in brain-bootstrap/reports/S13D-software-architecture-verification.md sections 14-15."
+    note: "S13D fully closed: Part A (ChatGPT semantic authoring) + Part B (Claude Code implementation, tests, verification, plus two advisor-driven validator fixes) both PASS. Software Architecture Agent v1 proven end-to-end through the real S12 discovery/lazy-load + S10 compiler + S09 runtime, as a new independent AgentDefinition (no reuse of researcher-v1/knowledge-gap-analyzer-v1/deep-researcher-v1), reusing S13B's KnowledgeGapAnalysisResult and (optionally) S13C's DeepResearchBatchResult unchanged, never mutating either. The ADR is always PROPOSED with approval_required true -- never ACCEPTED by this step. S13E (next S13x sub-step) remains NOT_STARTED and was not started by this closure."
 
 build_day:
   date: "2026-08-29"
