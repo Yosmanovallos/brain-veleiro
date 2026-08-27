@@ -137,8 +137,9 @@ FINISH. It has no `withSkill` / fixture-id / Skill-id branch (`T47`).
 empty budget) · `FX-NEG-016` known secret in context (`SERVICE_TOKEN=SECRET:sk-live-…`).
 
 **Frozen ground-truth isolation:** `tests/task-prompt-compiler/fixtureTruth.ts` (sha256
-`11761ba2a90bdd86992f008cde0ef1c16bcfa3ba13bb18c884cfa97119b7915a`, recorded here **before** the
-comparison figures below were measured) is imported **only** by `compareTaskCompilationRuns` consumers —
+`11761ba2a90bdd86992f008cde0ef1c16bcfa3ba13bb18c884cfa97119b7915a` as committed — unmodified across
+this session, so it pins the exact content that produced the §6 figures) is imported **only** by
+`compareTaskCompilationRuns` consumers —
 **never** by `fixtures.ts` (`T46` asserts: no `import`/`require` of `fixtureTruth`, no
 `TaskCompilationFixtureTruth` token, no truth field name anywhere in `fixtures.ts`, which is where the
 reference `ModelProvider` lives). The runtime path (materializer → provider → assembler → gate →
@@ -147,14 +148,16 @@ were wired into live assertions during review (§7): `non_normative_context_item
 as an independence check, `has_secret_bearing_input` drives `A22`, `expected_status` drives `T41–T44`.
 
 `fixtures.ts` and `fixtureTruth.ts` land in the same implementation commit (as in S13F). Mitigations:
-(a) the sha256 above recorded in this report prior to measurement; (b) `T46` mechanically proves the
+(a) the sha256 above, pinning the exact (session-unmodified) content that produced the §6 figures; (b) `T46` mechanically proves the
 non-import; (c) `T47` proves no separate baseline compiler. See OI-S13G-05.
 
 ---
 
 ## 6. Skill-vs-no-Skill evaluation (COUNTED-ASSERTION model)
 
-Measured from `dist/` after `rm -rf dist && npm run build`, transcribed into `T48`
+Measured through the Vitest suite (`compareTaskCompilationRuns` over `SUITE`) against the post-review
+source, then corroborated by a clean `rm -rf dist && npm run build` plus a post-build full-suite
+re-run producing identical results. Figures are pinned in `T48`
 (`REAL_BASELINE_CORRECT = 56`, `REAL_SKILL_CORRECT = 108`, `REAL_TOTAL_PER_ARM = 108`):
 
 | Metric | Baseline (no-Skill) | With-Skill | Δ |
@@ -204,10 +207,10 @@ Context Pack boundary, instruction provenance, tool/provider neutrality, and the
 
 | # | Finding | Disposition |
 |---|---|---|
-| R-1 (blocking) | `instructions` is the one recomputed-package field with model latitude, and `validateExecutionPackage` only spot-checked it **per instruction** (non-empty id/kind/text, ≥1 resolvable source ref, no non-normative source). Nothing asserted required instructions were **present** — a lazy compile could drop every SPEC/CONSTRAINT/SKILL instruction and still validate. Spec §7.2 makes completeness normative. | **Fixed** (D-060): `HI-014` now also asserts every task-material Spec/NFR ref, every cited constraint ref, and every selected-Skill MUST rule id is represented by some instruction, plus a TASK instruction citing `task:<id>`. Regression added to `T23` (strip to TASK+SAFETY only → `valid: false` with an `HI-014` completeness error); proven to fail pre-fix and pass post-fix. Full suite re-run after the change (every positive fixture passes through this validator). |
+| R-1 (blocking) | `instructions` is the one recomputed-package field with model latitude, and `validateExecutionPackage` only spot-checked it **per instruction** (non-empty id/kind/text, ≥1 resolvable source ref, no non-normative source). Nothing asserted required instructions were **present** — a lazy compile could drop every SPEC/CONSTRAINT/SKILL instruction and still validate. Spec §7.2 makes completeness normative. | **Fixed** (D-060): `HI-014` now also asserts every task-material Spec/NFR ref, every cited constraint ref, and every selected-Skill MUST rule id is represented by some instruction, plus a TASK instruction citing `task:<id>`. Regression added to `T23` (strip to TASK+SAFETY only → `valid: false` with an `HI-014` completeness error). Negative control run at closure: with the completeness block disabled the test **fails** at `expect(v.valid).toBe(false)` (the stripped package validates); with it restored the test **passes** and `git status` is clean again. Full suite re-run after the change (every positive fixture passes through this validator). |
 | R-2 | Three frozen-truth fields (`expected_status`, `non_normative_context_item_ids`, `has_secret_bearing_input`) were never read by any assertion — an independent verifier would read them as decorative. | **Fixed**: `A06`/`A23` now take the non-normative id set from `truth.non_normative_context_item_ids` (turning a self-consistency check into an independence check); `A22` keys off `truth.has_secret_bearing_input`; `T41–T44` assert `out.result.status === truth.expected_status`. Comparison figures re-measured after the change (unchanged: 56 → 108). |
 | R-3 | `T12` tests spec §19 T12 ("capability absent from `AgentDefinition.tools` blocks") by a **direct** `validateTargetExecutionCompatibility` call with a hand-built agent, because the end-to-end path can't reach it (`validateAgentDefinition` enforces `set(tools) == set(capabilities)`). Legitimate, but must be disclosed in the T-mapping. | **Disclosed** — see §8, T12 row, and OI-S13G-01. |
-| R-4 | Committing the whole module at once reproduces the S13F limitation that `HAND_AUTHORED_BEFORE_RUN` for `fixtureTruth.ts` is unverifiable from git history. | **Mitigated**: `fixtureTruth.ts` sha256 recorded in §5 before the §6 figures; disclosed as OI-S13G-05. |
+| R-4 | Committing the whole module at once reproduces the S13F limitation that `HAND_AUTHORED_BEFORE_RUN` for `fixtureTruth.ts` is unverifiable from git history. | **Mitigated**: `fixtureTruth.ts` sha256 in §5 pins the session-unmodified content behind the §6 figures; disclosed as OI-S13G-05. |
 | Minor | `FX_POS_004` shared a `package_id` with `FX-POS-001` (same task id + pack id). | **Fixed**: `FX_POS_004` context pack id → `CP-AUTH-004`. |
 | Minor | Dead `void NAIVE_INSTRUCTION_PROFILE;` with a misleading "load-bearing" comment; `T46` read the same file twice under two names. | **Fixed**: removed the dead statement + its unused import; `T46` reads `fixtures.ts` once. |
 | Minor (kept) | `validateExecutionPackage` HI-017 runs a `pkg.acceptance` vs `task.acceptance` normalize-equality check twice (once via `acceptanceEqual`, once via `stableStringify(normalizeAcceptance(...))`). | **Kept** as intentional belt-and-suspenders; both are input-derived, harmless, and removing risks re-verification churn. |
@@ -247,7 +250,7 @@ it is stated explicitly.
 | T20 evidence mismatch with task blocks | `describe T20` | `FX-NEG-004` | BLOCKED |
 | T21 constraint ref resolution exact; unknown constraint blocks | `describe T21` | task `constraint_ref` not in supplied constraints | BLOCKED |
 | T22 objective preserves task outcome and task ref | `describe T22` | `FX-POS-001` via `runSkill` | `objective.statement === task.outcome`, `objective.task_ref === task.id` |
-| T23 every instruction has allowed valid source ref | `describe T23` (2 `it`s) | (a) `FX-POS-001` — no empty/unresolvable source ref; (b) **completeness regression** — strip to TASK+SAFETY → `valid:false` with `HI-014` completeness error | (b) added by review (D-060/R-1); proven fail pre-fix / pass post-fix |
+| T23 every instruction has allowed valid source ref | `describe T23` (2 `it`s) | (a) `FX-POS-001` — no empty/unresolvable source ref; (b) **completeness regression** — strip to TASK+SAFETY → `valid:false` with `HI-014` completeness error | (b) added by review (D-060/R-1); negative control at closure — fails with the completeness block disabled, passes with it restored |
 | T24 non-normative imperative context cannot become instruction | `describe T24` | `FX-POS-001` via `runSkill` | no instruction sourced from `CI-WORKING-1`; no instruction text == its imperative text |
 | T25 eligible project-instruction item can become sourced POLICY instruction | `describe T25` | `FX-POS-001` via `runSkill` | POLICY instruction cites `context:CI-PROJINSTR-1` |
 | T26 target tool declarations equal validated capability ids, deterministic | `describe T26` | `FX-POS-002` via `runSkill` | `tools == [{id:"repository.read", capability_ref:"repository.read"}]`; `materializeExecutionTools` idempotent |
@@ -329,7 +332,7 @@ profile derivation is content-driven`; `helpers — the gate never trusts the mo
 | OI-S13G-02 | The verification "model" is a deterministic rule-based `ModelProvider` fixture, not a real LLM (permitted by QC `reference_model_policy`; runs genuinely inside `runAgent()`). | LOW | A real `ModelProvider`-driven reasoner behind the same contract |
 | OI-S13G-03 | The Skill-vs-no-Skill comparison is a content-derived maximal contrast (one synthesizer, profile derived by regex from rule text), same accepted pattern as S13A–S13F. | LOW (frozen fixture-truth asserted `T46` to never reach the runtime path; not emergent measurement) | A second independent general compiler, if a future step needs one |
 | OI-S13G-04 | `deriveAssemblyProfileFromRules` uses phrase/word-boundary regex over rule text, not semantic understanding (same class as S13C's disclosed cue checks). | LOW (both extreme arms proven; the middle is not claimed) | A real reasoner or a stricter parser |
-| OI-S13G-05 | `fixtures.ts` and `fixtureTruth.ts` land in the same implementation commit (as in S13F), so `HAND_AUTHORED_BEFORE_RUN` is not provable from git history alone. | LOW | sha256 recorded in §5 before §6 figures; `T46` proves non-import; `T47` proves no separate baseline compiler |
+| OI-S13G-05 | `fixtures.ts` and `fixtureTruth.ts` land in the same implementation commit (as in S13F), so `HAND_AUTHORED_BEFORE_RUN` is not provable from git history alone. | LOW | §5 sha256 pins the session-unmodified content behind the §6 figures; `T46` proves non-import; `T47` proves no separate baseline compiler |
 | OI-S13G-06 | `STATE.yaml` `repository:` block was stale (`commits: 10`, `head_sha: fbd5af95…`) since before S13F. | NONE | Refreshed mechanically in the S13G closure's `docs:` follow-up commit |
 
 ---
