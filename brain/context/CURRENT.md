@@ -14,7 +14,7 @@ S13D (software-architecture) is fully closed with `PASS`. The next objective is 
 `main`
 
 **HEAD:**
-`(set by this closure's commit — see the COMMIT section of the final STEP_STATUS response)`
+`2ace9742cd8418542f88d71a4ded1ea935e6950b`
 
 **Worktree status:**
 `CLEAN as of this update; verify independently`
