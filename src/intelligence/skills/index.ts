@@ -11,6 +11,7 @@ import { agentEngineeringS13E } from "./definitions/agentEngineeringS13E.js";
 import { implementationPlanningS13F } from "./definitions/implementationPlanningS13F.js";
 import { taskPromptCompilerS13G } from "./definitions/taskPromptCompilerS13G.js";
 import { repositoryGitWorkflowS13H } from "./definitions/repositoryGitWorkflowS13H.js";
+import { backendApiEngineeringS13I } from "./definitions/backendApiEngineeringS13I.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
@@ -23,6 +24,7 @@ export { agentEngineeringS13E } from "./definitions/agentEngineeringS13E.js";
 export { implementationPlanningS13F } from "./definitions/implementationPlanningS13F.js";
 export { taskPromptCompilerS13G } from "./definitions/taskPromptCompilerS13G.js";
 export { repositoryGitWorkflowS13H } from "./definitions/repositoryGitWorkflowS13H.js";
+export { backendApiEngineeringS13I } from "./definitions/backendApiEngineeringS13I.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -82,5 +84,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(repositoryGitWorkflowS13H),
     load_definition: async () => repositoryGitWorkflowS13H,
+  },
+  {
+    descriptor: toSkillDescriptor(backendApiEngineeringS13I),
+    load_definition: async () => backendApiEngineeringS13I,
   },
 ];

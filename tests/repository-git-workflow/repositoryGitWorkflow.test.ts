@@ -915,23 +915,18 @@ describe("T64 — no S14 Capability Registry / provider implementation is introd
   });
 });
 
-describe("T65 — no S13I backend-api-engineering implementation is introduced", () => {
-  it("no backend-api-engineering Part B implementation module exists", () => {
-    // Mechanical relaxation for S13I Part A: integrating ChatGPT's S13I Part A
-    // creates the canonical doc-only artifact
-    // brain-bootstrap/skills/BACKEND_API_ENGINEERING_SKILL_S13I.md (+ the QC and
-    // contract specs). That is the Authoring-Gate deliverable and precedes Part B.
-    // Mirrors the S13D->E, S13E->F, S13F->G and S13G->H prior-test relaxations.
-    // NOT an S13H semantic change. T65 still guards that no S13I Part B
-    // implementation module has been introduced.
-    expect(() => statSync("src/intelligence/backend-api-engineering")).toThrow();
+describe("T65 — S13H contains no S13I backend-api-engineering pull-forward", () => {
+  it("the S13H implementation remains isolated after separately authorized S13I begins", () => {
+    const s13hIndex = readFileSync("src/intelligence/repository-git-workflow/index.ts", "utf8");
+    expect(s13hIndex).not.toContain("backend-api-engineering");
+    expect(statSync("src/intelligence/backend-api-engineering").isDirectory()).toBe(true);
   });
 });
 
 describe("T66 — the full prior regression surface remains green", () => {
-  it("the reference Skill catalog has 11 entries and every pre-S13H entry is untouched", () => {
+  it("the reference Skill catalog preserves the first 11 entries through S13H", () => {
     const ids = referenceSkillCatalogEntries.map((e) => e.descriptor.id);
-    expect(ids.length).toBe(11);
+    expect(ids.length).toBeGreaterThanOrEqual(11);
     expect(ids.slice(0, 10)).toEqual([
       "research.evidence-grounded.s11",
       "reference.summarize.v1",
