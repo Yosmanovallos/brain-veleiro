@@ -5,41 +5,39 @@ import type { FrontendProductSurfaceDecision, FrontendProductSurfaceInput, Front
 export interface FrontendSurfaceScoredRun { input: FrontendProductSurfaceInput; candidateDecision: FrontendProductSurfaceDecision; }
 export const FRONTEND_SURFACE_COMPARISON_ASSERTIONS: Array<{ id: string; category: FrontendSurfaceScoreCategory }> = [...[...Array(10)].flatMap((_, dimensionIndex) => [...Array(3)].map((__, assertionIndex) => ({ id: `SD${dimensionIndex + 1}-${String.fromCharCode(65 + assertionIndex)}`, category: `SD-${String(dimensionIndex + 1).padStart(3, "0")}` as FrontendSurfaceDimensionId }))), { id: "XC-A", category: "REGRESSION_CROSS_CUTTING" }];
 const dimensions = [...Array(10)].map((_, index) => `SD-${String(index + 1).padStart(3, "0")}` as FrontendSurfaceDimensionId);
-const sorted = <T>(items: T[], key: (item: T) => string): T[] => [...items].sort((a, b) => key(a).localeCompare(key(b)));
 
-/** Exactly thirty dimension-specific observations. Each ID observes a different field/property family. */
+/** Exactly thirty dimension-specific observations with disjoint atomic field ownership. Array order is the stable row key. */
 export function extractFrontendSurfaceAssertionObservations(decision: FrontendProductSurfaceDecision): Record<string, unknown> {
-  const nodes = sorted(decision.flow_graph.nodes, (item) => item.id), edges = sorted(decision.flow_graph.edges, (item) => item.id), surfaces = sorted(decision.surfaces, (item) => item.surface_ref), states = sorted(decision.state_matrix, (item) => `${item.surface_ref}:${item.state}:${item.upstream_variant_refs.join(",")}`), forms = sorted(decision.forms, (item) => item.form_ref), retries = sorted(decision.retries, (item) => item.source_variant_ref), approvals = sorted(decision.approvals, (item) => item.approval_ref), responsive = sorted(decision.responsive, (item) => `${item.surface_ref}:${item.viewport}`);
-  const reachable = new Set<string>(); const queue = [...decision.flow_graph.entry_node_ids]; while (queue.length) { const id = queue.shift()!; if (reachable.has(id)) continue; reachable.add(id); for (const edge of edges.filter((item) => item.from === id)) queue.push(edge.to); }
+  const nodes = decision.flow_graph.nodes, edges = decision.flow_graph.edges, surfaces = decision.surfaces, states = decision.state_matrix, forms = decision.forms, retries = decision.retries, approvals = decision.approvals, responsive = decision.responsive, traceability = decision.traceability;
   return {
-    "SD1-A": decision.flow_graph.goal_node_ids.map((id) => ({ id, reachable: reachable.has(id) })),
-    "SD1-B": nodes.filter((node) => !node.terminal && !edges.some((edge) => edge.from === node.id)).map((node) => node.id),
-    "SD1-C": { entries: decision.flow_graph.entry_node_ids, exits: decision.flow_graph.interruptible_exit_policy_refs, recovery_edges: edges.filter((edge) => edge.recovery).map((edge) => edge.id) },
-    "SD2-A": surfaces.map((item) => ({ ref: item.surface_ref, kind: item.kind })),
-    "SD2-B": surfaces.map((item) => ({ ref: item.surface_ref, priority: item.priority })),
-    "SD2-C": surfaces.map((item) => ({ ref: item.surface_ref, goals: item.goal_refs })),
+    "SD1-A": { goals: structuredClone(decision.flow_graph.goal_node_ids), topology: edges.map((edge) => ({ from: edge.from, to: edge.to })) },
+    "SD1-B": nodes.map((node) => node.terminal),
+    "SD1-C": { entries: structuredClone(decision.flow_graph.entry_node_ids), exits: structuredClone(decision.flow_graph.interruptible_exit_policy_refs), recovery_flags: edges.map((edge) => edge.recovery) },
+    "SD2-A": surfaces.map((item) => item.kind),
+    "SD2-B": surfaces.map((item) => item.priority),
+    "SD2-C": surfaces.map((item) => structuredClone(item.goal_refs)),
     "SD3-A": states.map((item) => ({ state: item.state, applicable: item.applicable })),
-    "SD3-B": states.map((item) => ({ state: item.state, variants: item.upstream_variant_refs })),
-    "SD3-C": states.filter((item) => ["ERROR", "UNAVAILABLE", "VALIDATION_ERROR", "REJECTED"].includes(item.state)).map((item) => ({ state: item.state, recovery: item.recovery_action_refs, announce: item.announcement_required })),
-    "SD4-A": forms.map((item) => ({ ref: item.form_ref, fields: item.field_refs })),
-    "SD4-B": forms.map((item) => ({ ref: item.form_ref, lifecycle: item.submit_lifecycle, duplicate_disabled: item.duplicate_submit_disabled_while_pending })),
-    "SD4-C": forms.map((item) => ({ ref: item.form_ref, preserve: item.preserve_input_on_recoverable_error, cancel: item.cancel_exit_policy })),
-    "SD5-A": retries.map((item) => ({ variant: item.source_variant_ref, allowed: item.allowed, authorization: item.authorization_ref ?? null })),
-    "SD5-B": approvals.map((item) => ({ ref: item.approval_ref, pending: item.pending_state_ref, approved: item.approved_state_ref, rejected: item.rejected_state_ref })),
+    "SD3-B": states.map((item) => structuredClone(item.upstream_variant_refs)),
+    "SD3-C": states.map((item) => ({ copy: item.copy_intent ?? null, actions: structuredClone(item.available_action_refs), recovery: structuredClone(item.recovery_action_refs), announce: item.announcement_required })),
+    "SD4-A": forms.map((item) => structuredClone(item.field_refs)),
+    "SD4-B": forms.map((item) => ({ lifecycle: structuredClone(item.submit_lifecycle), duplicate_disabled: item.duplicate_submit_disabled_while_pending })),
+    "SD4-C": forms.map((item) => ({ preserve: item.preserve_input_on_recoverable_error, cancel: item.cancel_exit_policy })),
+    "SD5-A": retries.map((item) => ({ allowed: item.allowed, authorization: item.authorization_ref ?? null })),
+    "SD5-B": approvals.map((item) => ({ pending: item.pending_state_ref, approved: item.approved_state_ref, rejected: item.rejected_state_ref })),
     "SD5-C": { guardrails: forms.map((item) => item.destructive_guardrail_ref ?? null), self_approval_count: approvals.filter((item) => item.frontend_can_self_approve !== false).length },
-    "SD6-A": { semantic: decision.accessibility.semantic_structure_required, keyboard: decision.accessibility.keyboard_required_action_refs, visible_focus: decision.accessibility.visible_focus_required },
-    "SD6-B": { names: decision.accessibility.accessible_name_control_refs, descriptions: decision.accessibility.description_association_refs, errors: decision.accessibility.error_association_refs },
-    "SD6-C": { focus_order: decision.accessibility.focus_order_refs, restore: decision.accessibility.focus_restore_transition_refs, announcements: decision.accessibility.announcement_state_refs, conformance: decision.accessibility.browser_conformance_claimed },
-    "SD7-A": responsive.map((item) => ({ ref: item.surface_ref, viewport: item.viewport })),
-    "SD7-B": responsive.map((item) => ({ ref: item.surface_ref, viewport: item.viewport, content: item.primary_content_refs, actions: item.primary_action_refs })),
-    "SD7-C": responsive.map((item) => ({ ref: item.surface_ref, viewport: item.viewport, overflow: item.overflow_strategy, semantic: item.semantic_order_preserved, focus: item.focus_order_preserved })),
-    "SD8-A": states.flatMap((item) => item.upstream_variant_refs.map((ref) => ({ ref, state: item.state }))),
-    "SD8-B": { retry_variant_refs: retries.map((item) => item.source_variant_ref), approval_refs: approvals.map((item) => item.approval_ref) },
-    "SD8-C": { state_source_refs: states.filter((item) => item.upstream_variant_refs.length).map((item) => ({ variants: item.upstream_variant_refs, sources: item.source_refs })), client_authority_claimed: /client[_ -]?(?:tenant|user).{0,30}(?:authority|enforce)/i.test(JSON.stringify(decision)) },
-    "SD9-A": { task: decision.task_ref, specs: decision.spec_refs }, "SD9-B": decision.acceptance, "SD9-C": decision.evidence_required,
-    "SD10-A": { s13l: decision.deferred_to_s13l, s13o: decision.deferred_to_s13o, s13p: decision.deferred_to_s13p },
-    "SD10-B": { s13q: decision.deferred_to_s13q, s13r: decision.deferred_to_s13r, s14: decision.deferred_to_s14 },
-    "SD10-C": { forbidden_binding: FORBIDDEN_BINDING_PATTERN.test(JSON.stringify(decision)), status: decision.status, blockers: decision.blockers },
+    "SD6-A": { semantic: decision.accessibility.semantic_structure_required, keyboard: structuredClone(decision.accessibility.keyboard_required_action_refs), visible_focus: decision.accessibility.visible_focus_required },
+    "SD6-B": { names: structuredClone(decision.accessibility.accessible_name_control_refs), descriptions: structuredClone(decision.accessibility.description_association_refs), errors: structuredClone(decision.accessibility.error_association_refs) },
+    "SD6-C": { focus_order: structuredClone(decision.accessibility.focus_order_refs), restore: structuredClone(decision.accessibility.focus_restore_transition_refs), announcements: structuredClone(decision.accessibility.announcement_state_refs), conformance: decision.accessibility.browser_conformance_claimed },
+    "SD7-A": responsive.map((item) => item.viewport),
+    "SD7-B": responsive.map((item) => ({ content: structuredClone(item.primary_content_refs), actions: structuredClone(item.primary_action_refs) })),
+    "SD7-C": responsive.map((item) => ({ overflow: item.overflow_strategy, semantic: item.semantic_order_preserved, focus: item.focus_order_preserved })),
+    "SD8-A": traceability.map((item) => item.artifact_ref),
+    "SD8-B": traceability.map((item) => structuredClone(item.source_refs)),
+    "SD8-C": { retry_variant_refs: retries.map((item) => item.source_variant_ref), approval_refs: approvals.map((item) => item.approval_ref) },
+    "SD9-A": { task: decision.task_ref, specs: structuredClone(decision.spec_refs) }, "SD9-B": structuredClone(decision.acceptance), "SD9-C": structuredClone(decision.evidence_required),
+    "SD10-A": { s13l: structuredClone(decision.deferred_to_s13l), s13o: structuredClone(decision.deferred_to_s13o), s13p: structuredClone(decision.deferred_to_s13p) },
+    "SD10-B": { s13q: structuredClone(decision.deferred_to_s13q), s13r: structuredClone(decision.deferred_to_s13r), s14: structuredClone(decision.deferred_to_s14) },
+    "SD10-C": { forbidden_binding: FORBIDDEN_BINDING_PATTERN.test(JSON.stringify(decision)), status: decision.status, blockers: structuredClone(decision.blockers) },
     "XC-A": decision.task_ref.length > 0,
   };
 }

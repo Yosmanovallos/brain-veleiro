@@ -66,9 +66,9 @@ projected observations are frozen before comparison.
 
 ```text
 assertions per arm: 186
-baseline correct: 101/186
+baseline correct: 100/186
 with-Skill correct: 186/186
-dimension-specific delta: +85
+dimension-specific delta: +86
 qualified dimensions: SD-003, SD-004, SD-006, SD-007, SD-008, SD-010 (6)
 hard invariants with Skill: 216/216
 dead-end required flows: 0
@@ -91,7 +91,7 @@ SD-004: SD4-A=0 SD4-B=2 SD4-C=2 (delta 4, max share 1/2)
 SD-005: SD5-A=4 SD5-B=2 SD5-C=1 (delta 7, max share 4/7; not qualified)
 SD-006: SD6-A=6 SD6-B=1 SD6-C=6 (delta 13, max share 6/13)
 SD-007: SD7-A=6 SD7-B=6 SD7-C=6 (delta 18, max share 1/3)
-SD-008: SD8-A=5 SD8-B=2 SD8-C=6 (delta 13, max share 6/13)
+SD-008: SD8-A=6 SD8-B=6 SD8-C=2 (delta 14, max share 6/14)
 SD-009: SD9-A=0 SD9-B=0 SD9-C=0 (delta 0, max share 0)
 SD-010: SD10-A=6 SD10-B=6 SD10-C=0 (delta 12, max share 1/2)
 ```
@@ -112,8 +112,13 @@ single-ID contribution share at most one half.
    synthesizer. Pure inputs were split into `fixtureInputs.ts`; the oracle is now provider-blind.
 5. Direct entry-to-goal edges could bypass required form validation or approval. Required-step nodes
    and chained paths were added, validation now detects bypass, and T13 covers the repair.
-6. Observation SD8-C was strengthened from a vacuous fabricated-reference check to independent
-   state source-reference traceability plus client-authority non-claim.
+6. The initial builder revision strengthened SD8 beyond a vacuous fabricated-reference check.
+7. Fresh independent verification then found that SD7-A/B/C all repeated viewport identity facts.
+   The repair assigns disjoint atomic field families to all thirty observation IDs, keeps the frozen
+   oracle independently projected, separates SD8 into artifact refs, source refs and retry/approval
+   refs, and adds thirty adversarial regressions proving that each atomic mutation changes exactly
+   its own assertion, changes no sibling or XC-A assertion, and cannot mutate an earlier observation
+   snapshot through aliasing.
 
 All QA below was rerun after these repairs.
 
@@ -122,11 +127,12 @@ All QA below was rerun after these repairs.
 WSL Node `v24.19.0`:
 
 - `npm run typecheck`: PASS.
-- focused S13K: 60/60 PASS, mapping T1–T98.
-- full pre-build suite: 828/828 PASS.
+- focused S13K: 90/90 PASS (60 canonical T1–T98 tests plus 30 exhaustive observation-isolation
+  regressions).
+- full pre-build suite: 858/858 PASS.
 - validated prior `dist` move; confirmed `dist` absent; `npm run build`: PASS; confirmed generated
   `dist`; restored the prior `dist`; removed the validated temporary path.
-- full post-build suite: 828/828 PASS.
+- full post-build suite: 858/858 PASS.
 - six canonical positives and thirty canonical negatives: all PASS/BLOCK as specified.
 - package manifests and `src/core/` unchanged; Part A hashes exact.
 
