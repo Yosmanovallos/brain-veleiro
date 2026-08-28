@@ -1,0 +1,117 @@
+id: S13K_FRONTEND_PRODUCT_SURFACE_DEEP
+version: 1.0.0
+step: S13K
+name: frontend-product-surface
+depth: DEEP
+status: CANONICAL
+
+rationale:
+  risk: HIGH
+  ambiguity: HIGH
+  novelty: MEDIUM
+  irreversibility: MEDIUM
+  downstream_impact: HIGH
+  explanation: >-
+    Product-surface mistakes can create dead ends, inaccessible interactions,
+    misleading approval/auth states, unsafe retries/destructive actions, or
+    contracts that contradict backend semantics.
+
+hard_invariants:
+  - { id: HI-001, rule: one_bounded_task, pass: "Exactly one bounded product-surface task is represented." }
+  - { id: HI-002, rule: skill_only, pass: "No new AgentDefinition or Core special branch exists." }
+  - { id: HI-003, rule: no_runtime_side_effect, pass: "Canonical Skill runtime performs no browser/server/external side effect." }
+  - { id: HI-004, rule: provider_framework_neutral, pass: "No concrete UI framework/browser/provider binding exists." }
+  - { id: HI-005, rule: goals_reachable, pass: "Every required user goal is reachable from a valid entry." }
+  - { id: HI-006, rule: required_surfaces_reachable, pass: "Every required nonterminal surface is reachable." }
+  - { id: HI-007, rule: no_dead_end, pass: "No required nonterminal flow node is a dead end." }
+  - { id: HI-008, rule: recovery_or_exit, pass: "Recoverable error/interruption states expose recovery or safe exit." }
+  - { id: HI-009, rule: interruptible_exit_policy, pass: "Interruptible multi-step flows declare back/cancel/exit behavior." }
+  - { id: HI-010, rule: upstream_state_traceability, pass: "Every applicable upstream state/variant maps to explicit behavior." }
+  - { id: HI-011, rule: no_fabricated_api_state, pass: "No API/auth/policy state is invented." }
+  - { id: HI-012, rule: async_loading_semantics, pass: "Required async transitions have non-misleading loading/progressive semantics." }
+  - { id: HI-013, rule: applicable_empty_state, pass: "Applicable collection empty-success has explicit empty behavior." }
+  - { id: HI-014, rule: error_mapping, pass: "Applicable error variants map to safe actionable behavior." }
+  - { id: HI-015, rule: retry_safety, pass: "Retry affordance exists only with source-backed retry safety/idempotency/S13O policy." }
+  - { id: HI-016, rule: duplicate_submit_safety, pass: "Duplicate submit is prevented while pending unless explicitly proven safe." }
+  - { id: HI-017, rule: destructive_guardrail_ref, pass: "Destructive intent requires approved guardrail/approval source ref." }
+  - { id: HI-018, rule: no_self_approval, pass: "Frontend cannot self-approve a human/policy approval flow." }
+  - { id: HI-019, rule: no_client_auth_authority, pass: "Client UI state is never authorization/tenant authority." }
+  - { id: HI-020, rule: form_accessible_name, pass: "Required form controls have accessible name/label intent." }
+  - { id: HI-021, rule: validation_error_association, pass: "Validation errors are associated with affected input/summary intent." }
+  - { id: HI-022, rule: preserve_recoverable_input, pass: "Recoverable form failure preserves user input unless an approved reason says otherwise." }
+  - { id: HI-023, rule: keyboard_required_actions, pass: "Required interactive actions declare keyboard operability." }
+  - { id: HI-024, rule: focus_transition, pass: "Dialog/navigation/error transitions preserve explicit focus placement/restoration intent." }
+  - { id: HI-025, rule: async_announcement, pass: "Relevant async/status/error changes declare announcement intent." }
+  - { id: HI-026, rule: no_false_accessibility_claim, pass: "Render-neutral evidence does not claim browser/AT conformance." }
+  - { id: HI-027, rule: responsive_primary_reachable, pass: "PRIMARY content/actions remain reachable across applicable viewport classes." }
+  - { id: HI-028, rule: responsive_semantic_order, pass: "Responsive reorder does not contradict semantic/focus-order intent." }
+  - { id: HI-029, rule: dense_collection_narrow_strategy, pass: "Dense/unbounded collection has a narrow-viewport strategy." }
+  - { id: HI-030, rule: safe_copy, pass: "No raw stack/SQL/secret/internal path becomes product copy." }
+  - { id: HI-031, rule: no_fabricated_brand_copy, pass: "Brand/legal/localization text is not invented." }
+  - { id: HI-032, rule: s13i_immutable_boundary, pass: "S13I API semantics are not silently changed." }
+  - { id: HI-033, rule: future_stage_boundary, pass: "No S13L/S13O/S13P/S13Q/S13R/S14 implementation is introduced." }
+  - { id: HI-034, rule: acceptance_evidence_preserved, pass: "Acceptance/evidence is preserved without weakening or invention." }
+  - { id: HI-035, rule: anti_self_certification, pass: "Gate recomputes hard invariants/status from input plus candidate." }
+  - { id: HI-036, rule: input_immutability, pass: "Bounded input is not mutated." }
+
+semantic_dimensions:
+  - { id: SD-001, name: flow_graph_and_recovery }
+  - { id: SD-002, name: surface_inventory_and_information_hierarchy }
+  - { id: SD-003, name: state_matrix_and_feedback }
+  - { id: SD-004, name: forms_validation_and_submit_lifecycle }
+  - { id: SD-005, name: retry_approval_and_destructive_action_boundary }
+  - { id: SD-006, name: accessibility_intent }
+  - { id: SD-007, name: responsive_adaptive_behavior }
+  - { id: SD-008, name: api_auth_and_policy_traceability }
+  - { id: SD-009, name: acceptance_evidence_traceability }
+  - { id: SD-010, name: framework_provider_and_future_stage_boundary }
+
+fixtures:
+  minimum_positive_evaluable: 6
+  minimum_negative: 20
+
+skill_vs_no_skill_evaluation:
+  same_input: true
+  same_agent_definition: true
+  same_model_provider: true
+  same_capability_provider: true
+  same_s09_s10_runtime: true
+  same_parser_gate_evaluator: true
+  frozen_truth_provider_blind: true
+  fixture_id_branching: FORBIDDEN
+  skill_id_branching: FORBIDDEN
+  with_skill_flag_branching: FORBIDDEN
+  deliberately_bad_baseline: FORBIDDEN
+  post_hoc_denominator_changes: FORBIDDEN
+  cross_cutting_assertions_may_qualify_dimension: false
+  minimum_dimension_specific_scored_assertion_ids_per_qualified_dimension: 3
+  minimum_additional_correct_assertions_per_qualified_dimension: 2
+  maximum_single_assertion_share_of_dimension_improvement: 0.5
+  hard_invariant_score_with_skill: 1.0
+  minimum_additional_correct_dimension_specific_assertions_total: 14
+  minimum_qualified_dimensions: 5
+  maximum_dead_end_required_flows_with_skill: 0
+  maximum_missing_required_state_mappings_with_skill: 0
+  maximum_unsafe_retry_duplicate_destructive_recommendations_with_skill: 0
+  maximum_fabricated_api_auth_policy_states_with_skill: 0
+  maximum_framework_browser_provider_future_stage_bindings_with_skill: 0
+  hard_invariant_regression_allowed: false
+
+pass_criteria:
+  - "All hard invariants pass."
+  - "All canonical positive fixtures pass."
+  - "Canonical negatives block/reject correctly."
+  - "Actual parsed candidate is deterministically gated."
+  - "Real S12→S10→S09 runtime path is proven."
+  - "Provider/model cannot see frozen truth."
+  - "OI-A thresholds pass with raw grouped assertion-ID contributions."
+  - "No frontend/browser/runtime dependency is added."
+  - "typecheck passes."
+  - "full tests pass."
+  - "clean build passes."
+  - "post-build tests pass."
+  - "fresh independent verification passes before S13L."
+
+failure_policy:
+  semantic: RETURN_TO_CHATGPT_AUTHORING_GATE
+  mechanical: REPAIR_LOCALLY_AND_REVERIFY
