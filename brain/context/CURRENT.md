@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S00–S13J are `VERIFIED PASS`. S13K is the sole active step at `CHATGPT_AUTHORING_REQUIRED`; Part B is forbidden.
+S00–S13J are `VERIFIED PASS`. S13K canonical Part A is integrated and Part B is authorized only in a fresh non-fork builder context.
 
 ## Current Repository State
 
@@ -14,7 +14,7 @@ S00–S13J are `VERIFIED PASS`. S13K is the sole active step at `CHATGPT_AUTHORI
 `main`
 
 **HEAD:**
-`c2f79eb097e04833f4d67afbcb3e88d399f0ec28` (independently verified S13J checkpoint; verify the current documentation HEAD with `git rev-parse HEAD`)
+`fc1d54e1d0a41c65f00435a06623ee225a54c3f7` (S13K Part-A-only commit; verify current documentation HEAD independently)
 
 **Worktree status:**
 `CLEAN as of this update (apart from the retained untracked scaffolding .md files); verify independently`
@@ -25,18 +25,18 @@ S00–S13J are `VERIFIED PASS`. S13K is the sole active step at `CHATGPT_AUTHORI
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T043000Z-s13k-chatgpt-authoring-required.md`
+`brain/context/handoffs/2026-08-28T084700Z-s13k-part-a-integrated-to-fresh-builder.md`
 
 **Handoff status:**
-`CHATGPT_AUTHORING_REQUIRED`
+`PART_A_INTEGRATED / FRESH_BUILDER_REQUIRED`
 
 ## Current Status
 
-S00–S13J: `VERIFIED PASS`. S13K inspection confirms there is no existing frontend/UI framework or implementation; its compact authoring evidence pack is ready. No S13K Part B work has started.
+S00–S13J: `VERIFIED PASS`. S13K Part A is SKILL_ONLY/DEEP and byte-verified. YAML, typecheck and the 768/768 baseline pass. No S13K Part B work has started.
 
 ## Next Exact Action
 
-Publish the S13K authoring handoff, wait for the matching `AUTHORING_READY` response, then integrate the canonical transfer verbatim before Part B.
+Spawn a fresh non-fork S13K builder that reconstructs only from repository truth and implements Part B. The controller must not implement it.
 
 ### Operating Rule
 

@@ -1,6 +1,6 @@
 bootstrap_version: 1.2.0
 current_step: S13K
-status: CHATGPT_AUTHORING_REQUIRED
+status: IN_PROGRESS
 primary_builder: codex
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
@@ -59,8 +59,8 @@ repository:
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
   commits: 39
-  head_sha: "42b238425b24f7a58dede6e471f00eae3b18a031"
-  head_sha_note: "S13J FAIL-1 repair checkpoint and second independent-verification handoff; Part A remains at 782e9be."
+  head_sha: "fc1d54e1d0a41c65f00435a06623ee225a54c3f7"
+  head_sha_note: "S13K canonical Part-A-only integration; Part B must run in a fresh non-fork builder context."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -494,14 +494,25 @@ repository:
     note: "S13J VERIFIED PASS after FAIL-1 repair and fresh isolated executable verification. S13K is now the sole active step at authoring preflight; Part B is forbidden."
 
   frontend_product_surface:
-    status: CHATGPT_AUTHORING_REQUIRED
+    status: IN_PROGRESS
     preflight_at: "2026-08-28T04:30:00Z"
     preflight: "brain-bootstrap/reports/S13K-authoring-preflight.md"
     verified_start_head: "044337619871469c35251bb7d078551f785b86b3"
     authoring_handoff_id: "2026-08-28T04:30:00Z-S13K-chatgpt-authoring"
+    authoring_commit: "5bb41525db34c723789931eb43bbc5cda23e50d3"
+    transfer_branch: "chatgpt-authoring/s13k-20260828-043200z"
+    transfer_path: "S13K_CHATGPT_PART_A_CANONICAL.md"
+    transfer_sha256: "4c98ab6e8d6b01ff201084dda9311cae1de71df5be966b91197a355c226bf925"
+    part_a_integrated_at: "2026-08-28T08:47:00Z"
+    part_a_commit: "fc1d54e1d0a41c65f00435a06623ee225a54c3f7"
+    paths_part_a:
+      - brain-bootstrap/skills/FRONTEND_PRODUCT_SURFACE_SKILL_S13K.md
+      - brain-bootstrap/quality-contracts/S13K_FRONTEND_PRODUCT_SURFACE_DEEP.yaml
+      - brain-bootstrap/specs/FRONTEND_PRODUCT_SURFACE_CONTRACT_S13K.md
+    part_a_integrity: "PASS: mechanically extracted byte-identical transfer slices; SHA-256 skill 10e8113d...b15ad0, quality contract f9f86b24...5899b4, contract 375fe043...86b41; YAML parsed; Node 24.19 typecheck and 768/768 baseline tests PASS."
     repo_facts: "No S13K artifact/source/test/dependency exists. No frontend framework, DOM/browser runtime, CSS system, component library, or browser-test dependency exists. The Skill catalog has 13 append-only entries ending with S13J."
     boundaries: "Part B forbidden until canonical Part A. No UI framework/app, renderer, browser capability, auth/security policy, retry runtime, telemetry provider, delivery/deployment, S13L/S13O/S13P/S13Q/S13R/S14 implementation, Core mutation, or new AgentDefinition."
-    note: "Repository inspection and authoring evidence only. Await matching ChatGPT AUTHORING_READY transfer."
+    note: "Matching AUTHORING_READY integrated and published in a Part-A-only commit. Fresh non-fork S13K Part B builder is the next exact action."
 
 build_day:
   date: "2026-08-29"
