@@ -96,8 +96,25 @@ export function compareBackendApiEngineeringRuns(baselineCases: ScoredBackendApi
     const delta = skill.by_dimension[dim].correct - baseline.by_dimension[dim].correct;
     dimension_specific_total_delta += delta;
     const scored_assertions = skill.by_dimension[dim].total;
-    const max_single_assertion_share = delta > 0 ? 1 / delta : 0;
-    dimension_improvements[dim] = { delta, scored_assertions, max_single_assertion_share };
+    const assertionIds = BACKEND_API_COMPARISON_ASSERTIONS
+      .filter((assertion) => assertion.category === dim)
+      .map((assertion) => assertion.id);
+    const single_assertion_contributions = Object.fromEntries(assertionIds.map((id) => [id, 0]));
+    for (let index = 0; index < skill.assertions.length; index++) {
+      const skillAssertion = skill.assertions[index];
+      const baselineAssertion = baseline.assertions[index];
+      if (
+        skillAssertion.category === dim
+        && baselineAssertion?.id === skillAssertion.id
+        && !baselineAssertion.correct
+        && skillAssertion.correct
+      ) {
+        single_assertion_contributions[skillAssertion.id]++;
+      }
+    }
+    const maxContribution = Math.max(0, ...Object.values(single_assertion_contributions));
+    const max_single_assertion_share = delta > 0 ? maxContribution / delta : 0;
+    dimension_improvements[dim] = { delta, scored_assertions, single_assertion_contributions, max_single_assertion_share };
     if (scored_assertions >= 3 && delta >= 2 && max_single_assertion_share <= 0.5) improved_dimensions.push(dim);
   }
   const hard_invariant_regressed = skill.hard_invariant_correct < baseline.hard_invariant_correct;

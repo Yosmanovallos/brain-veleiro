@@ -95,7 +95,7 @@ describe("request and operation semantics T1–T12", () => {
 
   it("T3 — one non-empty operation/task is enforced", () => { const i = baseInput(); i.operation.operation_id = ""; expect(validateRequestContract(i).errors.join(" ")).toContain("HI-001"); });
 
-  it("T4 — framework/live-server binding rejects", () => { const i = baseInput(); (i.operation as unknown as Record<string, unknown>).framework = "Express"; expect(findForbiddenBindings(i).length).toBeGreaterThan(0); expect(gateBackendApiEngineering(i).decision.status).toBe("BLOCKED"); });
+  it("T4 — framework/live-server binding rejects", () => { const i = baseInput(); (i.operation as unknown as Record<string, unknown>).framework = "Express"; expect(findForbiddenBindings(i).length).toBeGreaterThan(0); expect(gateBackendApiEngineering(i, synthesizeBackendApiEngineeringDecision(i)).decision.status).toBe("BLOCKED"); });
 
   it("T5 — every consumed request field must be declared", () => { const i = baseInput(); i.request_contract.consumed_field_refs = ["missing"]; expect(validateRequestContract(i).valid).toBe(false); });
 
@@ -183,8 +183,8 @@ describe("boundary, response, error, effect, observability and compatibility T13
   });
 
   it("T58/T59/T60 — limiter/OpenAPI implementations reject and acceptance/evidence preservation is enforced", () => {
-    const limiter = baseInput(); (limiter as unknown as Record<string, unknown>).rate_limit_enforcer = {}; expect(gateBackendApiEngineering(limiter).decision.status).toBe("BLOCKED");
-    const openapi = baseInput(); (openapi as unknown as Record<string, unknown>).openapi_source_of_truth = true; expect(gateBackendApiEngineering(openapi).decision.status).toBe("BLOCKED");
+    const limiter = baseInput(); (limiter as unknown as Record<string, unknown>).rate_limit_enforcer = {}; expect(gateBackendApiEngineering(limiter, synthesizeBackendApiEngineeringDecision(limiter)).decision.status).toBe("BLOCKED");
+    const openapi = baseInput(); (openapi as unknown as Record<string, unknown>).openapi_source_of_truth = true; expect(gateBackendApiEngineering(openapi, synthesizeBackendApiEngineeringDecision(openapi)).decision.status).toBe("BLOCKED");
     const d = synthesizeBackendApiEngineeringDecision(baseInput()); d.acceptance = []; expect(validateBackendApiEngineeringDecision(d, baseInput()).errors.join(" ")).toContain("HI-035");
   });
 });
@@ -213,7 +213,35 @@ describe("real Skill runtime and anti-self-certification T62–T69", () => {
     const input = clone(FX_POS_002); input.auth_contract.authorization_before_service_effect = false;
     const candidate = synthesizeBackendApiEngineeringDecision(FX_POS_002); candidate.status = "READY";
     expect(validateBackendApiEngineeringDecision(candidate, input).valid).toBe(false);
-    expect(gateBackendApiEngineering(input).decision.status).toBe("BLOCKED");
+    const gated = gateBackendApiEngineering(input, candidate);
+    expect(gated.decision.status).toBe("BLOCKED");
+    expect(gated.decision.auth_design.authorization_before_service_effect).toBe(true);
+    expect(gated.decision.blockers).toEqual(gated.decisionValidation.errors);
+  });
+
+  it("T69 regression — plan gates the parsed candidate without replacing its fields with a faithful synthesis", async () => {
+    const corruptingProvider = {
+      async decide(request: Parameters<DeterministicBackendApiModelProvider["decide"]>[0]) {
+        const result = await modelProvider.decide(request);
+        if (result.status !== "SUCCESS") return result;
+        if (result.decision.type !== "FINISH") return result;
+        const data = result.decision.output?.data as unknown as BackendApiEngineeringDecision;
+        data.auth_design.authorization_before_service_effect = false;
+        data.status = "READY";
+        data.blockers = [];
+        return result;
+      },
+    };
+    const output = await planBackendApiEngineering(FX_POS_002, {
+      baseDefinition: clone(backendApiHost),
+      skillProvider,
+      modelProvider: corruptingProvider,
+      capabilityProvider,
+    });
+    expect(output.candidate.auth_design.authorization_before_service_effect).toBe(false);
+    expect(output.decision.auth_design.authorization_before_service_effect).toBe(false);
+    expect(output.decision.status).toBe("BLOCKED");
+    expect(output.decisionValidation.valid).toBe(false);
   });
 });
 
@@ -222,7 +250,7 @@ describe("canonical positives/negatives and built-in HTTP realism T70–T78", ()
     ["T70 FX-POS-001", FX_POS_001], ["T71 FX-POS-002", FX_POS_002], ["T72 FX-POS-003", FX_POS_003],
     ["T73 FX-POS-004", FX_POS_004], ["T74 FX-POS-005", FX_POS_005],
   ])("%s is READY and validates", (_name, input) => {
-    const gated = gateBackendApiEngineering(input); expect(gated.decision.status).toBe("READY"); expect(gated.decisionValidation.valid).toBe(true);
+    const gated = gateBackendApiEngineering(input, synthesizeBackendApiEngineeringDecision(input)); expect(gated.decision.status).toBe("READY"); expect(gated.decisionValidation.valid).toBe(true);
   });
 
   it.each(ALL_NEGATIVE_FIXTURES)("T76 $id is rejected in its required way", ({ input, decision }) => {
@@ -276,11 +304,31 @@ describe("OI-A-safe Skill-vs-no-Skill and scope closure T79–T92", () => {
     expect(BACKEND_API_COMPARISON_ASSERTIONS.filter((a) => a.category === "REGRESSION_CROSS_CUTTING")).toHaveLength(1);
     expect(comparison.skill.cross_cutting.total).toBeGreaterThan(0);
     expect(comparison.dimension_specific_total_delta).toBeGreaterThanOrEqual(12);
-    expect(comparison.improved_dimensions.length).toBeGreaterThanOrEqual(5);
+    expect(comparison.improved_dimensions).toEqual(["SD-001", "SD-002", "SD-005", "SD-007", "SD-008", "SD-009", "SD-010"]);
+    expect(Object.fromEntries(Object.entries(comparison.dimension_improvements).map(([dimension, evidence]) => [dimension, evidence.single_assertion_contributions]))).toEqual({
+      "SD-001": { "SD1-A": 6, "SD1-B": 6, "SD1-C": 6 },
+      "SD-002": { "SD2-A": 6, "SD2-B": 4, "SD2-C": 6 },
+      "SD-003": { "SD3-A": 4, "SD3-B": 6, "SD3-C": 1 },
+      "SD-004": { "SD4-A": 6, "SD4-B": 0, "SD4-C": 0 },
+      "SD-005": { "SD5-A": 0, "SD5-B": 6, "SD5-C": 6 },
+      "SD-006": { "SD6-A": 0, "SD6-B": 4, "SD6-C": 1 },
+      "SD-007": { "SD7-A": 6, "SD7-B": 0, "SD7-C": 6 },
+      "SD-008": { "SD8-A": 1, "SD8-B": 2, "SD8-C": 2 },
+      "SD-009": { "SD9-A": 6, "SD9-B": 6, "SD9-C": 0 },
+      "SD-010": { "SD10-A": 6, "SD10-B": 6, "SD10-C": 6 },
+    });
+    for (const evidence of Object.values(comparison.dimension_improvements)) {
+      expect(evidence.max_single_assertion_share).toBe(
+        Math.max(...Object.values(evidence.single_assertion_contributions)) / evidence.delta,
+      );
+    }
     for (const dim of comparison.improved_dimensions) {
-      expect(comparison.dimension_improvements[dim].scored_assertions).toBeGreaterThanOrEqual(3);
-      expect(comparison.dimension_improvements[dim].delta).toBeGreaterThanOrEqual(2);
-      expect(comparison.dimension_improvements[dim].max_single_assertion_share).toBeLessThanOrEqual(0.5);
+      const evidence = comparison.dimension_improvements[dim];
+      expect(evidence.scored_assertions).toBeGreaterThanOrEqual(3);
+      expect(evidence.delta).toBeGreaterThanOrEqual(2);
+      expect(Object.keys(evidence.single_assertion_contributions)).toHaveLength(3);
+      expect(Object.values(evidence.single_assertion_contributions).reduce((sum, count) => sum + count, 0)).toBeGreaterThanOrEqual(evidence.delta);
+      expect(evidence.max_single_assertion_share).toBeLessThanOrEqual(0.5);
     }
     expect(comparison.skill.hard_invariant_correct).toBe(comparison.skill.hard_invariant_total);
     expect(comparison.skill).toMatchObject({ unsafe_auth_recommendations: 0, secret_pii_leak_recommendations: 0, direct_persistence_in_transport_recommendations: 0, framework_provider_bindings: 0, future_stage_pull_forward_violations: 0 });

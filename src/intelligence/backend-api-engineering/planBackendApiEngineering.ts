@@ -8,7 +8,6 @@ import {
   BACKEND_API_ENGINEERING_SKILL_ID,
   BACKEND_API_ENGINEERING_SKILL_MATERIALIZATION_MARKER,
 } from "./constants.js";
-import { FAITHFUL_BACKEND_API_PROFILE, synthesizeBackendApiEngineeringDecision } from "./synthesizeBackendApiEngineeringDecision.js";
 import { validateBackendApiEngineeringDecision } from "./validateBackendApiEngineeringDecision.js";
 import type { BackendApiEngineeringDecision, BackendApiEngineeringInput, BackendApiValidationResult } from "./types.js";
 
@@ -42,9 +41,22 @@ function parseCandidate(run: AgentRunResult): BackendApiEngineeringDecision {
   if (run.outcome !== "SUCCESS" || !run.output?.data) throw new Error(`S13I run did not produce a structured decision (${run.outcome}).`);
   return run.output.data as unknown as BackendApiEngineeringDecision;
 }
-export function gateBackendApiEngineering(input: BackendApiEngineeringInput) {
-  const decision = synthesizeBackendApiEngineeringDecision(input, FAITHFUL_BACKEND_API_PROFILE);
-  return { decision, decisionValidation: validateBackendApiEngineeringDecision(decision, input) };
+export function gateBackendApiEngineering(
+  input: BackendApiEngineeringInput,
+  candidate: BackendApiEngineeringDecision,
+) {
+  const decisionValidation = validateBackendApiEngineeringDecision(candidate, input);
+  const decision = structuredClone(candidate);
+
+  // The gate preserves the actual parsed candidate and only recomputes the
+  // terminal gate fields. It must never substitute a separately synthesized
+  // faithful answer for a model candidate that failed deterministic checks.
+  if (!decisionValidation.valid) {
+    decision.status = "BLOCKED";
+    decision.blockers = [...decisionValidation.errors];
+  }
+
+  return { decision, decisionValidation };
 }
 export async function planBackendApiEngineering(input: BackendApiEngineeringInput, harness: BackendApiEngineeringHarness): Promise<PlanBackendApiEngineeringOutcome> {
   let loadedSkill: SkillDefinition | undefined;
@@ -59,6 +71,6 @@ export async function planBackendApiEngineering(input: BackendApiEngineeringInpu
   const compiled = compileAgentDefinition(materializedDefinition, { model_provider: harness.modelProvider, capability_provider: harness.capabilityProvider });
   const run = await runAgent(compiled.run_options);
   const candidate = parseCandidate(run);
-  const gated = gateBackendApiEngineering(input);
+  const gated = gateBackendApiEngineering(input, candidate);
   return { ...gated, candidate, run, skillLoaded: Boolean(loadedSkill), materializedDefinition };
 }

@@ -261,7 +261,12 @@ export interface BackendApiComparison {
   skill: BackendApiArmScore;
   dimension_specific_total_delta: number;
   improved_dimensions: BackendApiDimensionId[];
-  dimension_improvements: Record<BackendApiDimensionId, { delta: number; scored_assertions: number; max_single_assertion_share: number }>;
+  dimension_improvements: Record<BackendApiDimensionId, {
+    delta: number;
+    scored_assertions: number;
+    single_assertion_contributions: Record<string, number>;
+    max_single_assertion_share: number;
+  }>;
   hard_invariant_regressed: boolean;
   meets_threshold: boolean;
 }
