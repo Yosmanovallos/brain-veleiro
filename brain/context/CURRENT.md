@@ -6,8 +6,8 @@
 
 ## Current Objective
 
-S00–S13K are `VERIFIED PASS`. S13L is `NOT_STARTED`; its authoring preflight is now the only allowed
-next major-step work.
+S00–S13K are `VERIFIED PASS`. S13L guardrails-security is at `CHATGPT_AUTHORING_REQUIRED`; Part B is
+forbidden until matching canonical Part A is integrated verbatim.
 
 ## Current Repository State
 
@@ -15,7 +15,7 @@ next major-step work.
 `main`
 
 **Verification target:**
-`73d15db8e34653dbda898ccd4cf5088927384ec5` (S13K repair handoff independently verified)
+`06909c4ed50cb62602b3f354b609451b6a57917c` (S13K VERIFIED PASS closure / S13L preflight start)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
@@ -26,24 +26,24 @@ next major-step work.
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T202833Z-s13k-verified-pass.md`
+`brain/context/handoffs/2026-08-28T203045Z-s13l-chatgpt-authoring-required.md`
 
 **Handoff status:**
-`VERIFIED PASS`
+`CHATGPT_AUTHORING_REQUIRED`
 
 ## Current Status
 
-S13K is independently VERIFIED PASS. A different fresh, non-authoring, non-fork, read-only verifier
-reproduced all 30 atomic isolation probes, actual parsed-candidate anti-substitution, repaired OI-A
-`100/186 -> 186/186` (`+86`, six qualified dimensions), hard invariants 216/216, safety 0/0/0/0/0,
-Node 24.19 typecheck, focused 90/90, full 858/858 before and after a genuinely dist-absent clean
-build, Part A hashes, provider/oracle isolation and all stage boundaries. The verifier restored the
-prior `dist` byte-for-byte and left no repository changes.
+S13K is independently VERIFIED PASS. S13L preflight found no S13L artifact or implementation. The
+repo already has provider-neutral capability allowlisting/side-effect enforcement, S13I auth-boundary
+contracts, bounded known-secret rejection in S13G, destructive Git safeguards in S13H, and explicit
+S13J/S13K deferrals. These are inputs/boundaries, not a complete S13L security policy.
 
 ## Next Exact Action
 
-Inspect repository reality for S13L and publish a compact `CHATGPT_AUTHORING_REQUIRED` evidence pack.
-Do not implement S13L Part B before matching canonical Part A is integrated verbatim.
+Wait for the matching issue #1 `CHATGPT_RESPONSE` to handoff
+`2026-08-28T20:30:45Z-S13L-chatgpt-authoring`; fetch the temporary transfer without merging it,
+integrate its canonical artifacts verbatim, verify byte identity/YAML/Node 24 baseline, commit and
+push a Part-A-only change, then launch a fresh non-fork S13L Part B builder.
 
 ### Operating Rule
 
