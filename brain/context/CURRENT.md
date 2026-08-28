@@ -6,8 +6,8 @@
 
 ## Current Objective
 
-S00–S13J are `VERIFIED PASS`. S13K mechanical repair 1 has builder `PASS` and now requires a new
-fresh non-fork, read-only independent verifier. S13L remains forbidden.
+S00–S13K are `VERIFIED PASS`. S13L is `NOT_STARTED`; its authoring preflight is now the only allowed
+next major-step work.
 
 ## Current Repository State
 
@@ -15,34 +15,35 @@ fresh non-fork, read-only independent verifier. S13L remains forbidden.
 `main`
 
 **Verification target:**
-`f8b581df938702f8cabaa3a02fd62992ca79d68b` (S13K observation-isolation repair 1)
+`73d15db8e34653dbda898ccd4cf5088927384ec5` (S13K repair handoff independently verified)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
 
 **Last independently verified at:**
-`2026-08-28T04:27:00Z (S13J fresh isolated read-only executable verifier PASS)`
+`2026-08-28T20:28:33Z (S13K fresh isolated read-only executable verifier PASS)`
 
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T201641Z-s13k-repair1-independent-verification-required.md`
+`brain/context/handoffs/2026-08-28T202833Z-s13k-verified-pass.md`
 
 **Handoff status:**
-`INDEPENDENT_VERIFICATION_REQUIRED`
+`VERIFIED PASS`
 
 ## Current Status
 
-S13K repair builder evidence is PASS: 30/30 atomic observation-isolation probes, WSL Node 24.19
-typecheck, focused 90/90, full 858/858 before and after a genuinely dist-absent clean build, six
-positives, thirty canonical negatives, actual parsed-candidate anti-substitution, frozen
-provider-blind truth, repaired OI-A `100/186 -> 186/186` (`+86`, six qualified dimensions), Part A
-hash integrity and boundary scans. This is not independent verification.
+S13K is independently VERIFIED PASS. A different fresh, non-authoring, non-fork, read-only verifier
+reproduced all 30 atomic isolation probes, actual parsed-candidate anti-substitution, repaired OI-A
+`100/186 -> 186/186` (`+86`, six qualified dimensions), hard invariants 216/216, safety 0/0/0/0/0,
+Node 24.19 typecheck, focused 90/90, full 858/858 before and after a genuinely dist-absent clean
+build, Part A hashes, provider/oracle isolation and all stage boundaries. The verifier restored the
+prior `dist` byte-for-byte and left no repository changes.
 
 ## Next Exact Action
 
-Use a fresh non-authoring, non-fork, read-only verifier to reproduce the S13K report against the live
-target. Only a verified PASS may close S13K and authorize S13L.
+Inspect repository reality for S13L and publish a compact `CHATGPT_AUTHORING_REQUIRED` evidence pack.
+Do not implement S13L Part B before matching canonical Part A is integrated verbatim.
 
 ### Operating Rule
 
