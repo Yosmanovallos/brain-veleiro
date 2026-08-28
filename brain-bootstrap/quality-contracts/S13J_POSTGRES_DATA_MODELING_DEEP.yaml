@@ -1,0 +1,242 @@
+id: S13J_POSTGRES_DATA_MODELING_DEEP
+version: 1.0.0
+step: S13J
+name: postgres-data-modeling
+depth: DEEP
+status: CANONICAL
+
+purpose: >-
+  Verify that S13J converts approved logical data intent into a safe PostgreSQL
+  schema/modeling decision covering keys, relationships, constraints, domain
+  types, access-pattern-derived indexes, bounded query checks, transaction and
+  locking design, and migration safety without executing PostgreSQL or pulling
+  provider/security/reliability/deployment stages forward.
+
+rationale:
+  risk: HIGH
+  ambiguity: HIGH
+  novelty: MEDIUM
+  downstream_impact: HIGH
+  irreversibility: HIGH
+
+hard_invariants:
+  - { id: HI-001, rule: one_bounded_task, pass: "Exactly one bounded persistence-modeling task is represented." }
+  - { id: HI-002, rule: skill_only, pass: "No S13J AgentDefinition or Core special branch exists." }
+  - { id: HI-003, rule: no_live_db_side_effect, pass: "Canonical Skill runtime opens no DB connection and executes no SQL/migration." }
+  - { id: HI-004, rule: no_runtime_dependency, pass: "No PostgreSQL driver/ORM/migration framework/server dependency is added by S13J Part B." }
+  - { id: HI-005, rule: input_immutability, pass: "Caller/S13I intent snapshots are not mutated." }
+  - { id: HI-006, rule: explicit_schema_assumptions, pass: "Schema/search_path/extensions/version-sensitive assumptions are explicit." }
+  - { id: HI-007, rule: identifier_policy, pass: "New identifiers follow safe unquoted lower_snake_case/length policy unless approved legacy exception exists." }
+  - { id: HI-008, rule: primary_key_required, pass: "Every persisted table has an explicit valid PK strategy." }
+  - { id: HI-009, rule: natural_key_proof, pass: "Natural PK requires stable immutable unique domain evidence." }
+  - { id: HI-010, rule: fk_integrity, pass: "Required relational references have FK integrity unless explicitly external." }
+  - { id: HI-011, rule: fk_action_safe, pass: "CASCADE/SET NULL/update actions match explicit lifecycle/nullability semantics." }
+  - { id: HI-012, rule: nullability_matches_domain, pass: "Required/optional lifecycle semantics match NOT NULL/nullability." }
+  - { id: HI-013, rule: uniqueness_race_safe, pass: "Concurrency-critical uniqueness is DB-enforced." }
+  - { id: HI-014, rule: row_check_integrity, pass: "Row-local deterministic invariants use DB checks when safely expressible." }
+  - { id: HI-015, rule: no_invented_tenancy, pass: "Tenant/owner scope and RLS are never invented." }
+  - { id: HI-016, rule: time_semantics, pass: "Real instants are not silently modeled as timezone-naive timestamps." }
+  - { id: HI-017, rule: exact_numeric_semantics, pass: "Exact money/decimal requirements avoid floating-point representation." }
+  - { id: HI-018, rule: jsonb_relational_boundary, pass: "JSONB does not hide required FK/unique/join/filter core fields." }
+  - { id: HI-019, rule: array_relational_boundary, pass: "Independently queryable/referenceable elements are not hidden in arrays." }
+  - { id: HI-020, rule: index_source_backed, pass: "Every non-constraint index has source access/query justification." }
+  - { id: HI-021, rule: no_redundant_index, pass: "No semantically redundant duplicate/subsumed index is emitted." }
+  - { id: HI-022, rule: critical_access_supported, pass: "Critical high-cardinality access paths have justified support or explicit runtime-evidence rationale." }
+  - { id: HI-023, rule: composite_index_order, pass: "Composite index order is consistent with declared query shape." }
+  - { id: HI-024, rule: query_bounded, pass: "Potentially unbounded collection queries have stable ordering and a result/pagination bound." }
+  - { id: HI-025, rule: n_plus_one_safe, pass: "Known avoidable N+1 query plans are not accepted." }
+  - { id: HI-026, rule: no_fake_plan_evidence, pass: "No actual EXPLAIN/index-use claim exists without live PostgreSQL evidence." }
+  - { id: HI-027, rule: atomicity_preserved, pass: "ATOMIC_GROUP_REQUIRED intent maps to one transaction boundary." }
+  - { id: HI-028, rule: isolation_justified, pass: "Stronger isolation/locking has explicit anomaly/invariant justification." }
+  - { id: HI-029, rule: serializable_retry_handoff, pass: "SERIALIZABLE plans carry S13O retry handoff requirement." }
+  - { id: HI-030, rule: lock_order_safe, pass: "Multi-resource pessimistic locking has deterministic order." }
+  - { id: HI-031, rule: advisory_lock_exception, pass: "Advisory locks require explicit approved need." }
+  - { id: HI-032, rule: migration_compatibility, pass: "Existing external schemas evolve compatibly or carry explicit breaking approval." }
+  - { id: HI-033, rule: destructive_change_approval, pass: "Destructive/data-loss migration requires approval and recovery evidence." }
+  - { id: HI-034, rule: populated_backfill_safety, pass: "Required-field changes on populated data include expansion/backfill/validation." }
+  - { id: HI-035, rule: migration_lock_risk, pass: "Large/hot-table lock/rewrite risk is explicitly classified and handled." }
+  - { id: HI-036, rule: concurrent_index_transaction_mode, pass: "Concurrent index creation is not planned inside a normal transaction block." }
+  - { id: HI-037, rule: race_prevention, pass: "Race-prone invariants use constraint/transaction/locking rather than service pre-check alone." }
+  - { id: HI-038, rule: trigger_not_default, pass: "Trigger use is explicit and justified." }
+  - { id: HI-039, rule: no_search_path_dependency, pass: "Derived model/DDL does not rely on ambient search_path." }
+  - { id: HI-040, rule: extensions_explicit, pass: "No undeclared PostgreSQL extension is required." }
+  - { id: HI-041, rule: sensitive_storage_boundary, pass: "Raw credential/secret storage requires approved S13L storage-security reference." }
+  - { id: HI-042, rule: structured_model_authoritative, pass: "DDL preview cannot override or contradict validated structured model." }
+  - { id: HI-043, rule: acceptance_evidence_preserved, pass: "Acceptance/evidence requirements are preserved without invention or weakening." }
+  - { id: HI-044, rule: anti_self_certification, pass: "Status/blockers/hard invariants are recomputed from bounded input and candidate." }
+  - { id: HI-045, rule: no_s07_conflation, pass: "S07 SQLite MemoryProvider is not repurposed as application persistence." }
+  - { id: HI-046, rule: no_future_stage_pull_forward, pass: "No S14/S13K/S13L/S13O/S13R implementation is introduced." }
+
+semantic_dimensions:
+  - id: SD-001
+    name: schema_identity_and_naming
+    checks: ["table identity is explicit", "PK strategy is justified", "identifier/schema assumptions are safe"]
+  - id: SD-002
+    name: keys_relationships_and_constraints
+    checks: ["FK lifecycle is correct", "nullability/uniqueness/checks enforce domain invariants", "race-prone integrity is DB-backed"]
+  - id: SD-003
+    name: type_domain_and_sensitive_data
+    checks: ["time/money/status semantics are safe", "JSONB/array boundaries preserve relational needs", "sensitive storage has approved policy"]
+  - id: SD-004
+    name: index_and_access_path_design
+    checks: ["indexes are query-derived", "critical paths are supported", "redundancy/composite order are safe"]
+  - id: SD-005
+    name: query_bounds_and_plan_evidence
+    checks: ["collection queries are bounded", "N+1 is avoided", "live plan evidence is required rather than fabricated"]
+  - id: SD-006
+    name: transaction_concurrency_and_race_safety
+    checks: ["atomicity maps to transaction", "isolation/locking are justified", "deadlock/retry handoffs are explicit"]
+  - id: SD-007
+    name: migration_compatibility_and_data_safety
+    checks: ["expand/contract compatibility", "backfill/lock/rewrite risk", "destructive approval/recovery"]
+  - id: SD-008
+    name: tenant_security_and_schema_boundary
+    checks: ["tenant/RLS not invented", "scope-aware integrity only when required", "schema/extensions/search_path explicit"]
+  - id: SD-009
+    name: acceptance_evidence_and_traceability
+    checks: ["source refs trace decisions", "acceptance/evidence preserved", "runtime evidence gaps explicit"]
+  - id: SD-010
+    name: provider_runtime_and_future_stage_boundary
+    checks: ["no DB/provider/live runtime binding", "S07 remains separate", "no future-step implementation"]
+
+fixtures:
+  minimum_positive_evaluable: 6
+  minimum_negative: 20
+  canonical_positive:
+    - { id: FX-POS-001, title: parent_child_oltp }
+    - { id: FX-POS-002, title: explicit_tenant_scoped_model }
+    - { id: FX-POS-003, title: money_time_status_domain }
+    - { id: FX-POS-004, title: high_cardinality_keyset_query }
+    - { id: FX-POS-005, title: atomic_concurrent_mutation }
+    - { id: FX-POS-006, title: expand_contract_migration }
+  canonical_negative_ids:
+    - FX-NEG-001
+    - FX-NEG-002
+    - FX-NEG-003
+    - FX-NEG-004
+    - FX-NEG-005
+    - FX-NEG-006
+    - FX-NEG-007
+    - FX-NEG-008
+    - FX-NEG-009
+    - FX-NEG-010
+    - FX-NEG-011
+    - FX-NEG-012
+    - FX-NEG-013
+    - FX-NEG-014
+    - FX-NEG-015
+    - FX-NEG-016
+    - FX-NEG-017
+    - FX-NEG-018
+    - FX-NEG-019
+    - FX-NEG-020
+    - FX-NEG-021
+    - FX-NEG-022
+    - FX-NEG-023
+    - FX-NEG-024
+    - FX-NEG-025
+    - FX-NEG-026
+    - FX-NEG-027
+    - FX-NEG-028
+    - FX-NEG-029
+    - FX-NEG-030
+    - FX-NEG-031
+    - FX-NEG-032
+    - FX-NEG-033
+    - FX-NEG-034
+    - FX-NEG-035
+    - FX-NEG-036
+    - FX-NEG-037
+    - FX-NEG-038
+    - FX-NEG-039
+    - FX-NEG-040
+
+ground_truth_policy:
+  construction: FROZEN_BEFORE_EXECUTION
+  provider_visibility: FORBIDDEN
+  model_visibility: FORBIDDEN
+  fixture_id_branching: FORBIDDEN
+  skill_id_branching: FORBIDDEN
+  with_skill_flag_branching: FORBIDDEN
+  post_hoc_denominator_changes: FORBIDDEN
+
+skill_vs_no_skill_evaluation:
+  same_input: true
+  same_agent_definition: true
+  same_model_provider: true
+  same_capability_provider: true
+  same_s09_s10_runtime: true
+  same_parser_validator_evaluator: true
+  only_semantic_difference: "S13J Skill content present versus absent"
+  minimum_evaluable_positive_fixtures: 6
+  hard_invariant_score_with_skill: 1.0
+  maximum_missing_key_fk_constraint_recommendations_with_skill: 0
+  maximum_unsafe_destructive_migration_recommendations_with_skill: 0
+  maximum_unbounded_or_n_plus_one_critical_query_recommendations_with_skill: 0
+  maximum_provider_credential_live_runtime_bindings_with_skill: 0
+  maximum_future_stage_pull_forward_violations_with_skill: 0
+  minimum_additional_correct_dimension_specific_assertions_total: 16
+  improvement_distribution:
+    minimum_distinct_dimensions: 6
+    minimum_dimension_specific_scored_assertion_ids_per_improved_dimension: 3
+    minimum_additional_correct_instances_per_improved_dimension: 2
+    maximum_single_assertion_share_of_dimension_improvement: 0.5
+  cross_cutting_assertions:
+    may_count_toward_regression_score: true
+    may_count_toward_improved_dimension_threshold: false
+  hard_invariant_regression_allowed: false
+
+reference_model_policy:
+  allowed: true
+  requirements:
+    - "Must execute through real S09 runAgent."
+    - "Must not import frozen truth."
+    - "Must not branch on fixture id, S13J Skill id, or with-Skill flag."
+    - "Must be labeled deterministic/reference, not production external LLM."
+
+runtime_evidence_honesty:
+  live_postgres_required_for_part_b: false
+  forbidden_claims_without_live_capability:
+    - actual_explain_plan
+    - actual_index_usage
+    - actual_migration_lock_duration
+    - actual_transaction_anomaly_result
+    - actual_postgres_ddl_execution
+
+pass_criteria:
+  - "All hard invariants pass."
+  - "All canonical positives pass."
+  - "Canonical negatives fail as specified."
+  - "Skill-vs-no-Skill OI-A-safe threshold passes."
+  - "No live PostgreSQL/provider/runtime dependency is introduced."
+  - "No unsafe destructive migration or missing integrity recommendation occurs."
+  - "No critical unbounded/N+1 query recommendation occurs."
+  - "S12 → S10 → S09 runtime path passes."
+  - "typecheck/full tests/clean build/post-build pass."
+  - "fresh independent verification passes."
+  - "S13K remains NOT_STARTED until independent PASS."
+
+failure_policy:
+  semantic:
+    action: RETURN_TO_CHATGPT_AUTHORING_GATE
+  mechanical:
+    action: CODING_AGENT_MAY_REPAIR_LOCALLY
+    constraint: "Part A semantics remain unchanged."
+
+evidence_required:
+  - "Part A integrity."
+  - "Input immutability."
+  - "PK/FK/constraint evidence."
+  - "Domain-type/sensitive-data evidence."
+  - "Index justification/redundancy evidence."
+  - "Query bound/N+1/runtime-plan-evidence honesty."
+  - "Transaction/isolation/locking evidence."
+  - "Migration compatibility/backfill/lock/destructive-change evidence."
+  - "Tenant/schema/extension boundary evidence."
+  - "Structured-model/DDL consistency evidence."
+  - "Anti-self-certification anchor."
+  - "S12→S10→S09 runtime evidence."
+  - "Provider/frozen-truth source audit."
+  - "Skill-vs-no-Skill raw per-dimension and per-assertion contribution counts."
+  - "typecheck/tests/build/post-build results."
+  - "fresh independent verification."
