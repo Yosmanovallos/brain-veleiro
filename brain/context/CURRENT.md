@@ -14,7 +14,7 @@ S13I is `VERIFIED PASS`. S13J is the sole active step with builder status `PASS`
 `main`
 
 **HEAD:**
-`782e9be6e2c8ecfe6155b84666517b36b6b4dd08` (S13J Part-A-only integration commit; verify the current documentation HEAD with `git rev-parse HEAD`)
+`3f8491d1f5fdaf0f324c7de4bc8e62fb4e21ec60` (S13J Part B builder checkpoint; verify the current documentation HEAD with `git rev-parse HEAD`)
 
 **Worktree status:**
 `CLEAN as of this update (apart from the retained untracked scaffolding .md files); verify independently`

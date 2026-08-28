@@ -80,4 +80,3 @@ export const postgresDataModelingS13J: SkillDefinition = {
   permissions: { allowed_capabilities: [], allowed_side_effects: ["NONE"], deny_unlisted_capabilities: true },
   evals: ["evals/s13j/postgres-data-modeling-positive", "evals/s13j/postgres-data-modeling-negative", "evals/s13j/postgres-data-modeling-skill-comparison"],
 };
-

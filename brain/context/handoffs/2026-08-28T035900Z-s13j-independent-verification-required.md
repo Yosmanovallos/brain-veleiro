@@ -27,4 +27,3 @@ Status: PASS | FAIL | BLOCKED
 ```
 
 S13K remains NOT_STARTED until PASS.
-

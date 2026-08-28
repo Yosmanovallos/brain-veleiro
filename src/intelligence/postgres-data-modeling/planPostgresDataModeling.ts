@@ -23,4 +23,3 @@ export async function planPostgresDataModeling(input: PostgresDataModelingInput,
   const run = await runAgent(compiled.run_options); const candidate = parseCandidate(run); const gated = gatePostgresDataModeling(input, candidate);
   return { ...gated, candidate, run, skillLoaded: Boolean(loadedSkill), materializedDefinition };
 }
-

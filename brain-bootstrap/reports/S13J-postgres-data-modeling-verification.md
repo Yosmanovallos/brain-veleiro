@@ -127,4 +127,3 @@ platform, S13O retry runtime or S13R deployment was implemented. S13K remains NO
 A fresh non-authoring, read-only verifier must independently check Part A integrity, source/provider/
 evaluator behavior, raw OI-A grouping, typecheck/focused/full/clean-build/post-build and boundaries.
 S13K must not start until that verifier returns `VERIFIED PASS`.
-
