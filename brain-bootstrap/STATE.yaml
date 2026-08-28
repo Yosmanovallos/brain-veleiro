@@ -58,9 +58,9 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 55
-  head_sha: "73c43c36f90be5ddcdc1dc067263e78c02e0d09a"
-  head_sha_note: "S13K Part B builder PASS target; fresh non-fork read-only independent verification is required."
+  commits: 57
+  head_sha: "f8b581df938702f8cabaa3a02fd62992ca79d68b"
+  head_sha_note: "S13K mechanical observation-isolation repair builder PASS target; another fresh non-fork read-only independent verification is required."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -512,6 +512,7 @@ repository:
     part_a_integrity: "PASS: mechanically extracted byte-identical transfer slices; SHA-256 skill 10e8113d...b15ad0, quality contract f9f86b24...5899b4, contract 375fe043...86b41; YAML parsed; Node 24.19 typecheck and 768/768 baseline tests PASS."
     part_b_implemented_at: "2026-08-28T14:14:59Z"
     part_b_commit: "73c43c36f90be5ddcdc1dc067263e78c02e0d09a"
+    repair_1_commit: "f8b581df938702f8cabaa3a02fd62992ca79d68b"
     paths_part_b:
       - src/intelligence/frontend-product-surface/
       - src/intelligence/skills/definitions/frontendProductSurfaceS13K.ts
@@ -520,12 +521,12 @@ repository:
       - tests/backend-api-engineering/backendApiEngineering.test.ts (mechanical catalog relaxation)
       - tests/postgres-data-modeling/postgresDataModeling.test.ts (mechanical catalog relaxation)
       - brain-bootstrap/reports/S13K-frontend-product-surface-verification.md
-    contract_tests: "T1-T98 mapped to 60 focused executable tests; 6 canonical positives and 30 canonical negatives. Full suite 828/828."
-    quality_checks: "WSL Node 24.19 typecheck PASS; focused 60/60; full 828/828 pre-build; validated dist-absent clean build PASS with prior dist restored; post-build 828/828; Part A unchanged; package manifests and Core unchanged."
-    skill_vs_no_skill: "Same six inputs/host/provider class/capability provider/parser/gate/evaluator; only Skill prose differs. Frozen provider-blind truth imports only types and pure inputs. Baseline 101/186, Skill 186/186, delta +85; 6 qualified dimensions (SD-003/004/006/007/008/010); 30 distinct observations; raw grouped contributions exposed; hard invariants 216/216; all safety counters 0; no hard regression; threshold PASS."
-    builder_review: "Fixed nonretryable safe-exit semantics, a deferral false-positive binding regex, conjunctive hard-invariant merging, transitive oracle/provider coupling, required form/approval flow bypass, and vacuous SD8-C observation; added regressions and reran all QA."
+    contract_tests: "T1-T98 mapped to 60 canonical focused executable tests plus 30 exhaustive atomic observation-isolation regressions; 6 canonical positives and 30 canonical negatives. Full suite 858/858."
+    quality_checks: "WSL Node 24.19 typecheck PASS; focused 90/90; full 858/858 pre-build; validated dist-absent clean build PASS with prior dist restored; post-build 858/858; Part A unchanged; package manifests and Core unchanged."
+    skill_vs_no_skill: "Same six inputs/host/provider class/capability provider/parser/gate/evaluator; only Skill prose differs. Frozen provider-blind truth imports only types and pure inputs. Repaired baseline 100/186, Skill 186/186, delta +86; 6 qualified dimensions (SD-003/004/006/007/008/010); 30 disjoint atomic observation families; raw grouped contributions exposed; hard invariants 216/216; all safety counters 0; no hard regression; threshold PASS."
+    builder_review: "Fixed nonretryable safe-exit semantics, a deferral false-positive binding regex, conjunctive hard-invariant merging, transitive oracle/provider coupling, required form/approval flow bypass, and vacuous evaluation observations. After independent FAIL-1, separated every assertion's atomic field ownership and added 30/30 isolation plus no-alias regressions; reran all QA."
     boundaries: "No UI/framework/component/CSS/DOM/browser/server/auth/security enforcement/retry execution/telemetry/deployment/capability registry/future-stage implementation, Core mutation, AgentDefinition, runtime dependency, persistent handle, or Part A semantic edit."
-    note: "Builder PASS only. Fresh non-fork read-only independent verification is required at the Part B target; S13L remains forbidden."
+    note: "Repair builder PASS only at f8b581df938702f8cabaa3a02fd62992ca79d68b. Another fresh non-fork read-only independent verification is required; S13L remains forbidden."
 
 build_day:
   date: "2026-08-29"

@@ -6,8 +6,8 @@
 
 ## Current Objective
 
-S00–S13J are `VERIFIED PASS`. S13K Part B has builder `PASS` and now requires a fresh non-fork,
-read-only independent verifier. S13L remains forbidden.
+S00–S13J are `VERIFIED PASS`. S13K mechanical repair 1 has builder `PASS` and now requires a new
+fresh non-fork, read-only independent verifier. S13L remains forbidden.
 
 ## Current Repository State
 
@@ -15,10 +15,10 @@ read-only independent verifier. S13L remains forbidden.
 `main`
 
 **Verification target:**
-`73c43c36f90be5ddcdc1dc067263e78c02e0d09a` (S13K Part B; current documentation HEAD may be later)
+`f8b581df938702f8cabaa3a02fd62992ca79d68b` (S13K observation-isolation repair 1)
 
 **Worktree status:**
-`CLEAN as of this update apart from the retained pre-existing untracked Markdown scaffolds; verify independently`
+`tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
 
 **Last independently verified at:**
 `2026-08-28T04:27:00Z (S13J fresh isolated read-only executable verifier PASS)`
@@ -26,17 +26,18 @@ read-only independent verifier. S13L remains forbidden.
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T141459Z-s13k-independent-verification-required.md`
+`brain/context/handoffs/2026-08-28T201641Z-s13k-repair1-independent-verification-required.md`
 
 **Handoff status:**
 `INDEPENDENT_VERIFICATION_REQUIRED`
 
 ## Current Status
 
-S13K builder evidence is PASS: WSL Node 24.19 typecheck, focused 60/60, full 828/828 before and
-after a genuinely dist-absent clean build, six positives, thirty canonical negatives, actual parsed
-candidate anti-substitution, frozen provider-blind truth, exact OI-A threshold PASS, Part A hash
-integrity and boundary scans. This is not independent verification.
+S13K repair builder evidence is PASS: 30/30 atomic observation-isolation probes, WSL Node 24.19
+typecheck, focused 90/90, full 858/858 before and after a genuinely dist-absent clean build, six
+positives, thirty canonical negatives, actual parsed-candidate anti-substitution, frozen
+provider-blind truth, repaired OI-A `100/186 -> 186/186` (`+86`, six qualified dimensions), Part A
+hash integrity and boundary scans. This is not independent verification.
 
 ## Next Exact Action
 
