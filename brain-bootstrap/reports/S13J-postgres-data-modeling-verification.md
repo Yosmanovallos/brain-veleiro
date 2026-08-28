@@ -66,9 +66,9 @@ gate and evaluator. Only the materialized Skill content differs.
 
 ```text
 assertions per arm: 186
-baseline correct: 21/186
+baseline correct: 56/186
 with-Skill correct: 186/186
-dimension-specific delta: +165
+dimension-specific delta: +130
 qualified dimensions: SD-001..SD-010 (10)
 hard invariants with Skill: 186/186
 unsafe counters with Skill: 0/0/0/0/0
@@ -79,19 +79,23 @@ threshold: PASS
 Raw per-assertion improved-instance contributions:
 
 ```text
-SD-001: SD1-A=6 SD1-B=6 SD1-C=6 (delta 18, max share 1/3)
+SD-001: SD1-A=6 SD1-B=0 SD1-C=6 (delta 12, max share 1/2)
 SD-002: SD2-A=6 SD2-B=6 SD2-C=6 (delta 18, max share 1/3)
-SD-003: SD3-A=6 SD3-B=6 SD3-C=6 (delta 18, max share 1/3)
+SD-003: SD3-A=6 SD3-B=6 SD3-C=0 (delta 12, max share 1/2)
 SD-004: SD4-A=6 SD4-B=6 SD4-C=6 (delta 18, max share 1/3)
 SD-005: SD5-A=6 SD5-B=6 SD5-C=6 (delta 18, max share 1/3)
 SD-006: SD6-A=1 SD6-B=1 SD6-C=1 (delta 3, max share 1/3)
-SD-007: SD7-A=6 SD7-B=6 SD7-C=6 (delta 18, max share 1/3)
-SD-008: SD8-A=6 SD8-B=6 SD8-C=6 (delta 18, max share 1/3)
-SD-009: SD9-A=6 SD9-B=6 SD9-C=6 (delta 18, max share 1/3)
-SD-010: SD10-A=6 SD10-B=6 SD10-C=6 (delta 18, max share 1/3)
+SD-007: SD7-A=0 SD7-B=6 SD7-C=6 (delta 12, max share 1/2)
+SD-008: SD8-A=1 SD8-B=6 SD8-C=6 (delta 13, max share 6/13)
+SD-009: SD9-A=0 SD9-B=6 SD9-C=6 (delta 12, max share 1/2)
+SD-010: SD10-A=6 SD10-B=6 SD10-C=0 (delta 12, max share 1/2)
 ```
 
 Cross-cutting `XC-A` is excluded from dimension qualification.
+
+After fresh verification FAIL 1, the OI-A evaluator was replaced with 30 distinct observations
+scored against `tests/postgres-data-modeling/fixtureTruth.ts`, a frozen independent oracle that is
+never imported by the provider. The figures above are the repaired, pinned measurements.
 
 ## Builder review fixes
 
@@ -102,6 +106,10 @@ Cross-cutting `XC-A` is excluded from dimension qualification.
 3. The first full regression run exposed an S13I test that assumed S13I remained the final catalog
    entry. It was mechanically changed to pin S13I at its stable append-only index; no S13I semantic
    source or Part A changed.
+4. Fresh verifier FAIL 1 found a circular shared synthesizer oracle and triplicated OI-A predicates.
+   The comparator now requires frozen truth and each A/B/C ID checks a distinct property.
+5. Fresh verifier FAIL 1 found DDL index order loss and a redundant natural-PK UNIQUE. Both are
+   fixed and covered by explicit regressions.
 
 ## QA
 

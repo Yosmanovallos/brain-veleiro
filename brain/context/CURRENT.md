@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S13I is `VERIFIED PASS`. S13J is the sole active step with builder status `PASS` and operational status `AWAITING_INDEPENDENT_VERIFICATION`. Part A remains immutable; Part B, tests, QA and OI-A evidence are complete.
+S13I is `VERIFIED PASS`. S13J FAIL-1 repairs are complete and the sole active step is again `AWAITING_INDEPENDENT_VERIFICATION`. Part A remains immutable; S13K remains blocked.
 
 ## Current Repository State
 
@@ -25,18 +25,18 @@ S13I is `VERIFIED PASS`. S13J is the sole active step with builder status `PASS`
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T035900Z-s13j-independent-verification-required.md`
+`brain/context/handoffs/2026-08-28T041700Z-s13j-repair1-independent-verification-required.md`
 
 **Handoff status:**
-`INDEPENDENT_VERIFICATION_REQUIRED`
+`REPAIR_1_COMPLETE / INDEPENDENT_VERIFICATION_REQUIRED`
 
 ## Current Status
 
-S00–S13I: `VERIFIED PASS`. S13J builder QA: typecheck PASS, focused 63/63, full 768/768 before and after a clean build; OI-A 21/186 → 186/186, delta +165, ten qualified dimensions, unsafe counters zero. No PostgreSQL runtime or future-stage binding exists. S13K remains `NOT_STARTED`.
+S00–S13I: `VERIFIED PASS`. All four S13J FAIL-1 findings are repaired. Repaired QA: typecheck, 63/63 focused, 768/768 full, dist-absent build, 768/768 post-build. OI-A now uses frozen provider-blind truth and 30 distinct observations: 56/186 → 186/186, delta +130, ten qualified dimensions. S13K remains `NOT_STARTED`.
 
 ## Next Exact Action
 
-Run a fresh isolated, non-authoring, read-only S13J verifier against the pushed checkpoint. If PASS, version the result, close S13J and begin the S13K authoring preflight; otherwise repair S13J only.
+Run a second fresh isolated, non-authoring, read-only verifier against the pushed repair checkpoint. Do not start S13K before PASS.
 
 ### Operating Rule
 

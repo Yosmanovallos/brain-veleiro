@@ -483,13 +483,14 @@ repository:
       - brain-bootstrap/reports/S13J-postgres-data-modeling-verification.md
     contract_tests: "T1-T98 mapped to 63 focused executable tests; 6 canonical positives and 40 canonical negatives. Full suite 768/768."
     quality_checks: "Node 24.19 typecheck PASS; focused 63/63; full 768/768 pre-build; dist-absent clean build PASS; post-build 768/768; Part A unchanged; package manifests unchanged."
-    skill_vs_no_skill: "Same six inputs/host/provider/runtime/parser/gate/evaluator; only Skill prose differs. Baseline 21/186, Skill 186/186, delta +165; all 10 dimensions qualify; each has 3 assertion IDs and max contribution share 1/3; raw contributions exposed; unsafe counters 0; no regression; threshold PASS."
+    skill_vs_no_skill: "Repaired independent frozen truth. Same six inputs/host/provider/runtime/parser/gate/evaluator; only Skill prose differs. Baseline 56/186, Skill 186/186, delta +130; all 10 dimensions qualify; A/B/C are distinct observations; max contribution share <=0.5; raw contributions exposed; unsafe counters 0; no regression; threshold PASS."
     builder_review: "Fixed DDL unquoted/full-structure rendering, required validation before artifact rendering, and one prior S13I append-only catalog assertion."
-    independent_verification: PENDING
+    independent_verification: "FAIL 1 at 82f348d3: circular provider/evaluator oracle; triplicated OI-A predicates; DDL lost DESC; natural PK duplicated UNIQUE. Repair in progress; see S13J-independent-verification-fail-1.md."
+    independent_fail_1_repairs: "Frozen truth moved to a provider-blind independent fixtureTruth.ts oracle; comparator now takes frozen truth explicitly and A/B/C observe three distinct properties per dimension; DDL renders ASC/DESC; unique constraints exclude the PK column tuple."
     boundaries: "No driver/server/ORM/migration runner/pool/credentials/live SQL/application DB/S07 replacement/S14 capability/S13K/S13L/S13O/S13R implementation."
     repo_facts: "No S13J Skill/QC/spec/source/test exists; no PostgreSQL driver/server/runtime dependency exists; the only database dependency is better-sqlite3 behind the isolated S07 MemoryProvider reference adapter and is not an application-data precedent. S13I exposes provider-neutral ApiDataPortRequirement and ApiAtomicityContract inputs and explicitly defers tables/indexes/migrations/transaction mechanisms to S13J."
     gate: "SATISFIED: matching ChatGPT AUTHORING_READY response integrated verbatim and published before Part B."
-    note: "S13J builder implementation and QA PASS. Fresh isolated read-only verification is required; S13K remains NOT_STARTED."
+    note: "S13J FAIL-1 repairs and full QA PASS. A second fresh isolated read-only verification is required; S13K remains NOT_STARTED."
 
 build_day:
   date: "2026-08-29"

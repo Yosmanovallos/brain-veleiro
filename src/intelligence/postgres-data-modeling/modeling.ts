@@ -67,7 +67,7 @@ function makeTable(input: PostgresDataModelingInput, entity: PostgresEntityInten
     columns: fields,
     primary_key: { strategy: pk.strategy, column_refs: profile.schema_identity ? pk.refs : [], justification_refs: [...entity.identity.source_refs] },
     foreign_keys: profile.constraints ? input.relationships.filter((rel) => rel.from_entity_ref === entity.id && rel.integrity_required && !rel.external_reference).map((rel) => ({ id: rel.id, from_column_refs: [...rel.from_field_refs], to_table_ref: rel.to_entity_ref, to_column_refs: [...rel.to_field_refs], on_delete: rel.preferred_delete_action ?? "NO_ACTION", on_update: "NO_ACTION", justification_refs: [...rel.source_refs] })) : [],
-    unique_constraints: profile.constraints ? entity.identity.natural_key_candidates.filter((key) => key.domain_unique).map((key, index) => ({ id: `${entity.id}_uq_${index + 1}`, column_refs: [...key.field_refs], source_refs: [...key.source_refs] })) : [],
+    unique_constraints: profile.constraints ? entity.identity.natural_key_candidates.filter((key) => key.domain_unique && JSON.stringify(key.field_refs) !== JSON.stringify(pk.refs)).map((key, index) => ({ id: `${entity.id}_uq_${index + 1}`, column_refs: [...key.field_refs], source_refs: [...key.source_refs] })) : [],
     check_constraints: profile.constraints ? entity.fields.filter((field) => field.semantic_type === "STATUS" && field.closed_stable_values?.length).map((field) => ({ id: `${field.id}_check`, expression: `${field.logical_name} IN (${field.closed_stable_values!.map((value) => `'${value.replaceAll("'", "''")}'`).join(", ")})`, source_refs: [...field.source_refs] })) : [],
     rls_required: profile.tenant_boundary && entity.tenant_scope_required && input.target.rls_mode === "REQUIRED_BY_UPSTREAM",
     source_refs: [...entity.source_refs],
@@ -175,7 +175,7 @@ export function renderPostgresDdlPreview(decision: PostgresDataModelingDecision)
     ddl.push(`CREATE TABLE ${q(table.schema_name)}.${q(table.name)} (\n${body.join(",\n")}\n);`);
     if (table.rls_required) ddl.push(`ALTER TABLE ${q(table.schema_name)}.${q(table.name)} ENABLE ROW LEVEL SECURITY;`);
   }
-  for (const index of [...decision.index_plan.indexes].sort((a, b) => a.id.localeCompare(b.id))) { const table = decision.schema_model.tables.find((t) => t.id === index.table_ref)!; ddl.push(`CREATE INDEX ${index.concurrently_planned ? "CONCURRENTLY " : ""}${q(index.id)} ON ${q(table.schema_name)}.${q(table.name)} USING btree (${index.key_column_refs.map((ref) => q(columnName(table, ref))).join(", ")});`); }
+  for (const index of [...decision.index_plan.indexes].sort((a, b) => a.id.localeCompare(b.id))) { const table = decision.schema_model.tables.find((t) => t.id === index.table_ref)!; ddl.push(`CREATE INDEX ${index.concurrently_planned ? "CONCURRENTLY " : ""}${q(index.id)} ON ${q(table.schema_name)}.${q(table.name)} USING btree (${index.key_column_refs.map((ref, position) => `${q(columnName(table, ref))} ${index.order?.[position] ?? "ASC"}`).join(", ")});`); }
   return ddl;
 }
 export function buildPostgresDataModelingArtifact(decision: PostgresDataModelingDecision, input: PostgresDataModelingInput): PostgresDataModelingArtifact { const validation = validatePostgresDataModelingDecision(decision, input); if (!validation.valid || decision.status !== "READY") throw new Error(`Cannot render unvalidated S13J decision: ${validation.errors.join("; ")}`); return { decision: structuredClone(decision), ddl_preview: renderPostgresDdlPreview(decision) }; }
