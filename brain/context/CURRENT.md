@@ -14,7 +14,7 @@ S13I is `VERIFIED PASS`. S13J FAIL-1 repairs are complete and the sole active st
 `main`
 
 **HEAD:**
-`3f8491d1f5fdaf0f324c7de4bc8e62fb4e21ec60` (S13J Part B builder checkpoint; verify the current documentation HEAD with `git rev-parse HEAD`)
+`42b238425b24f7a58dede6e471f00eae3b18a031` (S13J FAIL-1 repair checkpoint; verify the current documentation HEAD with `git rev-parse HEAD`)
 
 **Worktree status:**
 `CLEAN as of this update (apart from the retained untracked scaffolding .md files); verify independently`
