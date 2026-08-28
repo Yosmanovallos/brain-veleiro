@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S00–S13J are `VERIFIED PASS`. S13K is the sole active step at authoring preflight; no S13K Part A or Part B has started.
+S00–S13J are `VERIFIED PASS`. S13K is the sole active step at `CHATGPT_AUTHORING_REQUIRED`; Part B is forbidden.
 
 ## Current Repository State
 
@@ -25,18 +25,18 @@ S00–S13J are `VERIFIED PASS`. S13K is the sole active step at authoring prefli
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T042700Z-s13j-verified-pass.md`
+`brain/context/handoffs/2026-08-28T043000Z-s13k-chatgpt-authoring-required.md`
 
 **Handoff status:**
-`S13J VERIFIED PASS / S13K PREFLIGHT`
+`CHATGPT_AUTHORING_REQUIRED`
 
 ## Current Status
 
-S00–S13J: `VERIFIED PASS`. S13J independently reproduced typecheck, 63/63 focused, 768/768 full before/after clean build, and OI-A 56/186 → 186/186 with ten qualified dimensions. S13K is `IN_PROGRESS` at preflight only.
+S00–S13J: `VERIFIED PASS`. S13K inspection confirms there is no existing frontend/UI framework or implementation; its compact authoring evidence pack is ready. No S13K Part B work has started.
 
 ## Next Exact Action
 
-Inspect the repository for S13K, create the compact authoring evidence pack, publish `CHATGPT_AUTHORING_REQUIRED`, and wait for a matching canonical response. Do not implement S13K Part B first.
+Publish the S13K authoring handoff, wait for the matching `AUTHORING_READY` response, then integrate the canonical transfer verbatim before Part B.
 
 ### Operating Rule
 
