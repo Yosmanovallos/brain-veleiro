@@ -352,7 +352,7 @@ describe("OI-A-safe Skill-vs-no-Skill and scope closure T79–T92", () => {
   });
 
   it("T92 — catalog registration is append-only and prior entries stay ordered", () => {
-    expect(referenceSkillCatalogEntries).toHaveLength(13);
+    expect(referenceSkillCatalogEntries.length).toBeGreaterThanOrEqual(13);
     expect(referenceSkillCatalogEntries[10].descriptor.id).toBe("intelligence.repository-git-workflow.s13h");
     expect(referenceSkillCatalogEntries[11].descriptor.id).toBe(BACKEND_API_ENGINEERING_SKILL_ID);
   });
