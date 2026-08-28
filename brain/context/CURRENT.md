@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S13I (backend-api-engineering) is `VERIFIED PASS`. S13J (postgres-data-modeling) is the sole active step with status `CHATGPT_AUTHORING_REQUIRED`. Repository inspection and the compact authoring evidence pack are complete; S13J Part B implementation is forbidden until the matching ChatGPT-authored canonical Part A transfer is integrated.
+S13I (backend-api-engineering) is `VERIFIED PASS`. S13J (postgres-data-modeling) is the sole active step with status `IN_PROGRESS`. Its matching ChatGPT-authored Part A is integrated verbatim and published separately; Part B is now authorized against that immutable contract.
 
 ## Current Repository State
 
@@ -14,7 +14,7 @@ S13I (backend-api-engineering) is `VERIFIED PASS`. S13J (postgres-data-modeling)
 `main`
 
 **HEAD:**
-`ec782bd7fa7e10eb7e6ce7e225be744745b903e6` (S13I independently verified checkpoint; verify the current documentation HEAD with `git rev-parse HEAD`)
+`782e9be6e2c8ecfe6155b84666517b36b6b4dd08` (S13J Part-A-only integration commit; verify the current documentation HEAD with `git rev-parse HEAD`)
 
 **Worktree status:**
 `CLEAN as of this update (apart from the retained untracked scaffolding .md files); verify independently`
@@ -25,18 +25,18 @@ S13I (backend-api-engineering) is `VERIFIED PASS`. S13J (postgres-data-modeling)
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T032200Z-s13j-chatgpt-authoring-required.md`
+`brain/context/handoffs/2026-08-28T034400Z-s13j-part-a-integrated-to-part-b.md`
 
 **Handoff status:**
-`CHATGPT_AUTHORING_REQUIRED`
+`PART_A_INTEGRATED / PART_B_AUTHORIZED`
 
 ## Current Status
 
-S00–S13I: `VERIFIED PASS`. S13J authoring preflight confirms no existing S13J artifacts, PostgreSQL dependency/server, or Part B source. The S07 SQLite adapter is isolated MemoryProvider infrastructure, not application-data modeling. S13I provides only logical data-port/atomicity requirements and explicitly defers schema/index/migration/transaction mechanisms to S13J. The canonical author must now define S13J Part A; no Part B exists.
+S00–S13I: `VERIFIED PASS`. S13J Part A is committed at `782e9be6…`; transfer SHA-256 and all three artifact hashes were verified, the YAML parsed, and the Node 24.19 baseline passed (`typecheck`, 705/705 tests). No PostgreSQL driver/server/ORM/migration framework or live database side effect was added. S13J Part B is active; S13K remains `NOT_STARTED`.
 
 ## Next Exact Action
 
-Post the versioned S13J evidence pack to the GitHub issue #1 control plane as `CHATGPT_AUTHORING_REQUIRED`, wait for the matching response/transfer, integrate approved Part A verbatim, and only then begin Part B.
+Implement S13J Part B under the committed Skill/QC/spec, run builder QA and OI-A evidence, then request a fresh isolated read-only verifier. Do not start S13K before fresh S13J `VERIFIED PASS`.
 
 ### Operating Rule
 
