@@ -1,6 +1,6 @@
 bootstrap_version: 1.2.0
 current_step: S13J
-status: IN_PROGRESS
+status: AWAITING_INDEPENDENT_VERIFICATION
 primary_builder: codex
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
@@ -456,7 +456,7 @@ repository:
     note: "S13I VERIFIED PASS after mechanical repair and fresh isolated executable verification. S13J is now the sole active step under its authoring-preflight gate; S13J Part B has not started."
 
   postgres_data_modeling:
-    status: IN_PROGRESS
+    status: AWAITING_INDEPENDENT_VERIFICATION
     preflight_at: "2026-08-28T03:22:00Z"
     preflight: "brain-bootstrap/reports/S13J-authoring-preflight.md"
     verified_start_head: "1986695234a226bbfd1e0dcaacbcc419e41f2a04"
@@ -472,9 +472,23 @@ repository:
       - brain-bootstrap/quality-contracts/S13J_POSTGRES_DATA_MODELING_DEEP.yaml
       - brain-bootstrap/specs/POSTGRES_DATA_MODELING_CONTRACT_S13J.md
     part_a_integrity: "PASS: three transfer blocks extracted mechanically, LF-terminated byte identity verified; SHA-256 skill f78f183d...d1bdde, quality contract 9431c6e4...c1f1a1, contract d5d14879...f73d75; YAML parsed; Node 24.19 typecheck and 705/705 baseline tests PASS."
+    part_b_implemented_at: "2026-08-28T03:59:00Z"
+    paths_part_b:
+      - src/intelligence/postgres-data-modeling/
+      - src/intelligence/skills/definitions/postgresDataModelingS13J.ts
+      - src/intelligence/skills/index.ts (append-only 13th Skill)
+      - tests/postgres-data-modeling/
+      - tests/backend-api-engineering/backendApiEngineering.test.ts (mechanical append-only catalog relaxation)
+      - brain-bootstrap/reports/S13J-postgres-data-modeling-verification.md
+    contract_tests: "T1-T98 mapped to 63 focused executable tests; 6 canonical positives and 40 canonical negatives. Full suite 768/768."
+    quality_checks: "Node 24.19 typecheck PASS; focused 63/63; full 768/768 pre-build; dist-absent clean build PASS; post-build 768/768; Part A unchanged; package manifests unchanged."
+    skill_vs_no_skill: "Same six inputs/host/provider/runtime/parser/gate/evaluator; only Skill prose differs. Baseline 21/186, Skill 186/186, delta +165; all 10 dimensions qualify; each has 3 assertion IDs and max contribution share 1/3; raw contributions exposed; unsafe counters 0; no regression; threshold PASS."
+    builder_review: "Fixed DDL unquoted/full-structure rendering, required validation before artifact rendering, and one prior S13I append-only catalog assertion."
+    independent_verification: PENDING
+    boundaries: "No driver/server/ORM/migration runner/pool/credentials/live SQL/application DB/S07 replacement/S14 capability/S13K/S13L/S13O/S13R implementation."
     repo_facts: "No S13J Skill/QC/spec/source/test exists; no PostgreSQL driver/server/runtime dependency exists; the only database dependency is better-sqlite3 behind the isolated S07 MemoryProvider reference adapter and is not an application-data precedent. S13I exposes provider-neutral ApiDataPortRequirement and ApiAtomicityContract inputs and explicitly defers tables/indexes/migrations/transaction mechanisms to S13J."
     gate: "SATISFIED: matching ChatGPT AUTHORING_READY response integrated verbatim and published before Part B."
-    note: "S13J Part A is immutable and separately auditable. Part B implementation is now authorized; S13K remains NOT_STARTED until fresh independent S13J VERIFIED PASS."
+    note: "S13J builder implementation and QA PASS. Fresh isolated read-only verification is required; S13K remains NOT_STARTED."
 
 build_day:
   date: "2026-08-29"

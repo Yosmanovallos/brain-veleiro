@@ -12,6 +12,7 @@ import { implementationPlanningS13F } from "./definitions/implementationPlanning
 import { taskPromptCompilerS13G } from "./definitions/taskPromptCompilerS13G.js";
 import { repositoryGitWorkflowS13H } from "./definitions/repositoryGitWorkflowS13H.js";
 import { backendApiEngineeringS13I } from "./definitions/backendApiEngineeringS13I.js";
+import { postgresDataModelingS13J } from "./definitions/postgresDataModelingS13J.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
@@ -25,6 +26,7 @@ export { implementationPlanningS13F } from "./definitions/implementationPlanning
 export { taskPromptCompilerS13G } from "./definitions/taskPromptCompilerS13G.js";
 export { repositoryGitWorkflowS13H } from "./definitions/repositoryGitWorkflowS13H.js";
 export { backendApiEngineeringS13I } from "./definitions/backendApiEngineeringS13I.js";
+export { postgresDataModelingS13J } from "./definitions/postgresDataModelingS13J.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -88,5 +90,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(backendApiEngineeringS13I),
     load_definition: async () => backendApiEngineeringS13I,
+  },
+  {
+    descriptor: toSkillDescriptor(postgresDataModelingS13J),
+    load_definition: async () => postgresDataModelingS13J,
   },
 ];

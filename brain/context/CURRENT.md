@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S13I (backend-api-engineering) is `VERIFIED PASS`. S13J (postgres-data-modeling) is the sole active step with status `IN_PROGRESS`. Its matching ChatGPT-authored Part A is integrated verbatim and published separately; Part B is now authorized against that immutable contract.
+S13I is `VERIFIED PASS`. S13J is the sole active step with builder status `PASS` and operational status `AWAITING_INDEPENDENT_VERIFICATION`. Part A remains immutable; Part B, tests, QA and OI-A evidence are complete.
 
 ## Current Repository State
 
@@ -25,18 +25,18 @@ S13I (backend-api-engineering) is `VERIFIED PASS`. S13J (postgres-data-modeling)
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T034400Z-s13j-part-a-integrated-to-part-b.md`
+`brain/context/handoffs/2026-08-28T035900Z-s13j-independent-verification-required.md`
 
 **Handoff status:**
-`PART_A_INTEGRATED / PART_B_AUTHORIZED`
+`INDEPENDENT_VERIFICATION_REQUIRED`
 
 ## Current Status
 
-S00–S13I: `VERIFIED PASS`. S13J Part A is committed at `782e9be6…`; transfer SHA-256 and all three artifact hashes were verified, the YAML parsed, and the Node 24.19 baseline passed (`typecheck`, 705/705 tests). No PostgreSQL driver/server/ORM/migration framework or live database side effect was added. S13J Part B is active; S13K remains `NOT_STARTED`.
+S00–S13I: `VERIFIED PASS`. S13J builder QA: typecheck PASS, focused 63/63, full 768/768 before and after a clean build; OI-A 21/186 → 186/186, delta +165, ten qualified dimensions, unsafe counters zero. No PostgreSQL runtime or future-stage binding exists. S13K remains `NOT_STARTED`.
 
 ## Next Exact Action
 
-Implement S13J Part B under the committed Skill/QC/spec, run builder QA and OI-A evidence, then request a fresh isolated read-only verifier. Do not start S13K before fresh S13J `VERIFIED PASS`.
+Run a fresh isolated, non-authoring, read-only S13J verifier against the pushed checkpoint. If PASS, version the result, close S13J and begin the S13K authoring preflight; otherwise repair S13J only.
 
 ### Operating Rule
 

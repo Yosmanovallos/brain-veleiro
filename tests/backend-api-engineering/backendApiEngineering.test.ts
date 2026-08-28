@@ -82,7 +82,7 @@ describe("S13I Part A integrity and typed Skill", () => {
   it("the typed Skill mechanically exposes every core R1-R30 rule and required quality ref", () => {
     expect(backendApiEngineeringS13I.rules.map((rule) => rule.id)).toEqual(Array.from({ length: 30 }, (_, i) => `BAE-R${i + 1}`));
     expect(backendApiEngineeringS13I.requires.quality_contract_refs).toEqual(["S13I_BACKEND_API_ENGINEERING_DEEP"]);
-    expect(referenceSkillCatalogEntries.at(-1)?.descriptor.id).toBe(BACKEND_API_ENGINEERING_SKILL_ID);
+    expect(referenceSkillCatalogEntries[11]?.descriptor.id).toBe(BACKEND_API_ENGINEERING_SKILL_ID);
   });
 });
 
@@ -352,7 +352,7 @@ describe("OI-A-safe Skill-vs-no-Skill and scope closure T79–T92", () => {
   });
 
   it("T92 — catalog registration is append-only and prior entries stay ordered", () => {
-    expect(referenceSkillCatalogEntries).toHaveLength(12);
+    expect(referenceSkillCatalogEntries).toHaveLength(13);
     expect(referenceSkillCatalogEntries[10].descriptor.id).toBe("intelligence.repository-git-workflow.s13h");
     expect(referenceSkillCatalogEntries[11].descriptor.id).toBe(BACKEND_API_ENGINEERING_SKILL_ID);
   });
