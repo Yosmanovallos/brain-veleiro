@@ -1,6 +1,6 @@
 bootstrap_version: 1.2.0
-current_step: S13I
-status: PASS
+current_step: S13J
+status: IN_PROGRESS
 primary_builder: codex
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
@@ -30,7 +30,7 @@ steps:
   S13G: PASS
   S13H: PASS
   S13I: PASS
-  S13J: NOT_STARTED
+  S13J: IN_PROGRESS
   S13K: NOT_STARTED
   S13L: NOT_STARTED
   S13M: NOT_STARTED
@@ -427,7 +427,7 @@ repository:
 
   backend_api_engineering:
     status: PASS
-    independent_verification: REQUIRED
+    independent_verification: PASS
     part_a_integrated_at: "2026-08-27T20:10:00Z"
     part_b_implemented_at: "2026-08-27T21:45:00Z"
     part_a_commit: "29639651634d7ba38e6ee4dd61874a5bedbddafb"
@@ -450,9 +450,10 @@ repository:
     quality_checks: "Part A diff from 2963965 empty; typecheck 0 errors; focused 67/67; full 705/705 before and after clean build; build PASS; git diff --check PASS; package manifests unchanged."
     skill_vs_no_skill: "Same 6 inputs/host/provider/runtime/parser/gate; only rule prose differs. Baseline 71/186, Skill 186/186, dimension-specific delta +115, 7 correctly qualified dimensions (SD-001/002/005/007/008/009/010), 18 scored instances per dimension, raw contributions grouped by assertion ID, hard invariants 120/120, unsafe auth/leak/direct-persistence/framework/future counters 0, threshold PASS, no hard-invariant regression. Cross-cutting XC-A excluded from dimension qualification."
     independent_fail_repairs: "First fresh verification FAIL (issue #1 response to handoff 2026-08-27T21:48:00Z-S13I-independent-verification) identified two mechanical defects. Repair ef400fc makes the real runAgent-parsed candidate mandatory input to the deterministic gate, preserves candidate fields while recomputing terminal gate outcome, adds a non-substitution regression, and computes max_single_assertion_share from raw improved-instance counts grouped by assertion ID rather than 1/delta. Part A unchanged."
+    independent_pass: "Fresh isolated non-fork verifier: fresh_session YES, implementation_authored_here NO, read_only YES. PASS at HEAD/origin/main/live remote ec782bd7fa7e10eb7e6ce7e225be744745b903e6. Independently reran Node 24.19 typecheck, focused 67/67, full 705/705, dist-absent clean build and post-build 705/705; reproduced actual-candidate non-substitution and raw OI-A contributions/7 qualified dimensions; verified Part A hashes, HTTP lifecycle, boundaries and S13J NOT_STARTED. See brain-bootstrap/reports/S13I-independent-verification.md."
     review_fixes: "Builder read-only review fixed bounded SQL/ORM token matching and strengthened full decision recomputation for boundary_map, observability allowlist/redaction, compatibility pagination/rate-limit, blockers and injected multi-operation inputs. All QA rerun afterward."
     boundaries: "No Brain HTTP server, web framework, auth provider, DB/ORM/schema/migration, retry/backoff/idempotency store, observability vendor, OpenAPI source inversion, Capability Registry, S13J/S13L/S13O/S13P/S14 implementation, new runtime dependency or persistent network handle."
-    note: "S13I builder closure PASS. Fresh independent read-only verification is mandatory before S13J; S13J remains NOT_STARTED."
+    note: "S13I VERIFIED PASS after mechanical repair and fresh isolated executable verification. S13J is now the sole active step under its authoring-preflight gate; S13J Part B has not started."
 
 build_day:
   date: "2026-08-29"

@@ -2,7 +2,7 @@
 
 **Step:** S13I Part B
 
-**Status:** `BUILDER PASS — FRESH INDEPENDENT VERIFICATION REQUIRED`
+**Status:** `VERIFIED PASS`
 
 **Verified at:** `2026-08-28T02:48:00Z`
 
@@ -144,9 +144,27 @@ clean-build, and post-build checks were rerun on the repaired source.
 - the deterministic reference provider is an evaluation fixture, not a production external LLM.
 - S13J remains `NOT_STARTED`.
 
+## Fresh independent executable verification
+
+Fresh isolated verifier result: `PASS`.
+
+```text
+fresh_session: YES
+implementation_authored_here: NO
+read_only: YES
+```
+
+The verifier independently confirmed local HEAD, `origin/main`, and live remote main at
+`ec782bd7fa7e10eb7e6ce7e225be744745b903e6`; a clean tracked tree before and after; empty Part A
+diff from `2963965`; all three canonical SHA-256 values; the actual-candidate non-substitution
+anchor; every raw OI-A contribution and ratio; Node 24.19 typecheck; focused 67/67; full 705/705;
+an isolated `dist`-absent clean build; post-build 705/705; HTTP fixture lifecycle; dependency/Core/
+AgentDefinition/provider/stage boundaries; and S13J `NOT_STARTED`.
+
+Versioned result: `brain-bootstrap/reports/S13I-independent-verification.md`.
+
 ## Closure
 
-Builder repair closure is PASS. S13I is not independently verified by its builder. The only next allowed
-action is a fresh-session, read-only independent verification that re-runs Part A integrity,
-typecheck, focused/full tests, clean build/post-build tests, independent OI-A measurement, HTTP
-fixture inspection, boundary/dependency audit, and confirms S13J remains `NOT_STARTED`.
+S13I is `VERIFIED PASS`. Builder evidence and a fresh isolated read-only executable verifier both
+pass. The master authorization permits transition to S13J under its ChatGPT Authoring Gate; no
+S13J Part B implementation may begin before canonical Part A is authored and integrated.

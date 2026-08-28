@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S13I (backend-api-engineering) mechanical repairs are closed with builder `PASS` against the unchanged committed ChatGPT-authored Part A. The only next objective is a second fresh-session **read-only independent verification of S13I**. S13J remains `NOT_STARTED` and must not begin until the verifier returns `VERIFICATION RESULT / Step: S13I / Status: PASS`.
+S13I (backend-api-engineering) is `VERIFIED PASS` after mechanical repair plus fresh isolated executable verification. S13J (postgres-data-modeling) is now the sole active step. Its immediate objective is repository inspection and a compact ChatGPT authoring preflight; S13J Part B implementation is forbidden until canonical Part A is authored and integrated.
 
 ## Current Repository State
 
@@ -14,29 +14,29 @@ S13I (backend-api-engineering) mechanical repairs are closed with builder `PASS`
 `main`
 
 **HEAD:**
-`ef400fc3b6231459d62bb8a7358cfc45235fb7a9` (S13I mechanical repair commit; verify the current documentation HEAD with `git rev-parse HEAD`)
+`ec782bd7fa7e10eb7e6ce7e225be744745b903e6` (S13I independently verified checkpoint; verify the current documentation HEAD with `git rev-parse HEAD`)
 
 **Worktree status:**
 `CLEAN as of this update (apart from the retained untracked scaffolding .md files); verify independently`
 
 **Last independently verified at:**
-`2026-08-28T02:48:00Z (Codex primary-builder repair QA; second independent fresh verification pending)`
+`2026-08-28T03:18:00Z (fresh isolated read-only executable verifier PASS)`
 
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T024800Z-s13i-independent-verification-required.md`
+`brain/context/handoffs/2026-08-28T031800Z-s13i-verified-pass-to-s13j.md`
 
 **Handoff status:**
-`BUILDER_VERIFIED_AWAITING_INDEPENDENT`
+`S13I_VERIFIED_PASS_S13J_PREFLIGHT_ALLOWED`
 
 ## Current Status
 
-S00–S13I: builder `PASS`. S13I Part A remains byte-identical to commit `2963965`. Repair commit `ef400fc` makes `planBackendApiEngineering()` gate the actual parsed candidate and replaces the invalid `1/delta` OI-A concentration calculation with raw per-assertion contribution counts. Focused tests `67/67`; full suite `705/705`; typecheck/build/post-build PASS. Comparison remains baseline `71/186`, Skill `186/186`, delta `+115`, with 7 correctly qualified dimensions, hard invariants `120/120`, and all five unsafe counters zero. No new AgentDefinition/runtime dependency/persistent server/future-stage implementation. S13J: `NOT_STARTED`.
+S00–S13I: `VERIFIED PASS`. Fresh verifier independently reproduced Part A integrity, actual-candidate gating, corrected raw OI-A scoring, Node 24.19 typecheck, focused `67/67`, full `705/705`, clean build and post-build `705/705`, safe HTTP lifecycle, and all scope boundaries. Comparison: baseline `71/186`, Skill `186/186`, delta `+115`, 7 qualified dimensions, hard invariants `120/120`, all unsafe counters zero. S13J is `IN_PROGRESS` only for inspection/authoring preflight; no Part B exists.
 
 ## Next Exact Action
 
-Run one fresh-session **read-only** independent verification of S13I using the current handoff/report. Confirm HEAD `== origin/main`, the three Part A files have empty diff from `2963965`, typecheck and focused/full/clean-build/post-build checks pass, independently re-measure OI-A, inspect the real HTTP fixture lifecycle and all stage/provider boundaries, and confirm S13J remains `NOT_STARTED`. Do not start S13J until the result is `PASS`.
+Re-read the canonical S13J contract from the bootstrap Skill, inspect repository types/boundaries and prior S13x patterns, create a compact S13J authoring evidence pack, post `CHATGPT_AUTHORING_REQUIRED`, and wait for the matching canonical Part A transfer. Do not implement S13J Part B before integration.
 
 ### Operating Rule
 
