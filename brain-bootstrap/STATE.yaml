@@ -58,9 +58,9 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 61
-  head_sha: "30e896bb02bed2b44c023a5119e6ab12d15b0e3d"
-  head_sha_note: "S13L canonical Part-A-only integration; fresh non-fork Part B builder is required."
+  commits: 64
+  head_sha: "dac2ca5f28c36fccc045003dfece26a6086af951"
+  head_sha_note: "S13L Part B implementation target; later documentation-only HEAD hands it to a fresh verifier."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -553,7 +553,22 @@ repository:
       quality_contract: "cdaf6753dceef210208016c81acf3106c4d5f37079426ae7a442313c6d9e9f1c"
       contract: "5f7eb7849934609870a09dd17ee8b9e45a8d878642754ed5bbed6bbc0f2e6bf5"
     part_a_integrity: "PASS: branch ancestry and single-transfer-file scope verified; transfer hash preserved; three delimiter slices integrated byte-identically; YAML parsed with 50 hard invariants and 10 semantic dimensions; WSL Node 24.19 typecheck and 858/858 baseline tests PASS."
-    note: "Canonical S13L Part A is integrated. Controller must not implement Part B; next action is a fresh non-fork builder that reconstructs context from repository authority. S13M remains forbidden."
+    part_b_implemented_at: "2026-08-28T21:24:26Z"
+    part_b_commit: "dac2ca5f28c36fccc045003dfece26a6086af951"
+    paths_part_b:
+      - src/intelligence/guardrails-security/
+      - src/intelligence/skills/definitions/guardrailsSecurityS13L.ts
+      - src/intelligence/skills/index.ts (append-only 15th Skill)
+      - tests/guardrails-security/
+      - tests/frontend-product-surface/frontendProductSurface.test.ts (mechanical append-only relaxation)
+      - tests/postgres-data-modeling/postgresDataModeling.test.ts (mechanical future-step relaxation)
+      - brain-bootstrap/reports/S13L-guardrails-security-verification.md
+    contract_tests: "T1-T112 equivalent coverage in 85 canonical focused tests plus 30 exhaustive atomic-isolation probes; 8 positives and all exact 36 named negatives. Full suite 973/973."
+    quality_checks: "WSL Node 24.19 typecheck PASS; focused 115/115; full 973/973 pre-build; genuine dist-absent build PASS with prior ignored dist restored; post-build 973/973; Part A/package/Core unchanged."
+    skill_vs_no_skill: "Frozen provider-blind truth. Same 8 inputs/host/provider class/capability provider/parser/gate/evaluator/S09/S10; only Skill prose differs. Baseline 120/248, Skill 248/248, delta +128; SD-001..008 qualify; each raw group A=8/B=8/C=0, delta 16, max share 1/2; SD-009/010 zero; hard invariants 400/400; eight unsafe counters 0; no regression; threshold PASS."
+    builder_review: "Repaired secret-ref propagation widening, candidate permission/disclosure smuggling, unknown enum fail-open behavior, unbounded non-NONE action side effects, incomplete content/log/memory coverage and unnamed negative fixtures; all final QA rerun."
+    boundaries: "No AgentDefinition/Core branch/provider/dependency/Capability Registry/MCP/identity-policy-vault-crypto-auth runtime/compliance system/persistent handle/future-stage implementation."
+    note: "Builder PASS at dac2ca5f...; INDEPENDENT_VERIFICATION_REQUIRED. S13M remains NOT_STARTED and forbidden until a different fresh non-fork read-only verifier returns PASS."
 
 build_day:
   date: "2026-08-29"

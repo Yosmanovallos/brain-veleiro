@@ -6,8 +6,8 @@
 
 ## Current Objective
 
-S00–S13K are `VERIFIED PASS`. S13L canonical Part A is integrated and verified; a fresh non-fork
-Part B builder is now required. S13M remains forbidden.
+S00–S13K are `VERIFIED PASS`. S13L fresh non-fork Part B builder returned `PASS`; a different fresh
+non-fork read-only independent verifier is required. S13M remains forbidden.
 
 ## Current Repository State
 
@@ -15,7 +15,7 @@ Part B builder is now required. S13M remains forbidden.
 `main`
 
 **Verification target:**
-`30e896bb02bed2b44c023a5119e6ab12d15b0e3d` (S13L Part-A-only integration; documentation HEAD may be later)
+`dac2ca5f28c36fccc045003dfece26a6086af951` (S13L Part B implementation; documentation HEAD may be later)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
@@ -26,24 +26,24 @@ Part B builder is now required. S13M remains forbidden.
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T210620Z-s13l-part-a-integrated-to-fresh-builder.md`
+`brain/context/handoffs/2026-08-28T212426Z-s13l-independent-verification-required.md`
 
 **Handoff status:**
-`PART_A_INTEGRATED / PART_B_FRESH_BUILDER_REQUIRED`
+`BUILDER_PASS / INDEPENDENT_VERIFICATION_REQUIRED`
 
 ## Current Status
 
-Matching ChatGPT response `5457707989` delivered a single transfer commit `73bf85e1…`. Transfer
-SHA-256 is `f8800cf9…57e45e1`. The three canonical artifacts were extracted byte-identically; hashes
-are recorded in STATE. The DEEP Quality Contract parses with 50 hard invariants and ten dimensions.
-WSL Node 24.19 typecheck and the unchanged 858/858 baseline suite pass.
+Part B implements the bounded SKILL_ONLY security decision, typed fifteenth Skill, actual-candidate
+gate, real S12→S10→S09 path, 8 positives, 36 named negatives, T1–T112-equivalent tests, 30/30 atomic
+isolation and frozen provider-blind OI-A. Builder QA: focused 115/115, full 973/973 before and after
+dist-absent build; Part A/package/Core unchanged. Exact OI-A is recorded in the current handoff.
 
 ## Next Exact Action
 
-Launch a fresh non-fork S13L Part B builder. It must reconstruct from repo/STATE/CURRENT/latest
-handoff/global rules/S13L Part A and matching control-plane response, stay inside canonical allowed
-scope, perform exact T1–T112/8-positive/36-negative/30-atomic OI-A/full QA evidence, commit/push the
-builder candidate and hand off to a different fresh read-only verifier.
+Launch a different fresh non-authoring, non-fork, read-only S13L verifier using the exact packet in
+the current handoff. It must independently reproduce integrity, semantics, 115/115 focused, 973/973
+full pre/post-build, 30/30 isolation, exact OI-A raw groups and all eight zero unsafe counters. It
+must not repair or launch S13M.
 
 ### Operating Rule
 
