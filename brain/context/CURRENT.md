@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S13I is `VERIFIED PASS`. S13J FAIL-1 repairs are complete and the sole active step is again `AWAITING_INDEPENDENT_VERIFICATION`. Part A remains immutable; S13K remains blocked.
+S00–S13J are `VERIFIED PASS`. S13K is the sole active step at authoring preflight; no S13K Part A or Part B has started.
 
 ## Current Repository State
 
@@ -14,29 +14,29 @@ S13I is `VERIFIED PASS`. S13J FAIL-1 repairs are complete and the sole active st
 `main`
 
 **HEAD:**
-`42b238425b24f7a58dede6e471f00eae3b18a031` (S13J FAIL-1 repair checkpoint; verify the current documentation HEAD with `git rev-parse HEAD`)
+`c2f79eb097e04833f4d67afbcb3e88d399f0ec28` (independently verified S13J checkpoint; verify the current documentation HEAD with `git rev-parse HEAD`)
 
 **Worktree status:**
 `CLEAN as of this update (apart from the retained untracked scaffolding .md files); verify independently`
 
 **Last independently verified at:**
-`2026-08-28T03:18:00Z (fresh isolated read-only executable verifier PASS)`
+`2026-08-28T04:27:00Z (S13J fresh isolated read-only executable verifier PASS)`
 
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-28T041700Z-s13j-repair1-independent-verification-required.md`
+`brain/context/handoffs/2026-08-28T042700Z-s13j-verified-pass.md`
 
 **Handoff status:**
-`REPAIR_1_COMPLETE / INDEPENDENT_VERIFICATION_REQUIRED`
+`S13J VERIFIED PASS / S13K PREFLIGHT`
 
 ## Current Status
 
-S00–S13I: `VERIFIED PASS`. All four S13J FAIL-1 findings are repaired. Repaired QA: typecheck, 63/63 focused, 768/768 full, dist-absent build, 768/768 post-build. OI-A now uses frozen provider-blind truth and 30 distinct observations: 56/186 → 186/186, delta +130, ten qualified dimensions. S13K remains `NOT_STARTED`.
+S00–S13J: `VERIFIED PASS`. S13J independently reproduced typecheck, 63/63 focused, 768/768 full before/after clean build, and OI-A 56/186 → 186/186 with ten qualified dimensions. S13K is `IN_PROGRESS` at preflight only.
 
 ## Next Exact Action
 
-Run a second fresh isolated, non-authoring, read-only verifier against the pushed repair checkpoint. Do not start S13K before PASS.
+Inspect the repository for S13K, create the compact authoring evidence pack, publish `CHATGPT_AUTHORING_REQUIRED`, and wait for a matching canonical response. Do not implement S13K Part B first.
 
 ### Operating Rule
 
