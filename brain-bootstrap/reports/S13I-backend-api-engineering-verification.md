@@ -4,11 +4,13 @@
 
 **Status:** `BUILDER PASS — FRESH INDEPENDENT VERIFICATION REQUIRED`
 
-**Verified at:** `2026-08-27T21:45:00Z`
+**Verified at:** `2026-08-28T02:48:00Z`
 
 **Part A base commit:** `29639651634d7ba38e6ee4dd61874a5bedbddafb`
 
 **Part B implementation commit:** `91bdc43e5eff5dd24355a9c0d2af2cefd2eeebfa`
+
+**Mechanical repair commit:** `ef400fc3b6231459d62bb8a7358cfc45235fb7a9`
 
 ## Outcome
 
@@ -30,10 +32,10 @@ S12→S10→S09 execution bridge, OI-A-safe comparison scoring, and public expor
 | Part A integrity | `git diff 2963965 -- <3 canonical Part A paths>` empty |
 | Part A sha256 | Skill `b44e32d30ea1fd7489cca41dbdd367f04e44df9d324b26d211f2f1a2e9775757`; QC `d055c78232a556c61ce76e094acdea268c0f72b1fd28c3b4066dc115f6d094c3`; Contract `89bf153eef02adfe2ca822bca6a2db3bbb171e14e2d72766667868ebd616bc59` |
 | `npm run typecheck` | PASS, 0 errors |
-| `npx vitest run tests/backend-api-engineering/` | PASS, 66/66 |
-| `npm test` before clean build | PASS, 704/704 (638 prior + 66 S13I) |
+| `npx vitest run tests/backend-api-engineering/` | PASS, 67/67 |
+| `npm test` before clean build | PASS, 705/705 (638 prior + 67 S13I) |
 | verified removal of repo-local `dist`; `npm run build` | PASS |
-| `npm test` after clean build | PASS, 704/704 |
+| `npm test` after clean build | PASS, 705/705 |
 | `git diff --check` | PASS |
 | dependency manifests | unchanged; runtime dependencies remain only `better-sqlite3` |
 
@@ -50,7 +52,7 @@ The focused suite uses named tests whose labels map directly to the canonical ca
 | T38–T43 | read/idempotent/non-idempotent/external effects and S13O-only reliability seam |
 | T44–T48 | endpoint observability, allowlist/redaction, raw header/body/secret and vendor rejection |
 | T49–T60 | compatibility/break approval, pagination/rationale, filter/sort allowlists, rate-limit/OpenAPI boundary, exact acceptance/evidence preservation |
-| T61–T69 | Skill permissions, no AgentDefinition/Core branch, real S12 lazy load + S10 compile + S09 run, honest reference provider, source-isolation audit, READY/auth-bypass anchor |
+| T61–T69 | Skill permissions, no AgentDefinition/Core branch, real S12 lazy load + S10 compile + S09 run, honest reference provider, source-isolation audit, READY/auth-bypass anchor, and parsed-candidate non-substitution regression |
 | T70–T75 | all six canonical positives, including disposable built-in Node HTTP realism |
 | T76 | 28 parameterized canonical negative fixtures, each rejected by deterministic validation |
 | T77–T78 | loopback `127.0.0.1`, port `0` allocation, no external network, server closed and not listening before test completion |
@@ -76,15 +78,36 @@ fixture-id, Skill-id, frozen-truth, or separate bad-baseline branch in the provi
 | framework/provider bindings | 6 | 0 |
 | future-stage pull-forward | 6 | 0 |
 
-Dimension-specific delta is `+115`; all ten semantic dimensions improve. Each dimension has 18
-scored assertions across six fixtures, improvement is at least `+5`, and maximum single-assertion
-share is at most `0.20`. Cross-cutting `XC-A` is reported separately and excluded from dimension
-qualification. `meets_threshold: true`; hard-invariant regression: `false`.
+Dimension-specific delta is `+115`; all ten dimensions have positive raw delta, and seven qualify
+as improved after applying the corrected assertion-concentration rule: `SD-001`, `SD-002`,
+`SD-005`, `SD-007`, `SD-008`, `SD-009`, and `SD-010`. This exceeds the required minimum of five.
+Each dimension has 18 scored instances across six fixtures. Cross-cutting `XC-A` is reported
+separately and excluded from dimension qualification. `meets_threshold: true`; hard-invariant
+regression: `false`.
+
+### Corrected OI-A raw contribution evidence
+
+`single_assertion_contributions[id]` counts the number of scored instances where that assertion ID
+improved from no-Skill false to with-Skill true. `max_single_assertion_share` is the largest raw
+contribution divided by the dimension's total delta.
+
+| Dimension | Delta | Raw per-assertion contributions | Max share | Qualifies |
+|---|---:|---|---:|---|
+| SD-001 | +18 | `SD1-A=6, SD1-B=6, SD1-C=6` | 0.3333 | yes |
+| SD-002 | +16 | `SD2-A=6, SD2-B=4, SD2-C=6` | 0.3750 | yes |
+| SD-003 | +11 | `SD3-A=4, SD3-B=6, SD3-C=1` | 0.5455 | no |
+| SD-004 | +6 | `SD4-A=6, SD4-B=0, SD4-C=0` | 1.0000 | no |
+| SD-005 | +12 | `SD5-A=0, SD5-B=6, SD5-C=6` | 0.5000 | yes |
+| SD-006 | +5 | `SD6-A=0, SD6-B=4, SD6-C=1` | 0.8000 | no |
+| SD-007 | +12 | `SD7-A=6, SD7-B=0, SD7-C=6` | 0.5000 | yes |
+| SD-008 | +5 | `SD8-A=1, SD8-B=2, SD8-C=2` | 0.4000 | yes |
+| SD-009 | +12 | `SD9-A=6, SD9-B=6, SD9-C=0` | 0.5000 | yes |
+| SD-010 | +18 | `SD10-A=6, SD10-B=6, SD10-C=6` | 0.3333 | yes |
 
 ## Builder-side read-only review
 
-The review found no Part A semantic contradiction. It found and fixed two mechanical robustness
-issues before closure:
+The original builder review found no Part A semantic contradiction and fixed two mechanical
+robustness issues before the first closure:
 
 1. a substring check treated `normalize` as containing an ORM token; persistence checks now use
    bounded `sql`/`orm` tokens;
@@ -93,6 +116,22 @@ issues before closure:
    final validator recomputes and compares all of them, and rejects injected multi-operation input.
 
 All focused/full/build/post-build checks were rerun after those fixes.
+
+The first fresh independent verification then returned `FAIL` with two additional mechanical
+findings, both repaired without Part A changes:
+
+1. `planBackendApiEngineering()` now passes the actual parsed model candidate into the deterministic
+   gate. The gate requires a candidate argument, preserves its non-terminal fields, recomputes
+   validation/status/blockers, and never imports or invokes the faithful synthesizer. A regression
+   provider injects an auth-order defect and proves the final decision remains defective-but-BLOCKED
+   rather than being replaced by a faithful answer.
+2. OI-A now groups improved scored instances by assertion ID and exposes raw contribution counts.
+   The pinned test proves the corrected ratios for all ten dimensions; the honest qualification
+   result is seven improved dimensions rather than the former incorrect claim of ten.
+
+Builder read-only review of the repair diff found no Part A drift, no new boundary/dependency, and
+no remaining occurrence of the rejected `1 / delta` calculation. Final typecheck, focused, full,
+clean-build, and post-build checks were rerun on the repaired source.
 
 ## Scope audit and limitations
 
@@ -107,7 +146,7 @@ All focused/full/build/post-build checks were rerun after those fixes.
 
 ## Closure
 
-Builder closure is PASS. S13I is not independently verified by its builder. The only next allowed
+Builder repair closure is PASS. S13I is not independently verified by its builder. The only next allowed
 action is a fresh-session, read-only independent verification that re-runs Part A integrity,
 typecheck, focused/full tests, clean build/post-build tests, independent OI-A measurement, HTTP
 fixture inspection, boundary/dependency audit, and confirms S13J remains `NOT_STARTED`.

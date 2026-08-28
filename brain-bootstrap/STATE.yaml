@@ -6,7 +6,7 @@ independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-27T21:45:00Z"
+last_verified_at: "2026-08-28T02:48:00Z"
 steps:
   S00: PASS
   S01: PASS
@@ -59,8 +59,8 @@ repository:
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
   commits: 39
-  head_sha: "91bdc43e5eff5dd24355a9c0d2af2cefd2eeebfa"
-  head_sha_note: "This is the S13I Part B implementation commit; the follow-up documentation commit records this real implementation checkpoint. Part A was committed at 2963965."
+  head_sha: "ef400fc3b6231459d62bb8a7358cfc45235fb7a9"
+  head_sha_note: "This is the S13I mechanical repair commit after the first fresh verifier FAIL. Part A remains at 2963965 and the original Part B implementation at 91bdc43."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -432,6 +432,7 @@ repository:
     part_b_implemented_at: "2026-08-27T21:45:00Z"
     part_a_commit: "29639651634d7ba38e6ee4dd61874a5bedbddafb"
     part_b_commit: "91bdc43e5eff5dd24355a9c0d2af2cefd2eeebfa"
+    repair_commit: "ef400fc3b6231459d62bb8a7358cfc45235fb7a9"
     paths_part_a:
       - brain-bootstrap/skills/BACKEND_API_ENGINEERING_SKILL_S13I.md
       - brain-bootstrap/quality-contracts/S13I_BACKEND_API_ENGINEERING_DEEP.yaml
@@ -445,9 +446,10 @@ repository:
       - brain-bootstrap/reports/S13I-backend-api-engineering-verification.md
       - brain/context/handoffs/2026-08-27T214500Z-s13i-independent-verification-required.md
     execution_model: "SKILL_ONLY through unchanged S12 metadata-only discovery/lazy load -> S10 compileAgentDefinition -> S09 runAgent with a caller-supplied generic host; no S13I AgentDefinition or Core branch."
-    contract_tests: "T1-T92 mapped to 66 executable focused tests: 6 canonical positives, 28 canonical negatives, built-in HTTP realism, runtime/gate/source audits and OI-A-safe scoring. Full suite 704/704 (638 prior + 66 S13I)."
-    quality_checks: "Part A diff from 2963965 empty; typecheck 0 errors; focused 66/66; full 704/704 before and after clean build; build PASS; git diff --check PASS; package manifests unchanged."
-    skill_vs_no_skill: "Same 6 inputs/host/provider/runtime/parser/gate; only rule prose differs. Baseline 71/186, Skill 186/186, dimension-specific delta +115, all 10 dimensions improved, 18 scored assertions per dimension, max single share <=0.20, hard invariants 120/120, unsafe auth/leak/direct-persistence/framework/future counters 0, threshold PASS, no hard-invariant regression. Cross-cutting XC-A excluded from dimension qualification."
+    contract_tests: "T1-T92 mapped to 67 executable focused tests: 6 canonical positives, 28 canonical negatives, built-in HTTP realism, runtime/gate/source audits, parsed-candidate non-substitution regression and corrected OI-A scoring. Full suite 705/705 (638 prior + 67 S13I)."
+    quality_checks: "Part A diff from 2963965 empty; typecheck 0 errors; focused 67/67; full 705/705 before and after clean build; build PASS; git diff --check PASS; package manifests unchanged."
+    skill_vs_no_skill: "Same 6 inputs/host/provider/runtime/parser/gate; only rule prose differs. Baseline 71/186, Skill 186/186, dimension-specific delta +115, 7 correctly qualified dimensions (SD-001/002/005/007/008/009/010), 18 scored instances per dimension, raw contributions grouped by assertion ID, hard invariants 120/120, unsafe auth/leak/direct-persistence/framework/future counters 0, threshold PASS, no hard-invariant regression. Cross-cutting XC-A excluded from dimension qualification."
+    independent_fail_repairs: "First fresh verification FAIL (issue #1 response to handoff 2026-08-27T21:48:00Z-S13I-independent-verification) identified two mechanical defects. Repair ef400fc makes the real runAgent-parsed candidate mandatory input to the deterministic gate, preserves candidate fields while recomputing terminal gate outcome, adds a non-substitution regression, and computes max_single_assertion_share from raw improved-instance counts grouped by assertion ID rather than 1/delta. Part A unchanged."
     review_fixes: "Builder read-only review fixed bounded SQL/ORM token matching and strengthened full decision recomputation for boundary_map, observability allowlist/redaction, compatibility pagination/rate-limit, blockers and injected multi-operation inputs. All QA rerun afterward."
     boundaries: "No Brain HTTP server, web framework, auth provider, DB/ORM/schema/migration, retry/backoff/idempotency store, observability vendor, OpenAPI source inversion, Capability Registry, S13J/S13L/S13O/S13P/S14 implementation, new runtime dependency or persistent network handle."
     note: "S13I builder closure PASS. Fresh independent read-only verification is mandatory before S13J; S13J remains NOT_STARTED."
