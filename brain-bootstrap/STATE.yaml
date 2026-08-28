@@ -1,6 +1,6 @@
 bootstrap_version: 1.2.0
 current_step: S13J
-status: IN_PROGRESS
+status: CHATGPT_AUTHORING_REQUIRED
 primary_builder: codex
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
@@ -454,6 +454,15 @@ repository:
     review_fixes: "Builder read-only review fixed bounded SQL/ORM token matching and strengthened full decision recomputation for boundary_map, observability allowlist/redaction, compatibility pagination/rate-limit, blockers and injected multi-operation inputs. All QA rerun afterward."
     boundaries: "No Brain HTTP server, web framework, auth provider, DB/ORM/schema/migration, retry/backoff/idempotency store, observability vendor, OpenAPI source inversion, Capability Registry, S13J/S13L/S13O/S13P/S14 implementation, new runtime dependency or persistent network handle."
     note: "S13I VERIFIED PASS after mechanical repair and fresh isolated executable verification. S13J is now the sole active step under its authoring-preflight gate; S13J Part B has not started."
+
+  postgres_data_modeling:
+    status: CHATGPT_AUTHORING_REQUIRED
+    preflight_at: "2026-08-28T03:22:00Z"
+    preflight: "brain-bootstrap/reports/S13J-authoring-preflight.md"
+    verified_start_head: "1986695234a226bbfd1e0dcaacbcc419e41f2a04"
+    repo_facts: "No S13J Skill/QC/spec/source/test exists; no PostgreSQL driver/server/runtime dependency exists; the only database dependency is better-sqlite3 behind the isolated S07 MemoryProvider reference adapter and is not an application-data precedent. S13I exposes provider-neutral ApiDataPortRequirement and ApiAtomicityContract inputs and explicitly defers tables/indexes/migrations/transaction mechanisms to S13J."
+    gate: "ChatGPT must author complete canonical Part A before any S13J Part B implementation. Requested targets: POSTGRES_DATA_MODELING_SKILL_S13J.md, S13J_POSTGRES_DATA_MODELING_<DEPTH>.yaml, POSTGRES_DATA_MODELING_CONTRACT_S13J.md."
+    note: "S13J inspection/preflight only. No semantic Part A or implementation authored by Codex."
 
 build_day:
   date: "2026-08-29"
