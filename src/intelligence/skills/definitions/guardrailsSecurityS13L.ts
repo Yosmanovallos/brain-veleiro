@@ -16,4 +16,3 @@ export const guardrailsSecurityS13L: SkillDefinition = {
   permissions: { allowed_capabilities: [], allowed_side_effects: ["NONE"], deny_unlisted_capabilities: true },
   evals: ["evals/s13l/guardrails-security-positive", "evals/s13l/guardrails-security-negative", "evals/s13l/guardrails-security-skill-comparison"],
 };
-

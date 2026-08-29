@@ -37,4 +37,3 @@ function observe(atomic: GuardrailsAtomicDecision): Record<string, unknown> { re
   "SD10-A": atomic.boundary.provider_neutral_result, "SD10-B": atomic.boundary.future_stage_result, "SD10-C": atomic.boundary.prior_contract_result, "XC-A": true,
 }; }
 export const FROZEN_GUARDRAILS_SECURITY_FIXTURE_TRUTH: readonly FrozenGuardrailsSecurityFixtureTruth[] = Object.freeze(ALL_POSITIVE_INPUTS.map((input) => Object.freeze({ task_ref: input.task_ref, expected_assertions: Object.freeze(observe(projectAtomicOracle(input))) })));
-

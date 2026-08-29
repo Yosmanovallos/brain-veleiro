@@ -157,4 +157,3 @@ A different fresh non-authoring, non-fork, read-only verifier must independently
 target, hashes, 115 focused/973 full counts, 8/36 fixtures, candidate anti-substitution, real runtime,
 30/30 isolation, raw OI-A figures, eight zero unsafe counters and boundaries. Only its `VERIFIED PASS`
 may close S13L and authorize S13M.
-

@@ -32,4 +32,3 @@ export const FX_POS_007 = (() => { const input = baseGuardrailsSecurityInput(); 
 export const FX_POS_008 = (() => { const input = authenticated("TASK-GSS-008"); input.action = { action_id: "access.rotate", action_fingerprint: "fp:access-rotate:v1", impact: "HIGH_IMPACT", side_effect: "EXTERNAL", recovery_mode: "NOT_REQUIRED" }; capability(input, "capability:access-rotate", "EXTERNAL"); input.policy.approval_required_for_high_impact = true; input.approval.policy = { approval_path_allowed: true, distinct_approver_required: true }; return input; })();
 export const ALL_POSITIVE_INPUTS = [FX_POS_001, FX_POS_002, FX_POS_003, FX_POS_004, FX_POS_005, FX_POS_006, FX_POS_007, FX_POS_008] as const;
 export { NOW, authenticated, approved, capability };
-

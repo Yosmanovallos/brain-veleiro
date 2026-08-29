@@ -22,4 +22,3 @@ export async function planGuardrailsSecurity(input: GuardrailsSecurityInput, har
   const run = await runAgent(compiled.run_options); const candidate = parseCandidate(run); const gated = gateGuardrailsSecurity(input, candidate);
   return { ...gated, candidate, run, skillLoaded: Boolean(loadedSkill), materializedDefinition };
 }
-

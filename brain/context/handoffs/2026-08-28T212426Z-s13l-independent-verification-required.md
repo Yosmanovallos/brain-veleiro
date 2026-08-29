@@ -75,4 +75,3 @@ Required work:
    any prior ignored dist safely restored, and full post-build.
 9. Return one evidence-backed `VERIFIED PASS` or `FAIL` report. Do not repair. On PASS only, the
    controller may mechanically close S13L and authorize S13M.
-

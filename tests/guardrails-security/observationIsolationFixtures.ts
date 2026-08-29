@@ -22,4 +22,3 @@ export const OBSERVATION_ATOMIC_MUTATIONS: Record<string, (decision: GuardrailsS
   "SD9-A": (d) => { d.atomic.traceability.source_refs_result = next(d.atomic.traceability.source_refs_result); }, "SD9-B": (d) => { d.atomic.traceability.evidence_result = next(d.atomic.traceability.evidence_result); }, "SD9-C": (d) => { d.atomic.traceability.blocker_traceability_result = next(d.atomic.traceability.blocker_traceability_result); },
   "SD10-A": (d) => { d.atomic.boundary.provider_neutral_result = next(d.atomic.boundary.provider_neutral_result); }, "SD10-B": (d) => { d.atomic.boundary.future_stage_result = next(d.atomic.boundary.future_stage_result); }, "SD10-C": (d) => { d.atomic.boundary.prior_contract_result = next(d.atomic.boundary.prior_contract_result); },
 };
-

@@ -8,4 +8,3 @@ export const FORBIDDEN_CREDENTIAL_KEY_PATTERN = /^(?:password|passwd|secret(?:_?
 export const FORBIDDEN_SECURITY_BINDING_PATTERN = /\b(?:auth0|okta|keycloak|cognito|vault|kms|snyk|lakera|prompt shield|capability registry|mcp server|oauth middleware|jwt verifier|soc\s*2 certified|hipaa compliant)\b/i;
 export const FUTURE_STAGE_IMPLEMENTATION_PATTERN = /\b(?:S13M|S13N|S13O|S13P|S13Q|S13R|S14)\b.{0,48}\b(?:implemented|runtime|provider|framework|registry|stack|deployment)\b/i;
 export const PRIOR_CONTRACT_REWRITE_PATTERN = /\b(?:rewrite|replace|override)\b.{0,48}\bS13[ijk]\b/i;
-

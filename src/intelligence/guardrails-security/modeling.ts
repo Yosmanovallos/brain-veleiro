@@ -8,6 +8,15 @@ const hasText = (value: unknown): boolean => typeof value === "string" && value.
 const result = (passes: boolean): SecurityCheckResult => passes ? "PASS" : "FAIL";
 const highImpact = (input: GuardrailsSecurityInput): boolean => input.action.impact === "HIGH_IMPACT" || input.action.impact === "DESTRUCTIVE_OR_IRREVERSIBLE";
 const protectedAction = (input: GuardrailsSecurityInput): boolean => input.policy.authentication_required || input.policy.authorization_required || input.scope.kind !== "NONE" || Boolean(input.capability.requested_capability_id) || highImpact(input);
+const SECURITY_SCOPE_KINDS = ["NONE", "OWNER", "TENANT", "RESOURCE", "CUSTOM"] as const;
+const TOOL_SIDE_EFFECT_CLASSES = ["NONE", "LOCAL", "EXTERNAL"] as const;
+const SECRET_PROPAGATION_POLICIES = ["TRANSIENT_ONLY", "NONE"] as const;
+const SECURITY_CHECK_RESULTS = ["PASS", "FAIL", "NOT_APPLICABLE"] as const;
+const GUARDRAILS_SECURITY_STATUSES = ["ALLOW", "APPROVAL_REQUIRED", "BLOCKED"] as const;
+const SECURITY_ENFORCEMENT_POINTS = ["NOT_APPLICABLE", "CALLER_GUARD", "API_AUTHORIZATION_BOUNDARY", "RESTRICTED_CAPABILITY_BOUNDARY", "RESOURCE_POLICY_BOUNDARY"] as const;
+const isKnown = (values: readonly string[], value: unknown): value is string => typeof value === "string" && values.includes(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
+const isStringArray = (value: unknown): value is string[] => Array.isArray(value) && value.every((item) => typeof item === "string");
 
 /** Finite known-key defense only. Values are intentionally not heuristically classified. */
 export function findForbiddenCredentialKeys(value: unknown, path = "$", seen = new Set<object>()): string[] {
@@ -54,6 +63,7 @@ function sourceAuthorityPasses(input: GuardrailsSecurityInput): boolean {
 }
 
 export function deriveExpectedGuardrailsAtomic(input: GuardrailsSecurityInput): GuardrailsAtomicDecision {
+  if (inputErrors(input).length) return failClosedAtomic();
   const publicAllowed = input.subject.authentication_mode === "PUBLIC" && !input.policy.authentication_required;
   const authenticated = input.subject.authentication_mode === "AUTHENTICATED" && input.subject.authentication_state === "VERIFIED" && hasText(input.subject.principal_ref);
   const trustedIdentity = publicAllowed || (authenticated && input.subject.identity_provenance === "TRUSTED_AUTH_CONTEXT");
@@ -142,6 +152,49 @@ const ATOMIC_PATHS = ["identity.authentication_result", "identity.provenance_res
 const readPath = (value: unknown, path: string): unknown => path.split(".").reduce<unknown>((current, part) => current && typeof current === "object" ? (current as Record<string, unknown>)[part] : undefined, value);
 const flip = (value: SecurityCheckResult): SecurityCheckResult => value === "PASS" ? "FAIL" : "PASS";
 
+function failClosedAtomic(): GuardrailsAtomicDecision {
+  return {
+    identity: { authentication_result: "FAIL", provenance_result: "FAIL", public_mode_result: "FAIL" },
+    scope: { authorization_result: "FAIL", tenant_isolation_result: "FAIL", confused_deputy_result: "FAIL" },
+    capability: { allowlist_result: "FAIL", side_effect_result: "FAIL", least_privilege_result: "FAIL" },
+    action: { impact_result: "FAIL", approval_result: "FAIL", recovery_result: "FAIL" },
+    secrets: { no_secret_value_result: "FAIL", reference_result: "FAIL", propagation_result: "FAIL" },
+    content: { instruction_data_result: "FAIL", indirect_injection_result: "FAIL", authority_conflict_result: "FAIL" },
+    data: { minimization_result: "FAIL", disclosure_result: "FAIL", memory_logging_result: "FAIL" },
+    enforcement: { point_result: "FAIL", freshness_result: "FAIL", fail_closed_result: "FAIL" },
+    traceability: { source_refs_result: "FAIL", evidence_result: "FAIL", blocker_traceability_result: "FAIL" },
+    boundary: { provider_neutral_result: "FAIL", future_stage_result: "FAIL", prior_contract_result: "FAIL" },
+  };
+}
+
+function hasGuardrailsSecurityDecisionShape(candidate: unknown): candidate is GuardrailsSecurityDecision {
+  if (!isRecord(candidate)
+    || !isKnown(GUARDRAILS_SECURITY_STATUSES, candidate.status)
+    || typeof candidate.task_ref !== "string"
+    || !isStringArray(candidate.spec_refs)
+    || !isRecord(candidate.atomic)
+    || !Array.isArray(candidate.blockers)
+    || !Array.isArray(candidate.approval_requirements)
+    || !isStringArray(candidate.permitted_capability_ids)
+    || !Array.isArray(candidate.permitted_side_effects)
+    || !candidate.permitted_side_effects.every((item) => isKnown(TOOL_SIDE_EFFECT_CLASSES, item))
+    || !isStringArray(candidate.allowed_disclosure_field_refs)
+    || typeof candidate.enforcement_required !== "boolean"
+    || !isKnown(SECURITY_ENFORCEMENT_POINTS, candidate.enforcement_point)
+    || !Array.isArray(candidate.acceptance)
+    || !Array.isArray(candidate.evidence_required)) return false;
+  if (ATOMIC_PATHS.some((path) => !isKnown(SECURITY_CHECK_RESULTS, readPath(candidate.atomic, path)))) return false;
+  if (!candidate.blockers.every((item) => isRecord(item) && typeof item.code === "string" && typeof item.message === "string" && isStringArray(item.source_refs))) return false;
+  if (!candidate.approval_requirements.every((item) => isRecord(item) && typeof item.code === "string" && typeof item.action_fingerprint === "string" && typeof item.reason === "string" && isStringArray(item.required_evidence_refs))) return false;
+  if (!candidate.acceptance.every((item) => isRecord(item) && typeof item.id === "string" && typeof item.condition === "string" && typeof item.verification_method === "string" && typeof item.evidence_expected === "string")) return false;
+  return candidate.evidence_required.every((item) => isRecord(item) && typeof item.kind === "string" && typeof item.description === "string"
+    && (item.source_ref === undefined || typeof item.source_ref === "string") && (item.manual_review_reason === undefined || typeof item.manual_review_reason === "string"));
+}
+
+function candidateShapeErrors(candidate: unknown): string[] {
+  return hasGuardrailsSecurityDecisionShape(candidate) ? [] : ["HI-041: parsed candidate structure is missing or incomplete."];
+}
+
 export function deriveGuardrailsSecurityProfileFromRules(ruleTexts: readonly string[]): GuardrailsSecuritySynthesisProfile {
   const text = ruleTexts.join("\n");
   return { complete_atomic_reasoning: /deny by default|positive.*authorization/i.test(text) && /secret values forbidden|opaque secret/i.test(text) && /instruction.*data|prompt injection/i.test(text), complete_traceability: /traceability.*mandatory|source\/evidence refs/i.test(text), safe_boundaries: /provider neutrality|no later-stage pull-forward/i.test(text) };
@@ -164,6 +217,13 @@ function approvalRequirements(input: GuardrailsSecurityInput, atomic: Guardrails
 }
 
 export function synthesizeGuardrailsSecurityDecision(input: GuardrailsSecurityInput, profile: GuardrailsSecuritySynthesisProfile = deriveGuardrailsSecurityProfileFromRules([])): GuardrailsSecurityDecision {
+  const validationErrors = inputErrors(input);
+  if (validationErrors.length) return {
+    status: "BLOCKED", task_ref: input.task_ref, spec_refs: [...input.spec_refs], atomic: failClosedAtomic(),
+    blockers: validationErrors.map((message, index) => ({ code: `INPUT_VALIDATION_${index + 1}`, message, source_refs: [...input.spec_refs, input.policy.policy_ref].filter(Boolean) })),
+    approval_requirements: [], permitted_capability_ids: [], permitted_side_effects: [], allowed_disclosure_field_refs: [],
+    enforcement_required: true, enforcement_point: input.enforcement.enforcement_point, acceptance: clone(input.acceptance), evidence_required: clone(input.evidence_required),
+  };
   const atomic = clone(deriveExpectedGuardrailsAtomic(input));
   if (!profile.complete_atomic_reasoning) for (let index = 0; index < ATOMIC_PATHS.length; index += 3) for (const offset of [0, 1]) {
     const [group, field] = ATOMIC_PATHS[index + offset].split(".");
@@ -180,12 +240,18 @@ function inputErrors(input: GuardrailsSecurityInput): string[] {
   const errors: string[] = [];
   if (!hasText(input.task_ref) || !hasText(input.action.action_id) || !hasText(input.action.action_fingerprint)) errors.push("HI-001: one bounded task/action with an opaque fingerprint is required.");
   if (!input.spec_refs.length) errors.push("HI-043: spec refs and supplied evidence must be preserved.");
-  if (!["NOT_APPLICABLE", "CALLER_GUARD", "API_AUTHORIZATION_BOUNDARY", "RESTRICTED_CAPABILITY_BOUNDARY", "RESOURCE_POLICY_BOUNDARY"].includes(input.enforcement.enforcement_point)) errors.push("HI-037: enforcement point enum is unknown.");
+  if (!isKnown(SECURITY_SCOPE_KINDS, input.scope.kind)) errors.push("HI-039: scope kind enum is unknown.");
+  if (!isKnown(TOOL_SIDE_EFFECT_CLASSES, input.action.side_effect)) errors.push("HI-017: action side-effect enum is unknown.");
+  if (input.capability.descriptor_side_effect !== undefined && !isKnown(TOOL_SIDE_EFFECT_CLASSES, input.capability.descriptor_side_effect)) errors.push("HI-017: capability descriptor side-effect enum is unknown.");
+  if (!isKnown(SECRET_PROPAGATION_POLICIES, input.policy.allowed_secret_reference_propagation)) errors.push("HI-029: secret propagation-policy enum is unknown.");
+  if (!isKnown(SECURITY_ENFORCEMENT_POINTS, input.enforcement.enforcement_point)) errors.push("HI-037: enforcement point enum is unknown.");
   if (findForbiddenCredentialKeys(input).length) errors.push("HI-026: finite scanner found a forbidden credential-like key.");
   return errors;
 }
 
 function structuralErrors(candidate: GuardrailsSecurityDecision, input: GuardrailsSecurityInput, expected: GuardrailsAtomicDecision): string[] {
+  const shapeErrors = candidateShapeErrors(candidate);
+  if (shapeErrors.length) return shapeErrors;
   const errors: string[] = [];
   if (candidate.task_ref !== input.task_ref || !same(candidate.spec_refs, input.spec_refs)) errors.push("HI-001: candidate task/spec boundary differs from the bounded input.");
   for (const path of ATOMIC_PATHS) if (readPath(candidate.atomic, path) !== readPath(expected, path)) errors.push(`HI-041: actual candidate atomic field ${path} differs from deterministic recomputation.`);
@@ -203,30 +269,37 @@ function structuralErrors(candidate: GuardrailsSecurityDecision, input: Guardrai
 }
 
 export function validateGuardrailsSecurityInput(input: GuardrailsSecurityInput): GuardrailsSecurityValidationResult {
-  const expected = deriveExpectedGuardrailsAtomic(input); const errors = [...inputErrors(input), ...ATOMIC_PATHS.filter((path) => readPath(expected, path) === "FAIL" && path !== "action.approval_result").map((path) => `HI-039: required gate failed at ${path}.`)];
-  const recomputed_status = errors.length ? "BLOCKED" : statusFromAtomic(expected);
+  const base = inputErrors(input); const expected = base.length ? undefined : deriveExpectedGuardrailsAtomic(input); const errors = [...base, ...(expected ? ATOMIC_PATHS.filter((path) => readPath(expected, path) === "FAIL" && path !== "action.approval_result").map((path) => `HI-039: required gate failed at ${path}.`) : [])];
+  const recomputed_status = expected && !errors.length ? statusFromAtomic(expected) : "BLOCKED";
   const hard = Object.fromEntries(Array.from({ length: 50 }, (_, index) => [`HI-${String(index + 1).padStart(3, "0")}`, true]));
   if (errors.length) hard["HI-039"] = false;
   return { valid: errors.length === 0, errors, hard_invariants: hard, recomputed_status };
 }
 
 export function validateGuardrailsSecurityDecision(candidate: GuardrailsSecurityDecision, input: GuardrailsSecurityInput): GuardrailsSecurityValidationResult {
-  const expected = deriveExpectedGuardrailsAtomic(input); const base = inputErrors(input); const structural = structuralErrors(candidate, input, expected); const expectedStatus = base.length || ATOMIC_PATHS.some((path) => path !== "action.approval_result" && readPath(expected, path) === "FAIL") ? "BLOCKED" : statusFromAtomic(expected);
-  const statusErrors = candidate.status === expectedStatus ? [] : [`HI-041: candidate status '${candidate.status}' differs from recomputed '${expectedStatus}'.`];
+  const base = inputErrors(input); const expected = base.length ? undefined : deriveExpectedGuardrailsAtomic(input); const structural = expected ? structuralErrors(candidate, input, expected) : candidateShapeErrors(candidate); const expectedStatus = !expected || structural.length || ATOMIC_PATHS.some((path) => path !== "action.approval_result" && readPath(expected, path) === "FAIL") ? "BLOCKED" : statusFromAtomic(expected);
+  const candidateStatus = readPath(candidate, "status"); const statusErrors = candidateStatus === expectedStatus ? [] : [`HI-041: candidate status '${String(candidateStatus)}' differs from recomputed '${expectedStatus}'.`];
   const errors = [...base, ...structural, ...statusErrors]; const hard = Object.fromEntries(Array.from({ length: 50 }, (_, index) => [`HI-${String(index + 1).padStart(3, "0")}`, true]));
   for (const error of errors) { const match = error.match(/HI-\d{3}/); if (match) hard[match[0]] = false; }
   return { valid: errors.length === 0, errors, hard_invariants: hard, recomputed_status: expectedStatus };
 }
 
 export function gateGuardrailsSecurity(input: GuardrailsSecurityInput, candidate: GuardrailsSecurityDecision): { decision: GuardrailsSecurityDecision; decisionValidation: GuardrailsSecurityValidationResult } {
-  const expected = deriveExpectedGuardrailsAtomic(input); const errors = [...inputErrors(input), ...structuralErrors(candidate, input, expected)]; const expectedStatus = statusFromAtomic(expected); const decision = clone(candidate);
+  const base = inputErrors(input); const expected = base.length ? undefined : deriveExpectedGuardrailsAtomic(input); const structural = expected ? structuralErrors(candidate, input, expected) : candidateShapeErrors(candidate); const errors = [...base, ...structural]; const expectedStatus = expected ? statusFromAtomic(expected) : "BLOCKED"; const decision = (isRecord(candidate) ? clone(candidate) : {}) as GuardrailsSecurityDecision;
   decision.status = errors.length ? "BLOCKED" : expectedStatus;
-  decision.blockers = [...blockersFromAtomic(input, expected), ...errors.map((message, index) => ({ code: `CANDIDATE_GATE_${index + 1}`, message, source_refs: [...input.spec_refs, input.policy.policy_ref].filter(Boolean) }))];
-  decision.approval_requirements = errors.length ? [] : approvalRequirements(input, expected);
+  decision.blockers = [...(expected ? blockersFromAtomic(input, expected) : []), ...errors.map((message, index) => ({ code: `CANDIDATE_GATE_${index + 1}`, message, source_refs: [...input.spec_refs, input.policy.policy_ref].filter(Boolean) }))];
+  decision.approval_requirements = errors.length || !expected ? [] : approvalRequirements(input, expected);
   decision.permitted_capability_ids = decision.status === "ALLOW" && input.capability.requested_capability_id ? [input.capability.requested_capability_id] : [];
   decision.permitted_side_effects = decision.status === "ALLOW" ? [input.action.side_effect] : [];
   decision.allowed_disclosure_field_refs = decision.status === "ALLOW" ? [...input.sensitive_data.proposed_disclosure_field_refs] : [];
-  return { decision, decisionValidation: validateGuardrailsSecurityDecision(decision, input) };
+  const decisionValidation = validateGuardrailsSecurityDecision(decision, input);
+  if (errors.length) {
+    decisionValidation.valid = false;
+    decisionValidation.recomputed_status = "BLOCKED";
+    decisionValidation.errors = [...errors, ...decisionValidation.errors];
+    for (const error of errors) { const match = error.match(/HI-\d{3}/); if (match) decisionValidation.hard_invariants[match[0]] = false; }
+  }
+  return { decision, decisionValidation };
 }
 
 export const GUARDRAILS_ATOMIC_PATHS = ATOMIC_PATHS;

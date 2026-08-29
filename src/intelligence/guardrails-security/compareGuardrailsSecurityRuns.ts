@@ -74,4 +74,3 @@ export function compareGuardrailsSecurityRuns(baselineRuns: readonly GuardrailsS
 }
 
 export const GUARDRAILS_SECURITY_ATOMIC_ASSERTION_COUNT = GUARDRAILS_ATOMIC_PATHS.length;
-
