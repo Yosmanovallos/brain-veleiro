@@ -15,7 +15,7 @@ non-authoring, non-fork, read-only independent verifier. S13N remains forbidden.
 `main`
 
 **Verification target:**
-`707ea8ea9dd1f86ff6ef01dff0dc148d6df323c9` (S13M Part B repair target)
+`9cf9cb681ea0d0e7e72efa95bef642acf0898533` (S13M Part B repair target)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`

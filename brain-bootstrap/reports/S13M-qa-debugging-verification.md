@@ -127,3 +127,8 @@ before dereference, requires nonempty exact descriptor-to-result candidate/envir
 completion, treats empty CONTRADICTS records as unresolved contradictions, and derives causal factors
 from the experiment rather than a literal. Typecheck and focused S13M pass; independent verification
 remains required.
+
+Repair 3 final test target `9cf9cb681ea0d0e7e72efa95bef642acf0898533`: added explicit
+alternate-causal-factor, malformed-suite, missing/wrong candidate/wrong environment/NOT_RUN/FAIL suite,
+and empty-relationship-CONTRADICTS regressions. Node 24 typecheck PASS; focused 9/9; full pre-build
+993/993 PASS. These remain builder evidence only.
