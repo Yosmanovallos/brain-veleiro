@@ -6,8 +6,8 @@
 
 ## Current Objective
 
-S00–S13L are `VERIFIED PASS`. S13M qa-debugging is at `CHATGPT_AUTHORING_REQUIRED`; Part B is
-forbidden until matching canonical ChatGPT Part A is integrated verbatim.
+S00–S13L are `VERIFIED PASS`. S13M qa-debugging Part B is builder-complete and awaits a fresh,
+non-authoring, non-fork, read-only independent verifier. S13N remains forbidden.
 
 ## Current Repository State
 
@@ -15,36 +15,33 @@ forbidden until matching canonical ChatGPT Part A is integrated verbatim.
 `main`
 
 **Verification target:**
-`3eac82efcd102b2375ac383b1aa75a92c074c68d` (S13L VERIFIED PASS closure / S13M preflight start)
+`b445863cb2c0eb28ca417788c05bf32378455a0e` (S13M Part B implementation target)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
 
 **Last independently verified at:**
-`2026-08-29T14:14:15Z (S13L fresh non-authoring non-fork read-only verifier PASS; accepted)`
+`2026-08-29T15:32:00Z (S13M builder evidence; independent verification remains required)`
 
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-29T143036Z-s13m-chatgpt-authoring-required.md`
+`brain/context/handoffs/2026-08-29T153200Z-s13m-independent-verification-required.md`
 
 **Handoff status:**
-`CHATGPT_AUTHORING_REQUIRED`
+`INDEPENDENT_VERIFICATION_REQUIRED`
 
 ## Current Status
 
-S13L is independently VERIFIED PASS and accepted by the ChatGPT control plane. S13M preflight found
-the established deterministic TypeScript/Vitest QA foundation, S09 normalized error/observation and
-run-event representations, S12→S10→S09 runtime path, existing fixture/truth/validator and OI-A
-patterns, and no S13M-specific artifact or implementation. These are factual inputs, not the S13M
-semantic contract.
+S13M canonical Part A remains byte-identical to integration commit `3458df7`; Part B implementation
+target is `b445863`. Builder evidence passes on WSL Node 24.19.0: typecheck, focused S13M (7 blocks),
+pre-build 991/991, genuine dist-absent build and post-build 991/991. This is not an independent PASS.
 
 ## Next Exact Action
 
-Wait for the matching issue #1 `CHATGPT_RESPONSE` to handoff
-`2026-08-29T143036Z-S13M-chatgpt-authoring`; fetch the temporary transfer without merging it,
-integrate its canonical artifacts verbatim, verify byte identity/YAML/current baseline, commit and
-push a Part-A-only change, then launch a fresh non-fork S13M Part B builder. S13N remains forbidden.
+Run the exact independent-verifier handoff only; keep tracked files read-only, verify Part A hashes,
+reproduce the required deterministic evidence, and return an evidence-backed PASS/FAIL/BLOCKED.
+Do not start S13N.
 
 ### Operating Rule
 
