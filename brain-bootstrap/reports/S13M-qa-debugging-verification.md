@@ -192,3 +192,27 @@ full pre-build `994/994`, genuine dist-absent build with prior ignored `dist` re
 `994/994`, all 36 exact negatives, 8/8 positives and 30/30 isolation; `git diff --check` passed. This
 is builder evidence only: S13M remains `IN_PROGRESS` / `INDEPENDENT_VERIFICATION_REQUIRED`; S13N remains
 `NOT_STARTED` and forbidden.
+
+## Material-evidence resolution repair — supersedes previous builder target
+
+Implementation target: `de6f2b4aa3631d25261b45b29f839651add101a0`. All material evidence references
+that support a decision are now collected and resolved against `evidence_records`: incident,
+environment, reproduction, record contradictions, hypothesis support/contradiction, causal experiment,
+regression, suite and security references. An unresolvable material reference produces the hard
+`REQUIRED_EVIDENCE_UNAVAILABLE` blocker. A hypothesis with resolving contradictory evidence cannot be
+`PROVEN`; a resolving contradiction stays visible with `RESOLVE_CONTRADICTION`; an unresolved
+`CONTRADICTS_CAUSE` experiment cannot disprove a cause.
+
+HI-016 now requires resolving material contradiction refs, HI-039 requires all material input evidence
+refs to resolve, and HI-043 combines resolving material contradictions with the closure contradiction
+gate. Adversarial regressions cover missing regression/supporting/relationship/causal-contradiction
+evidence and a resolving hypothesis contradiction. They verify correct `BLOCKED` / owning safe state,
+blocker code and relevant hard-invariant failures.
+
+OI-A was recalculated through the current executable S12→S10→S09 path: baseline `16/248`, Skill
+`248/248`, delta `+232`, ten qualified dimensions, baseline/Skill HI `240/400 → 400/400`, and all eight
+Skill unsafe counters `0`. On exact target `de6f2b4`, WSL Node `v24.19.0` / npm `11.17.0` passed
+typecheck, focused S13M `11/11`, full pre-build `995/995`, genuine dist-absent build with prior ignored
+`dist` restored, full post-build `995/995`, 8/8 positives, all 36 exact negatives, 30/30 isolation and
+`git diff --check`. This is builder evidence only: S13M remains `IN_PROGRESS` /
+`INDEPENDENT_VERIFICATION_REQUIRED`; S13N remains `NOT_STARTED` and forbidden.

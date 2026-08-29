@@ -581,11 +581,11 @@ repository:
 
   qa_debugging:
     status: IN_PROGRESS
-    implementation_target: "f55724d9d8e9535ae8735517ca69701ece6aab0a"
+    implementation_target: "de6f2b4aa3631d25261b45b29f839651add101a0"
     part_a_commit: "3458df7171f8fb1bce5c921986d738faaeab8561"
     authoring_handoff_id: "2026-08-29T143036Z-S13M-chatgpt-authoring"
-    builder_handoff_id: "2026-08-29T205800Z-S13M-codex-semantic-gate-repair"
-    note: "Part A remains byte-identical. Builder repair target f55724d makes the actual candidate semantic gate compare every material decision field to the bounded deterministic decision, rejecting well-formed root/evidence/contradiction/blocker tampering without substituting a faithful candidate. WSL Node 24.19.0: typecheck PASS; focused 10/10; full pre-build 994/994; genuine dist-absent build PASS with prior ignored dist restored; post-build 994/994. Recomputed OI-A is baseline 16/248 to Skill 248/248 (+232), 10 qualified dimensions, baseline/Skill HI 232/400 to 400/400, 30/30 isolation, 36 exact negatives and eight Skill unsafe counters zero. Independent verification remains required. S13N remains NOT_STARTED and forbidden."
+    builder_handoff_id: "2026-08-29T221651Z-S13M-codex-material-evidence-repair"
+    note: "Part A remains byte-identical. Builder repair target de6f2b4 resolves every material input evidence/contradiction ref before closure, blocks missing material evidence, prevents PROVEN with resolving hypothesis contradiction, and makes HI-016/039/043 test those real references. WSL Node 24.19.0: typecheck PASS; focused 11/11; full pre-build 995/995; genuine dist-absent build PASS with prior ignored dist restored; post-build 995/995. Recomputed OI-A is baseline 16/248 to Skill 248/248 (+232), 10 qualified dimensions, baseline/Skill HI 240/400 to 400/400, 30/30 isolation, 36 exact negatives and eight Skill unsafe counters zero. Independent verification remains required. S13N remains NOT_STARTED and forbidden."
 
 build_day:
   date: "2026-08-29"
