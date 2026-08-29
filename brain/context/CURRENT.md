@@ -6,8 +6,8 @@
 
 ## Current Objective
 
-S00–S13L are `VERIFIED PASS`. S13M qa-debugging repository inspection and authoring preflight are
-the only allowed next major-step work. S13M semantic authoring and Part B remain forbidden.
+S00–S13L are `VERIFIED PASS`. S13M qa-debugging is at `CHATGPT_AUTHORING_REQUIRED`; Part B is
+forbidden until matching canonical ChatGPT Part A is integrated verbatim.
 
 ## Current Repository State
 
@@ -15,36 +15,36 @@ the only allowed next major-step work. S13M semantic authoring and Part B remain
 `main`
 
 **Verification target:**
-`0b3925f1f3461d603c99683b00af1c725667f4dd` (S13L fresh-verifier documentation checkpoint)
+`3eac82efcd102b2375ac383b1aa75a92c074c68d` (S13L VERIFIED PASS closure / S13M preflight start)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
 
 **Last independently verified at:**
-`2026-08-29T14:14:15Z (S13L fresh non-authoring non-fork read-only verifier PASS)`
+`2026-08-29T14:14:15Z (S13L fresh non-authoring non-fork read-only verifier PASS; accepted)`
 
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-29T142749Z-s13l-verified-pass.md`
+`brain/context/handoffs/2026-08-29T143036Z-s13m-chatgpt-authoring-required.md`
 
 **Handoff status:**
-`VERIFIED PASS / CLOSED`
+`CHATGPT_AUTHORING_REQUIRED`
 
 ## Current Status
 
-S13L is independently VERIFIED PASS. A different fresh non-authoring, non-fork, read-only verifier
-reproduced Part A integrity, repair regressions 11/11, actual-candidate malformed-shape fail-closed
-behavior, focused 126/126, full 984/984 before and after a genuinely dist-absent build, 8/8 positives,
-36/36 named negatives, 30/30 atomic isolation, OI-A `120/248 → 248/248` (`+128`), hard invariants
-`392/400 → 400/400`, all eight unsafe counters zero, future-stage boundaries and `git diff --check`.
-ChatGPT control-plane accepted the verifier in issue #1 comment `5462919214`.
+S13L is independently VERIFIED PASS and accepted by the ChatGPT control plane. S13M preflight found
+the established deterministic TypeScript/Vitest QA foundation, S09 normalized error/observation and
+run-event representations, S12→S10→S09 runtime path, existing fixture/truth/validator and OI-A
+patterns, and no S13M-specific artifact or implementation. These are factual inputs, not the S13M
+semantic contract.
 
 ## Next Exact Action
 
-Close S13L continuity, then inspect repository reality for S13M qa-debugging and publish a compact
-`CHATGPT_AUTHORING_REQUIRED` evidence pack. Do not author S13M semantic artifacts or implement S13M
-Part B before a matching canonical ChatGPT Part A is integrated verbatim.
+Wait for the matching issue #1 `CHATGPT_RESPONSE` to handoff
+`2026-08-29T143036Z-S13M-chatgpt-authoring`; fetch the temporary transfer without merging it,
+integrate its canonical artifacts verbatim, verify byte identity/YAML/current baseline, commit and
+push a Part-A-only change, then launch a fresh non-fork S13M Part B builder. S13N remains forbidden.
 
 ### Operating Rule
 

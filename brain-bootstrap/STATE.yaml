@@ -1,6 +1,6 @@
 bootstrap_version: 1.2.0
-current_step: S13L
-status: PASS
+current_step: S13M
+status: CHATGPT_AUTHORING_REQUIRED
 primary_builder: codex
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
@@ -33,7 +33,7 @@ steps:
   S13J: PASS
   S13K: PASS
   S13L: PASS
-  S13M: NOT_STARTED
+  S13M: IN_PROGRESS
   S13N: NOT_STARTED
   S13O: NOT_STARTED
   S13P: NOT_STARTED
@@ -58,9 +58,9 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 65
-  head_sha: "0b3925f1f3461d603c99683b00af1c725667f4dd"
-  head_sha_note: "S13L fresh-verifier documentation checkpoint independently VERIFIED PASS; the closure documentation commit may be later."
+  commits: 66
+  head_sha: "3eac82efcd102b2375ac383b1aa75a92c074c68d"
+  head_sha_note: "S13L VERIFIED PASS closure; S13M authoring preflight target."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -578,6 +578,14 @@ repository:
     builder_review: "Repair 1 rejects unknown scope kind, action/descriptor side-effect and secret propagation-policy enums before evaluation; a total candidate-shape guard now returns deterministic invalid/BLOCKED without TypeError for missing/incomplete nested fields while preserving actual-candidate gating. The nine reported blank-line-at-EOF defects were removed without semantic edits."
     boundaries: "No AgentDefinition/Core branch/provider/dependency/Capability Registry/MCP/identity-policy-vault-crypto-auth runtime/compliance system/persistent handle/future-stage implementation."
     note: "VERIFIED PASS. A fresh non-authoring non-fork read-only verifier reproduced the S13L repair target, exact Part A hashes, focused 126/126, full 984/984 pre/post genuine dist-absent build, 11/11 repair regressions, 8/8 positives, 36/36 negatives, 30/30 isolation, OI-A 120/248 to 248/248 (+128), hard invariants 392/400 to 400/400, eight unsafe counters zero, boundaries and diff-check. ChatGPT control-plane accepted PASS in issue #1 comment 5462919214. S13M authoring preflight is now allowed; no S13M semantic authoring or Part B is authorized."
+
+  qa_debugging:
+    status: CHATGPT_AUTHORING_REQUIRED
+    preflight_at: "2026-08-29T14:30:36Z"
+    preflight: "brain-bootstrap/reports/S13M-authoring-preflight.md"
+    verified_start_head: "3eac82efcd102b2375ac383b1aa75a92c074c68d"
+    authoring_handoff_id: "2026-08-29T143036Z-S13M-chatgpt-authoring"
+    note: "Evidence pack only. No S13M Skill, Quality Contract, spec, typed projection, source module, test suite, AgentDefinition, provider, dependency or runtime implementation exists at preflight. Await matching ChatGPT AUTHORING_READY transfer before Part B. S13N remains NOT_STARTED and forbidden."
 
 build_day:
   date: "2026-08-29"
