@@ -121,3 +121,9 @@ an isolated temporary path, `dist` was confirmed absent, `npm run build` passed 
 and full post-build `npm test` passed `991/991`. Generated dist was removed and the original ignored
 dist restored. Final tracked `git diff --check` passed; only the retained 13 pre-existing root scaffolds
 remain untracked.
+
+Repair 3 target `d0d1029c06db4ec03581af2b99f979b16bb3c251`: validates suite descriptor/result shapes
+before dereference, requires nonempty exact descriptor-to-result candidate/environment/evidence/count
+completion, treats empty CONTRADICTS records as unresolved contradictions, and derives causal factors
+from the experiment rather than a literal. Typecheck and focused S13M pass; independent verification
+remains required.
