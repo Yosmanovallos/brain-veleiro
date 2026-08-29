@@ -150,3 +150,24 @@ Focused evidence retains the genuine same-path Skill-vs-no-Skill comparison (8 i
 ownership observations and 30 mutations, positive grouped delta, 400/400 Skill HI evaluations, and all
 eight unsafe counters zero). This is builder evidence only: S13M is `IN_PROGRESS` and
 `INDEPENDENT_VERIFICATION_REQUIRED`; S13N is `NOT_STARTED` and forbidden.
+
+## Total-validation repair — supersedes previous builder target
+
+Implementation target: `67ac92ec24f9959ec83d76d920c5ba21dbef8129`. This bounded mechanical repair
+makes input validation total before production dereferences any nested input. It now validates incident
+references and surfaces, environments, evidence, reproduction, hypotheses, causal-experiment constants
+and effects, candidate relation, regression, suites, optional stability counts, security, acceptance and
+evidence requirements. It also makes §27 candidate validation total for all required decision families:
+root cause, candidate kind/revision, unique suite refs, blockers, next action, evidence arrays,
+acceptance/evidence arrays and impossible closure status/root-cause combinations.
+
+The focused regression contains malformed otherwise-valid nested inputs and malformed parsed candidates.
+For every case, `deriveQaDebuggingDecision`, `validateQaDebuggingDecision` and
+`gateQaDebuggingCandidate` are no-throw; malformed packets/candidates fail closed to `BLOCKED`.
+
+On exact target `67ac92e`, WSL Node `v24.19.0` / npm `11.17.0` passed typecheck, focused S13M
+`10/10`, full pre-build `994/994`, a genuine dist-absent build (with prior ignored `dist` preserved and
+restored), and full post-build `994/994`; `git diff --check` passed. The real S12→S10→S09 OI-A remains
+`232/248 → 248/248` (+16), with 30/30 isolation, 36 exact negatives, 8/8 positives, 400/400 Skill
+hard invariants and eight unsafe counters at zero. This is builder evidence only: S13M remains
+`IN_PROGRESS` / `INDEPENDENT_VERIFICATION_REQUIRED`; S13N remains `NOT_STARTED` and forbidden.

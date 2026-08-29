@@ -581,11 +581,11 @@ repository:
 
   qa_debugging:
     status: IN_PROGRESS
-    implementation_target: "938e07b281a2d3c8a6b96c7da24069bca2f73728"
+    implementation_target: "67ac92ec24f9959ec83d76d920c5ba21dbef8129"
     part_a_commit: "3458df7171f8fb1bce5c921986d738faaeab8561"
     authoring_handoff_id: "2026-08-29T143036Z-S13M-chatgpt-authoring"
-    builder_handoff_id: "2026-08-29T143900Z-S13M-codex-final-builder"
-    note: "Part A remains byte-identical. Builder repair target 938e07b adds exact named-negative ownership assertions and named alternate-factor coverage. WSL Node 24.19.0: typecheck PASS; focused 9/9; full pre-build 993/993; genuine dist-absent build PASS with prior ignored dist restored; post-build 993/993. Independent verification remains required. S13N remains NOT_STARTED and forbidden."
+    builder_handoff_id: "2026-08-29T204657Z-S13M-codex-total-validation-repair"
+    note: "Part A remains byte-identical. Builder repair target 67ac92e totalizes QaDebuggingInput and §27 candidate validation before dereference; malformed nested input/candidates are no-throw and fail closed to BLOCKED. WSL Node 24.19.0: typecheck PASS; focused 10/10; full pre-build 994/994; genuine dist-absent build PASS with prior ignored dist restored; post-build 994/994. OI-A remains 232/248 to 248/248, 30/30 isolation, 400/400 Skill HI, 36 exact negatives and eight unsafe counters zero. Independent verification remains required. S13N remains NOT_STARTED and forbidden."
 
 build_day:
   date: "2026-08-29"
