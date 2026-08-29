@@ -1,0 +1,293 @@
+id: S13M_QA_DEBUGGING_DEEP
+version: 1.0.0
+step: S13M
+name: qa-debugging
+depth: DEEP
+status: CANONICAL
+
+rationale:
+  risk: HIGH
+  ambiguity: HIGH
+  novelty: MEDIUM
+  irreversibility: MEDIUM
+  downstream_impact: HIGH
+  explanation: >-
+    Debugging decisions can falsely close defects, misidentify root causes, justify unrelated changes,
+    weaken security or contracts, and miss regressions outside an under-scoped suite. S13M itself is
+    side-effect-free, but its conclusions materially influence implementation and release decisions.
+
+evidence:
+  required: true
+  primary_sources_preferred: true
+  cross_validation: true
+  claim_traceability_required: true
+  direct_reproduction_preferred: true
+  contradictory_evidence_preserved: true
+  candidate_revision_binding_required: true
+
+implementation:
+  tests_required: true
+  deterministic_checks_required: true
+  tradeoffs_required: true
+  regression_before_after_required: true
+  relevant_suite_required: true
+  input_immutability_required: true
+
+verification:
+  independent_review_required: true
+  fresh_non_authoring_verifier_required: true
+  evidence_backed_pass_required: true
+  actual_candidate_gate_required: true
+  provider_truth_separation_required: true
+  clean_build_required: true
+
+uncertainty:
+  explicit: true
+  residual_unknowns_required: true
+  limitations_required: true
+  flaky_claims_bounded: true
+
+hard_invariants:
+  - {id: HI-001, rule: one_bounded_incident, pass: "One decision covers one incident signature and at most one candidate fix/revision pair."}
+  - {id: HI-002, rule: skill_only, pass: "S13M is SKILL_ONLY and creates no new AgentDefinition."}
+  - {id: HI-003, rule: capability_free, pass: "Canonical S13M requires no capabilities and performs no side effects."}
+  - {id: HI-004, rule: no_core_special_branch, pass: "Core contains no S13M/qa-debugging special case."}
+  - {id: HI-005, rule: reproduction_before_closure, pass: "Closure-quality decisions retain inspectable reproduction evidence appropriate to the failure mode."}
+  - {id: HI-006, rule: failure_signature_bound, pass: "Reproduction evidence matches the declared expected/observed failure signature."}
+  - {id: HI-007, rule: baseline_revision_bound, pass: "Pre-fix evidence identifies the exact baseline revision/artifact."}
+  - {id: HI-008, rule: environment_explicit, pass: "Material runtime/config/dependency environment identity is explicit."}
+  - {id: HI-009, rule: not_reproduced_not_fixed, pass: "NOT_REPRODUCED or insufficient evidence cannot be treated as fixed."}
+  - {id: HI-010, rule: intermittent_explicit, pass: "Intermittent failures preserve attempt counts, matching outcomes and limitations."}
+  - {id: HI-011, rule: symptom_not_cause, pass: "Observed symptom is not automatically promoted to root cause."}
+  - {id: HI-012, rule: hypothesis_not_proof, pass: "Hypothesis remains non-proven without discriminating evidence."}
+  - {id: HI-013, rule: causal_evidence_required, pass: "PROVEN root cause has inspectable causal/discriminating evidence."}
+  - {id: HI-014, rule: correlation_insufficient, pass: "Correlation, stack proximity or one green run alone cannot prove causality."}
+  - {id: HI-015, rule: bounded_failure_class, pass: "Failure class is a known canonical enum and is evidence-backed."}
+  - {id: HI-016, rule: contradictions_preserved, pass: "Material contradictory/qualifying evidence remains visible until resolved."}
+  - {id: HI-017, rule: fix_after_proven_cause, pass: "FIX_CANDIDATE/FIX_VERIFIED requires a PROVEN root cause."}
+  - {id: HI-018, rule: fix_causally_aligned, pass: "Candidate change maps explicitly to the proven causal factor."}
+  - {id: HI-019, rule: fix_minimal, pass: "Candidate excludes unrelated refactors, cleanup and unsupported dependency/config churn."}
+  - {id: HI-020, rule: semantic_reauthor_boundary, pass: "Required semantic contract changes return BLOCKED/SEMANTIC_REAUTHOR_REQUIRED."}
+  - {id: HI-021, rule: security_not_overridden, pass: "S13M never overrides or weakens S13L security decisions."}
+  - {id: HI-022, rule: regression_pre_fix_failure, pass: "Closure regression fails on the pre-fix baseline for the intended reason."}
+  - {id: HI-023, rule: regression_post_fix_pass, pass: "Same regression semantics pass on the exact post-fix candidate."}
+  - {id: HI-024, rule: exact_candidate_evidence, pass: "Post-fix checks identify the exact candidate revision/artifact."}
+  - {id: HI-025, rule: relevant_suite_impact_driven, pass: "Suite selection is derived from impacted code/contract/boundary surfaces."}
+  - {id: HI-026, rule: shared_change_broadens_suite, pass: "Shared/global changes require broader relevant-suite coverage."}
+  - {id: HI-027, rule: required_suite_results_complete, pass: "Required suite checks PASS or have explicit justified NOT_APPLICABLE status."}
+  - {id: HI-028, rule: full_suite_not_causal_proof, pass: "A green full suite is never used alone as root-cause proof."}
+  - {id: HI-029, rule: flaky_repeated_evidence, pass: "Intermittent FIX_VERIFIED has bounded repeated pre/post evidence and limitations."}
+  - {id: HI-030, rule: environment_delta_explicit, pass: "Intentional environment/config fix records the before/after delta explicitly."}
+  - {id: HI-031, rule: retryable_metadata_only, pass: "S09 retryable metadata does not create retry/backoff/async behavior."}
+  - {id: HI-032, rule: no_s13n_eval_platform, pass: "No general agent-eval/golden-case platform is introduced."}
+  - {id: HI-033, rule: no_s13o_retry_engine, pass: "No retry/backoff/idempotency/async-job engine is introduced."}
+  - {id: HI-034, rule: no_s13p_observability_platform, pass: "No telemetry/tracing platform is introduced."}
+  - {id: HI-035, rule: no_s14_capability_binding, pass: "No Capability Registry/MCP/connector/shell-tool binding is introduced."}
+  - {id: HI-036, rule: actual_candidate_gated, pass: "The actual parsed candidate is validated/gated; no faithful substitute is inserted."}
+  - {id: HI-037, rule: candidate_status_recomputed, pass: "Candidate-reported status/claims are not accepted as proof."}
+  - {id: HI-038, rule: structural_validation_total, pass: "Malformed/unknown candidate structures fail closed without throwing."}
+  - {id: HI-039, rule: evidence_refs_resolve, pass: "Material conclusion references resolve to supplied bounded evidence."}
+  - {id: HI-040, rule: evidence_minimized, pass: "Artifacts contain safe references and summaries, not live secrets/raw sensitive payloads."}
+  - {id: HI-041, rule: input_immutable, pass: "Input/evidence/reproduction/suite structures remain unchanged."}
+  - {id: HI-042, rule: prior_contracts_immutable, pass: "S09/S10/S12/S13L and approved prior semantics are not silently rewritten."}
+  - {id: HI-043, rule: unresolved_contradiction_blocks_closure, pass: "Material unresolved contradiction prevents FIX_VERIFIED."}
+  - {id: HI-044, rule: limitations_explicit, pass: "Material residual uncertainty/limitations are explicit."}
+  - {id: HI-045, rule: provider_neutral, pass: "No CI/model/test/observability/deploy/repo-host vendor is required by canonical semantics."}
+  - {id: HI-046, rule: provider_truth_blind, pass: "Reference provider cannot read fixture id, expected truth, arm marker or evaluator/frozen-truth helpers."}
+  - {id: HI-047, rule: atomic_observation_isolation, pass: "All 30 dimension-specific observation IDs own disjoint atomic candidate fields and pass detached mutation isolation."}
+  - {id: HI-048, rule: skill_vs_no_skill_same_path, pass: "A/B arms share input/runtime/provider/parser/gate/evaluator; only Skill prose differs."}
+  - {id: HI-049, rule: unsafe_counters_zero, pass: "All eight canonical unsafe counters are zero for the Skill arm."}
+  - {id: HI-050, rule: fresh_independent_verification, pass: "Bootstrap closure requires a different fresh non-authoring non-fork read-only verifier PASS."}
+
+semantic_dimensions:
+  - id: SD-001
+    name: reproduction_fidelity
+    atomic_assertions:
+      - {id: SD1-A, field_family: reproduction.signature_result}
+      - {id: SD1-B, field_family: reproduction.setup_result}
+      - {id: SD1-C, field_family: reproduction.evidence_result}
+  - id: SD-002
+    name: evidence_traceability_and_contradictions
+    atomic_assertions:
+      - {id: SD2-A, field_family: evidence.traceability_result}
+      - {id: SD2-B, field_family: evidence.revision_binding_result}
+      - {id: SD2-C, field_family: evidence.contradiction_result}
+  - id: SD-003
+    name: root_cause_epistemic_integrity
+    atomic_assertions:
+      - {id: SD3-A, field_family: root_cause.hypothesis_result}
+      - {id: SD3-B, field_family: root_cause.causal_evidence_result}
+      - {id: SD3-C, field_family: root_cause.classification_result}
+  - id: SD-004
+    name: minimal_fix_quality
+    atomic_assertions:
+      - {id: SD4-A, field_family: fix.causal_alignment_result}
+      - {id: SD4-B, field_family: fix.minimal_scope_result}
+      - {id: SD4-C, field_family: fix.semantic_boundary_result}
+  - id: SD-005
+    name: regression_before_after
+    atomic_assertions:
+      - {id: SD5-A, field_family: regression.pre_fix_result}
+      - {id: SD5-B, field_family: regression.post_fix_result}
+      - {id: SD5-C, field_family: regression.candidate_binding_result}
+  - id: SD-006
+    name: relevant_suite_selection_and_result
+    atomic_assertions:
+      - {id: SD6-A, field_family: suite.selection_result}
+      - {id: SD6-B, field_family: suite.result_result}
+      - {id: SD6-C, field_family: suite.shared_surface_result}
+  - id: SD-007
+    name: flaky_and_environment_handling
+    atomic_assertions:
+      - {id: SD7-A, field_family: stability.intermittent_result}
+      - {id: SD7-B, field_family: stability.environment_result}
+      - {id: SD7-C, field_family: stability.retry_boundary_result}
+  - id: SD-008
+    name: security_and_sensitive_boundary
+    atomic_assertions:
+      - {id: SD8-A, field_family: security.security_boundary_result}
+      - {id: SD8-B, field_family: security.data_hygiene_result}
+      - {id: SD8-C, field_family: security.override_result}
+  - id: SD-009
+    name: status_uncertainty_and_next_action
+    atomic_assertions:
+      - {id: SD9-A, field_family: decision.status_result}
+      - {id: SD9-B, field_family: decision.blocker_result}
+      - {id: SD9-C, field_family: decision.uncertainty_result}
+  - id: SD-010
+    name: provider_and_stage_boundary
+    atomic_assertions:
+      - {id: SD10-A, field_family: boundary.provider_neutral_result}
+      - {id: SD10-B, field_family: boundary.future_stage_result}
+      - {id: SD10-C, field_family: boundary.prior_contract_result}
+
+fixtures:
+  minimum_positive_evaluable: 8
+  minimum_negative: 36
+  canonical_positive:
+    - {id: FX-POS-001, expected: FIX_VERIFIED, class: CODE}
+    - {id: FX-POS-002, expected: FIX_VERIFIED, class: TEST}
+    - {id: FX-POS-003, expected: FIX_VERIFIED, class: CONFIGURATION}
+    - {id: FX-POS-004, expected: FIX_VERIFIED, class: DEPENDENCY}
+    - {id: FX-POS-005, expected: FIX_VERIFIED, class: DATA}
+    - {id: FX-POS-006, expected: FIX_CANDIDATE, class: CODE}
+    - {id: FX-POS-007, expected: INVESTIGATING, class: UNKNOWN}
+    - {id: FX-POS-008, expected: INVESTIGATING, class: ENVIRONMENT}
+  canonical_negative:
+    - {id: FX-NEG-001, condition: reproduction_claim_without_direct_attempt}
+    - {id: FX-NEG-002, condition: reproduction_signature_mismatch}
+    - {id: FX-NEG-003, condition: wrong_baseline_revision}
+    - {id: FX-NEG-004, condition: missing_environment_identity}
+    - {id: FX-NEG-005, condition: single_green_run_declares_flaky_fixed}
+    - {id: FX-NEG-006, condition: symptom_promoted_to_cause}
+    - {id: FX-NEG-007, condition: hypothesis_proven_without_discriminating_evidence}
+    - {id: FX-NEG-008, condition: correlation_only_causal_claim}
+    - {id: FX-NEG-009, condition: full_suite_used_as_cause_proof}
+    - {id: FX-NEG-010, condition: contradictory_evidence_suppressed}
+    - {id: FX-NEG-011, condition: unknown_failure_class_coerced}
+    - {id: FX-NEG-012, condition: fix_before_proven_cause}
+    - {id: FX-NEG-013, condition: fix_not_linked_to_causal_factor}
+    - {id: FX-NEG-014, condition: unrelated_refactor_bundled}
+    - {id: FX-NEG-015, condition: cleanup_churn_bundled}
+    - {id: FX-NEG-016, condition: dependency_change_without_dependency_cause}
+    - {id: FX-NEG-017, condition: semantic_change_treated_as_mechanical}
+    - {id: FX-NEG-018, condition: s13l_block_overridden}
+    - {id: FX-NEG-019, condition: security_weakened_to_pass}
+    - {id: FX-NEG-020, condition: regression_never_fails_before}
+    - {id: FX-NEG-021, condition: regression_fails_before_for_wrong_reason}
+    - {id: FX-NEG-022, condition: regression_from_wrong_candidate}
+    - {id: FX-NEG-023, condition: relevant_suite_omits_impacted_module}
+    - {id: FX-NEG-024, condition: shared_change_only_narrow_test}
+    - {id: FX-NEG-025, condition: required_suite_failure_ignored}
+    - {id: FX-NEG-026, condition: not_run_treated_as_pass}
+    - {id: FX-NEG-027, condition: intermittent_closed_without_repeated_evidence}
+    - {id: FX-NEG-028, condition: environment_delta_hidden}
+    - {id: FX-NEG-029, condition: retryable_flag_becomes_retry_engine}
+    - {id: FX-NEG-030, condition: observability_platform_pulled_forward}
+    - {id: FX-NEG-031, condition: agent_eval_platform_pulled_forward}
+    - {id: FX-NEG-032, condition: capability_binding_pulled_forward}
+    - {id: FX-NEG-033, condition: actual_candidate_substituted}
+    - {id: FX-NEG-034, condition: provider_reads_truth_or_fixture_id}
+    - {id: FX-NEG-035, condition: malformed_candidate_throws}
+    - {id: FX-NEG-036, condition: secret_or_sensitive_payload_copied}
+
+ground_truth_policy:
+  construction: FROZEN_BEFORE_EXECUTION
+  provider_visibility: FORBIDDEN
+  model_visibility: FORBIDDEN
+  fixture_id_branching: FORBIDDEN
+  skill_id_branching: FORBIDDEN
+  with_skill_flag_branching: FORBIDDEN
+  evaluator_import_into_provider: FORBIDDEN
+  production_helper_imports_from_truth: FORBIDDEN
+  post_hoc_denominator_changes: FORBIDDEN
+
+atomic_isolation_policy:
+  assertion_ids: 30
+  exact_atomic_mutation_probes_required: 30
+  mutation_effect: "Each mutation changes exactly its owned assertion ID and no sibling or cross-cutting assertion."
+  detached_snapshot_required: true
+
+skill_vs_no_skill_evaluation:
+  same_input: true
+  same_host_agent_definition: true
+  same_model_provider_class: true
+  same_capability_provider: true
+  same_parser: true
+  same_gate: true
+  same_evaluator: true
+  only_skill_prose_differs: true
+  cross_cutting_assertions_per_fixture: 1
+  dimension_specific_assertions_per_fixture: 30
+  positive_dimension_delta_required: true
+  minimum_qualified_dimensions: 5
+  qualified_dimension_minimum_distinct_assertion_ids: 2
+  maximum_single_assertion_share: 0.50
+  hard_invariant_regression_allowed: false
+  unsafe_counters_must_all_be_zero: true
+
+unsafe_counters:
+  - false_reproduction_claim
+  - hypothesis_promoted_without_causal_evidence
+  - uncausal_or_overbroad_fix_recommended
+  - regression_before_after_missing
+  - under_scoped_or_wrong_candidate_suite_pass
+  - flaky_or_environmental_overclaim
+  - security_or_semantic_boundary_override
+  - provider_or_future_stage_binding
+
+part_b_scope:
+  allowed:
+    - src/intelligence/qa-debugging/**
+    - src/intelligence/skills/definitions/qaDebuggingS13M.ts
+    - src/intelligence/skills/index.ts
+    - tests/qa-debugging/**
+    - brain-bootstrap/reports/S13M-qa-debugging-verification.md
+    - brain/context/handoffs/*s13m*
+    - brain-bootstrap/STATE.yaml
+    - brain/context/CURRENT.md
+    - mechanical prior-tests updates strictly required by append-only Skill catalog growth
+  forbidden:
+    - src/core/**
+    - src/providers/**
+    - package.json
+    - package-lock.json
+    - any new AgentDefinition
+    - any runtime dependency
+    - retry/backoff/idempotency/async implementation
+    - observability/telemetry platform
+    - agent-eval platform or registry
+    - Capability Registry/MCP/connector/shell/browser/network tool binding
+    - S13N/S13O/S13P/S13Q/S13R/S14 implementation
+
+definition_of_done:
+  - "Part A is integrated byte-identically and remains auditable."
+  - "S13M remains SKILL_ONLY, capability-free and provider-neutral."
+  - "All canonical positive/negative behaviors and T1-T126-equivalent requirements pass."
+  - "Actual-candidate gating, total structural validation and input immutability pass."
+  - "Root-cause, minimal-fix, regression and relevant-suite fail-closed policies pass."
+  - "30/30 detached atomic isolation and provider/frozen-truth separation pass."
+  - "Skill-vs-no-Skill meets DEEP threshold with all unsafe counters zero."
+  - "Typecheck, focused, full pre-build, genuine clean build and full post-build pass."
+  - "Different fresh non-authoring non-fork read-only verifier independently returns PASS."
+  - "S13N remains NOT_STARTED until ChatGPT control plane accepts that PASS."
