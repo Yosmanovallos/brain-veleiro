@@ -216,3 +216,9 @@ typecheck, focused S13M `11/11`, full pre-build `995/995`, genuine dist-absent b
 `dist` restored, full post-build `995/995`, 8/8 positives, all 36 exact negatives, 30/30 isolation and
 `git diff --check`. This is builder evidence only: S13M remains `IN_PROGRESS` /
 `INDEPENDENT_VERIFICATION_REQUIRED`; S13N remains `NOT_STARTED` and forbidden.
+
+## Suite, environment-delta and meta-invariant repair — supersedes previous builder target
+
+Target `88d5ac5` repairs the three mechanical findings from control-plane comment `5465310237` without changing Part A. Required suite results may be `PASS` or `NOT_APPLICABLE` only when the latter has an explicit reason reference and non-empty resolving evidence. `FX-POS-003` now carries distinct before/after configuration snapshots; `FX-NEG-028` hides that delta and safely downgrades to `FIX_CANDIDATE` / `RUN_REGRESSION_BEFORE_AFTER`.
+
+HI-046..HI-050 are no longer aliases for `valid`/`true`: provider truth blindness, detached 30/30 isolation and same-path evidence require observed harness context; unsafe-zero is recomputed from the candidate; fresh-independent-verifier is false until such a verifier actually passes. Current builder OI-A is `16/248 → 248/248` (+232), HI `232/400 → 368/400`; the reduced Skill score is intentional because HI-046..048 and HI-050 default fail-closed outside observed harness context. Node `v24.19.0` / npm `11.17.0`: typecheck, focused `14/14`, full `998/998` and build PASS. S13M remains `IN_PROGRESS`; S13N remains forbidden.
