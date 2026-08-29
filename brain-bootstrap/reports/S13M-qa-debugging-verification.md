@@ -222,3 +222,27 @@ typecheck, focused S13M `11/11`, full pre-build `995/995`, genuine dist-absent b
 Target `88d5ac5` repairs the three mechanical findings from control-plane comment `5465310237` without changing Part A. Required suite results may be `PASS` or `NOT_APPLICABLE` only when the latter has an explicit reason reference and non-empty resolving evidence. `FX-POS-003` now carries distinct before/after configuration snapshots; `FX-NEG-028` hides that delta and safely downgrades to `FIX_CANDIDATE` / `RUN_REGRESSION_BEFORE_AFTER`.
 
 HI-046..HI-050 are no longer aliases for `valid`/`true`: provider truth blindness, detached 30/30 isolation and same-path evidence require observed harness context; unsafe-zero is recomputed from the candidate; fresh-independent-verifier is false until such a verifier actually passes. Current builder OI-A is `16/248 → 248/248` (+232), HI `232/400 → 368/400`; the reduced Skill score is intentional because HI-046..048 and HI-050 default fail-closed outside observed harness context. Node `v24.19.0` / npm `11.17.0`: typecheck, focused `14/14`, full `998/998` and build PASS. S13M remains `IN_PROGRESS`; S13N remains forbidden.
+
+## Canonical alignment and total-validation ordering repair — supersedes previous builder target
+
+The accepted ChatGPT Part A correction from `4f53a8da8f52a2ba6fd135193dfd73731b842dbb` was integrated
+as its own commit at `a5fc6e051522cdb2ecda5d7e8c9a7b7a8bbde31b`. Part B was aligned separately at
+`326c5043378f2c658eea58ed542c23f15c5fcd96`. The final bounded implementation target is
+`554f01d27dfa5c2719e1aed27de4342dd7376246`; it does not modify Part A.
+
+The last repair computes and validates the complete `evidence_records` structural shape before any
+`NOT_APPLICABLE` evidence-reference resolution. Focused adversarials inject `null`, `undefined` and a
+malformed evidence record into an otherwise valid justified `NOT_APPLICABLE` packet. For each variant,
+`deriveQaDebuggingDecision`, `validateQaDebuggingDecision` and `gateQaDebuggingCandidate` do not throw;
+derive/gate return `BLOCKED` and validation returns invalid.
+
+On WSL Node `v24.19.0` / npm `11.17.0`, typecheck passed and focused S13M passed `15/15`. The first full
+run reproduced the known S13H T53 disposable-repository timeout (S13M passed); the immediate complete
+rerun passed all `999/999`. With the prior ignored `dist` preserved outside the repository and `dist`
+confirmed absent, `npm run build` passed, followed by a clean post-build full suite at `999/999`; generated
+output was discarded and the exact prior `dist` restored. `git diff --check` passed.
+
+The current executable builder evidence remains OI-A `16/248 → 248/248` (+232), HI
+`232/400 → 368/400`, 30/30 isolation, all 36 exact negatives and eight Skill unsafe counters zero.
+The non-400 HI result is intentional and fail-closed: HI-050 remains false because no fresh executable
+verifier was launched. S13M remains `IN_PROGRESS`; S13N remains `NOT_STARTED` and forbidden.

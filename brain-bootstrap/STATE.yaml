@@ -581,11 +581,13 @@ repository:
 
   qa_debugging:
     status: IN_PROGRESS
-    implementation_target: "88d5ac53977db2af8382e70c1da7106848cf2ffa"
-    part_a_commit: "3458df7171f8fb1bce5c921986d738faaeab8561"
+    implementation_target: "554f01d27dfa5c2719e1aed27de4342dd7376246"
+    part_a_commit: "a5fc6e051522cdb2ecda5d7e8c9a7b7a8bbde31b"
+    part_a_correction_source: "4f53a8da8f52a2ba6fd135193dfd73731b842dbb"
+    part_b_alignment_target: "326c5043378f2c658eea58ed542c23f15c5fcd96"
     authoring_handoff_id: "2026-08-29T143036Z-S13M-chatgpt-authoring"
-    builder_handoff_id: "2026-08-29T230336Z-S13M-codex-suite-environment-meta-repair"
-    note: "Part A remains byte-identical. Builder repair target 88d5ac5 accepts PASS or explicit reason/evidence-backed NOT_APPLICABLE suite results, requires configuration/environment before-after delta for closure, and changes FX-NEG-028 to hide that delta. HI-046..050 now use observed harness context and real unsafe checks; defaults fail closed and HI-050 remains false without a fresh independent verifier. WSL Node 24.19.0: typecheck PASS; focused 14/14; full 998/998; build PASS. Recomputed OI-A is baseline 16/248 to Skill 248/248 (+232), baseline/Skill HI 232/400 to 368/400, 30/30 isolation, 36 exact negatives and eight Skill unsafe counters zero. Independent verification remains required. S13N remains NOT_STARTED and forbidden."
+    builder_handoff_id: "2026-08-29T233445Z-S13M-codex-canonical-alignment-total-validation-repair"
+    note: "Corrected Part A was integrated separately at a5fc6e0 from ChatGPT source 4f53a8d and was not modified by the subsequent Part B commits. Part B alignment 326c504 binds justified NOT_APPLICABLE and environment-delta evidence to the corrected schema. Total-validation target 554f01d structurally validates evidence_records before any reference resolution; adversarials cover null, undefined and malformed evidence_records and prove derive/validate/gate no-throw fail-closed behavior. WSL Node 24.19.0: typecheck PASS; focused 15/15; full 999/999 after one reproduced transient S13H T53 timeout; genuine dist-absent build PASS; post-build full 999/999. Current OI-A remains baseline 16/248 to Skill 248/248 (+232), baseline/Skill HI 232/400 to 368/400, 30/30 isolation, 36 exact negatives and eight Skill unsafe counters zero. HI-050 remains false: no fresh verifier was launched. Independent control-plane source review remains required. S13N remains NOT_STARTED and forbidden."
 
 build_day:
   date: "2026-08-29"
