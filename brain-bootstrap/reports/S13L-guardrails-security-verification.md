@@ -21,6 +21,8 @@ provider, middleware, enforcement runtime, Capability Registry or future-stage s
   `cdaf6753dceef210208016c81acf3106c4d5f37079426ae7a442313c6d9e9f1c`.
 - Contract SHA-256: `5f7eb7849934609870a09dd17ee8b9e45a8d878642754ed5bbed6bbc0f2e6bf5`.
 - Part B verification target: `dac2ca5f28c36fccc045003dfece26a6086af951`.
+- Mechanical repair 1 target: `4296ba728061b1ba14ab8d63faabfa4217253477`, authorized by
+  issue #1 comment `5459768412` after independent FAIL-1 comment `5459696308`.
 - The three Part A files have an empty diff from their Part-A-only commit.
 
 ## Implemented surface
@@ -128,18 +130,26 @@ provider_or_future_stage_binding=0
 5. Content-source tests now cover USER_PAYLOAD, RETRIEVED_CONTENT, TOOL_OUTPUT, HISTORICAL_MEMORY and
    EXTERNAL_DOCUMENT individually; logging and durable memory independently require purpose+authz.
 6. All 36 negative fixtures now carry the exact canonical condition names, not numeric count alone.
+7. Repair 1 rejects unknown scope-kind, action/descriptor side-effect and secret propagation-policy
+   enum values before deterministic evaluation; four adversarial regressions prove invalid/BLOCKED.
+8. A total parsed-candidate shape guard now precedes all unsafe nested dereferences. Five incomplete
+   nested-shape cases, one non-object case and one real parsed-candidate case prove no throw and
+   deterministic invalid/BLOCKED while the actual candidate remains the gated object.
+9. The seven implementation and two related closure-document blank-line-at-EOF defects identified by
+   FAIL-1 were removed without semantic changes.
 
 ## Canonical final QA
 
 WSL Node `v24.19.0` on the final candidate:
 
 - `npm run typecheck`: PASS, zero errors.
-- focused S13L: 115/115 PASS (85 canonical/boundary/runtime tests + 30 isolation probes).
-- full pre-build suite: 973/973 PASS.
+- focused S13L: 126/126 PASS (96 canonical/boundary/runtime tests + 30 isolation probes).
+- full pre-build suite: 984/984 PASS.
 - Existing ignored `dist` was moved to an exact validated sibling temp path; `dist` was confirmed
-  absent; `npm run build` PASS; generated `dist` confirmed; generated output removed and the prior
-  ignored `dist` restored byte-for-byte at its original path.
-- full post-build suite: 973/973 PASS.
+  absent; `npm run build` PASS with 615 generated files; generated output was recycled and the prior
+  ignored 573-file `dist` restored at its original path with inventory SHA-256
+  `fd55185ac3a96ead0be962a060d531100b9494aa8db6c03a908e346fc9e81747` unchanged.
+- full post-build suite: 984/984 PASS.
 - eight positives and all 36 named negatives: exact expected outcomes.
 - `git diff --check`: PASS.
 - package manifests, `src/core/` and Part A: unchanged.
@@ -154,6 +164,7 @@ implementation was added. S13M remains `NOT_STARTED` and forbidden.
 ## Required next action
 
 A different fresh non-authoring, non-fork, read-only verifier must independently reproduce the exact
-target, hashes, 115 focused/973 full counts, 8/36 fixtures, candidate anti-substitution, real runtime,
+repair target, hashes, 126 focused/984 full counts, 8/36 fixtures, candidate anti-substitution and
+malformed-candidate fail-closed behavior, real runtime,
 30/30 isolation, raw OI-A figures, eight zero unsafe counters and boundaries. Only its `VERIFIED PASS`
 may close S13L and authorize S13M.

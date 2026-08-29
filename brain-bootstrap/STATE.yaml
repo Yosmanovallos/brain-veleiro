@@ -555,6 +555,9 @@ repository:
     part_a_integrity: "PASS: branch ancestry and single-transfer-file scope verified; transfer hash preserved; three delimiter slices integrated byte-identically; YAML parsed with 50 hard invariants and 10 semantic dimensions; WSL Node 24.19 typecheck and 858/858 baseline tests PASS."
     part_b_implemented_at: "2026-08-28T21:24:26Z"
     part_b_commit: "dac2ca5f28c36fccc045003dfece26a6086af951"
+    repair_1_authorized_by_comment: 5459768412
+    repair_1_at: "2026-08-29T02:46:15Z"
+    repair_1_commit: "4296ba728061b1ba14ab8d63faabfa4217253477"
     paths_part_b:
       - src/intelligence/guardrails-security/
       - src/intelligence/skills/definitions/guardrailsSecurityS13L.ts
@@ -563,12 +566,12 @@ repository:
       - tests/frontend-product-surface/frontendProductSurface.test.ts (mechanical append-only relaxation)
       - tests/postgres-data-modeling/postgresDataModeling.test.ts (mechanical future-step relaxation)
       - brain-bootstrap/reports/S13L-guardrails-security-verification.md
-    contract_tests: "T1-T112 equivalent coverage in 85 canonical focused tests plus 30 exhaustive atomic-isolation probes; 8 positives and all exact 36 named negatives. Full suite 973/973."
-    quality_checks: "WSL Node 24.19 typecheck PASS; focused 115/115; full 973/973 pre-build; genuine dist-absent build PASS with prior ignored dist restored; post-build 973/973; Part A/package/Core unchanged."
+    contract_tests: "T1-T112 equivalent coverage plus repair regressions in 96 canonical/boundary/runtime tests and 30 exhaustive atomic-isolation probes; 8 positives and all exact 36 named negatives. Full suite 984/984."
+    quality_checks: "WSL Node 24.19 typecheck PASS; focused 126/126; full 984/984 pre-build; genuine dist-absent build emitted 615 files and prior ignored 573-file dist was restored with exact inventory SHA-256; post-build 984/984; Part A/package/Core unchanged; implementation+repair and working-tree diff-check PASS."
     skill_vs_no_skill: "Frozen provider-blind truth. Same 8 inputs/host/provider class/capability provider/parser/gate/evaluator/S09/S10; only Skill prose differs. Baseline 120/248, Skill 248/248, delta +128; SD-001..008 qualify; each raw group A=8/B=8/C=0, delta 16, max share 1/2; SD-009/010 zero; hard invariants 400/400; eight unsafe counters 0; no regression; threshold PASS."
-    builder_review: "Repaired secret-ref propagation widening, candidate permission/disclosure smuggling, unknown enum fail-open behavior, unbounded non-NONE action side effects, incomplete content/log/memory coverage and unnamed negative fixtures; all final QA rerun."
+    builder_review: "Repair 1 rejects unknown scope kind, action/descriptor side-effect and secret propagation-policy enums before evaluation; a total candidate-shape guard now returns deterministic invalid/BLOCKED without TypeError for missing/incomplete nested fields while preserving actual-candidate gating. The nine reported blank-line-at-EOF defects were removed without semantic edits."
     boundaries: "No AgentDefinition/Core branch/provider/dependency/Capability Registry/MCP/identity-policy-vault-crypto-auth runtime/compliance system/persistent handle/future-stage implementation."
-    note: "Builder PASS at dac2ca5f...; INDEPENDENT_VERIFICATION_REQUIRED. S13M remains NOT_STARTED and forbidden until a different fresh non-fork read-only verifier returns PASS."
+    note: "Repair builder PASS at 4296ba728061b1ba14ab8d63faabfa4217253477; INDEPENDENT_VERIFICATION_REQUIRED. S13L remains the sole active step. S13M remains NOT_STARTED and forbidden until a different fresh non-authoring non-fork read-only verifier returns PASS."
 
 build_day:
   date: "2026-08-29"
