@@ -6,7 +6,7 @@ independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-29T15:52:00Z"
+last_verified_at: "2026-08-29T14:39:00Z"
 steps:
   S00: PASS
   S01: PASS
@@ -580,12 +580,12 @@ repository:
     note: "VERIFIED PASS. A fresh non-authoring non-fork read-only verifier reproduced the S13L repair target, exact Part A hashes, focused 126/126, full 984/984 pre/post genuine dist-absent build, 11/11 repair regressions, 8/8 positives, 36/36 negatives, 30/30 isolation, OI-A 120/248 to 248/248 (+128), hard invariants 392/400 to 400/400, eight unsafe counters zero, boundaries and diff-check. ChatGPT control-plane accepted PASS in issue #1 comment 5462919214. S13M authoring preflight is now allowed; no S13M semantic authoring or Part B is authorized."
 
   qa_debugging:
-    status: CHATGPT_AUTHORING_REQUIRED
-    preflight_at: "2026-08-29T14:30:36Z"
-    preflight: "brain-bootstrap/reports/S13M-authoring-preflight.md"
-    verified_start_head: "3eac82efcd102b2375ac383b1aa75a92c074c68d"
+    status: IN_PROGRESS
+    implementation_target: "938e07b281a2d3c8a6b96c7da24069bca2f73728"
+    part_a_commit: "3458df7171f8fb1bce5c921986d738faaeab8561"
     authoring_handoff_id: "2026-08-29T143036Z-S13M-chatgpt-authoring"
-    note: "Evidence pack only. No S13M Skill, Quality Contract, spec, typed projection, source module, test suite, AgentDefinition, provider, dependency or runtime implementation exists at preflight. Await matching ChatGPT AUTHORING_READY transfer before Part B. S13N remains NOT_STARTED and forbidden."
+    builder_handoff_id: "2026-08-29T143900Z-S13M-codex-final-builder"
+    note: "Part A remains byte-identical. Builder repair target 938e07b adds exact named-negative ownership assertions and named alternate-factor coverage. WSL Node 24.19.0: typecheck PASS; focused 9/9; full pre-build 993/993; genuine dist-absent build PASS with prior ignored dist restored; post-build 993/993. Independent verification remains required. S13N remains NOT_STARTED and forbidden."
 
 build_day:
   date: "2026-08-29"

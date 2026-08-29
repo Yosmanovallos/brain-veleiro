@@ -132,3 +132,21 @@ Repair 3 final test target `9cf9cb681ea0d0e7e72efa95bef642acf0898533`: added exp
 alternate-causal-factor, malformed-suite, missing/wrong candidate/wrong environment/NOT_RUN/FAIL suite,
 and empty-relationship-CONTRADICTS regressions. Node 24 typecheck PASS; focused 9/9; full pre-build
 993/993 PASS. These remain builder evidence only.
+
+## Current final builder evidence — supersedes earlier target summaries
+
+Implementation target: `938e07b281a2d3c8a6b96c7da24069bca2f73728`. This target replaces the
+blanket 36-negative non-closure assertion with an explicit per-ID status and owning-next-action table,
+adds a named fully valid `FX-ALT-FACTOR` fixture (outside the eight OI-A inputs), and makes unresolved
+contradictions/security-boundary failure choose the canonical safe owning action.
+
+Canonical WSL runtime was Node `v24.19.0`, npm `11.17.0`. On this exact target: typecheck PASS; focused
+S13M `9/9`; full pre-build `993/993`; a pre-existing ignored `dist` was moved to an isolated temporary
+path, `dist` was confirmed absent, `npm run build` passed, generated output was removed and the prior
+ignored `dist` restored; full post-build `993/993`; `git diff --check` PASS. The retained 13 untracked
+root Markdown scaffolds were not changed.
+
+Focused evidence retains the genuine same-path Skill-vs-no-Skill comparison (8 inputs, 30 detached
+ownership observations and 30 mutations, positive grouped delta, 400/400 Skill HI evaluations, and all
+eight unsafe counters zero). This is builder evidence only: S13M is `IN_PROGRESS` and
+`INDEPENDENT_VERIFICATION_REQUIRED`; S13N is `NOT_STARTED` and forbidden.

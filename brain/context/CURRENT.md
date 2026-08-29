@@ -15,27 +15,28 @@ non-authoring, non-fork, read-only independent verifier. S13N remains forbidden.
 `main`
 
 **Verification target:**
-`9cf9cb681ea0d0e7e72efa95bef642acf0898533` (S13M Part B repair target)
+`938e07b281a2d3c8a6b96c7da24069bca2f73728` (S13M Part B final builder target)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
 
 **Last independently verified at:**
-`2026-08-29T15:55:00Z (S13M repair builder evidence; independent verification remains required)`
+`2026-08-29T14:39:00Z (S13M final builder evidence; independent verification remains required)`
 
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-29T153200Z-s13m-independent-verification-required.md`
+`brain/context/handoffs/2026-08-29T143900Z-s13m-final-builder-independent-verification-required.md`
 
 **Handoff status:**
 `INDEPENDENT_VERIFICATION_REQUIRED`
 
 ## Current Status
 
-S13M canonical Part A remains byte-identical to integration commit `3458df7`; repair target is `707ea8e`.
-Builder evidence passes on WSL Node 24.19.0: typecheck, focused S13M (7 blocks), pre-build 991/991,
-genuine dist-absent build and post-build 991/991. This is not an independent PASS.
+S13M canonical Part A remains byte-identical to integration commit `3458df7`; final builder target is
+`938e07b`. Builder evidence passes on WSL Node 24.19.0: typecheck, focused S13M 9/9, pre-build
+993/993, genuine dist-absent build with ignored prior dist restored, and post-build 993/993. This is
+not an independent PASS.
 
 ## Next Exact Action
 
