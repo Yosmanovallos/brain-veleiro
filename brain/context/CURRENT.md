@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S00–S13L are `VERIFIED PASS`. S13M qa-debugging Part B has a new material-evidence builder repair and
+S00–S13L are `VERIFIED PASS`. S13M qa-debugging Part B has a new non-empty-evidence builder repair and
 requires control-plane review before any fresh independent verifier. S13N remains forbidden.
 
 ## Current Repository State
@@ -15,28 +15,30 @@ requires control-plane review before any fresh independent verifier. S13N remain
 `main`
 
 **Verification target:**
-`de6f2b4aa3631d25261b45b29f839651add101a0` (S13M material-evidence repair target)
+`891fd1994f3ff416f476f2761d4c7657c08fc68e` (S13M non-empty closure-evidence repair target)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
 
 **Last builder evidence at:**
-`2026-08-29T22:16:51Z (independent verification remains required)`
+`2026-08-29T22:36:04Z (independent verification remains required)`
 
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-29T221651Z-s13m-material-evidence-independent-verification-required.md`
+`brain/context/handoffs/2026-08-29T223604Z-s13m-nonempty-evidence-independent-verification-required.md`
 
 **Handoff status:**
 `INDEPENDENT_VERIFICATION_REQUIRED`
 
 ## Current Status
 
-S13M canonical Part A remains byte-identical to integration commit `3458df7`; material-evidence repair
-target is `de6f2b4`. Builder evidence passes on WSL Node 24.19.0: typecheck, focused S13M 11/11,
-pre-build 995/995, genuine dist-absent build with ignored prior dist restored, and post-build 995/995.
-OI-A was recomputed as 16/248 to 248/248 (+232), HI 240/400 to 400/400. This is not an independent PASS.
+S13M canonical Part A remains byte-identical to integration commit `3458df7`; non-empty closure-evidence
+repair target is `891fd19`. Reproduction, causal SUPPORTS/CONTRADICTS experiments, regression and every
+suite result now require evidence that is both non-empty and resolvable before closure. Builder evidence
+passes on WSL Node 24.19.0: typecheck, focused S13M 12/12, pre-build 996/996, genuine dist-absent build
+with ignored prior dist restored, and post-build 996/996. OI-A was recomputed as 16/248 to 248/248 (+232),
+HI 240/400 to 400/400. This is not an independent PASS.
 
 ## Next Exact Action
 

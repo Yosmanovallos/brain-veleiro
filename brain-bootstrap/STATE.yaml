@@ -581,11 +581,11 @@ repository:
 
   qa_debugging:
     status: IN_PROGRESS
-    implementation_target: "de6f2b4aa3631d25261b45b29f839651add101a0"
+    implementation_target: "891fd1994f3ff416f476f2761d4c7657c08fc68e"
     part_a_commit: "3458df7171f8fb1bce5c921986d738faaeab8561"
     authoring_handoff_id: "2026-08-29T143036Z-S13M-chatgpt-authoring"
-    builder_handoff_id: "2026-08-29T221651Z-S13M-codex-material-evidence-repair"
-    note: "Part A remains byte-identical. Builder repair target de6f2b4 resolves every material input evidence/contradiction ref before closure, blocks missing material evidence, prevents PROVEN with resolving hypothesis contradiction, and makes HI-016/039/043 test those real references. WSL Node 24.19.0: typecheck PASS; focused 11/11; full pre-build 995/995; genuine dist-absent build PASS with prior ignored dist restored; post-build 995/995. Recomputed OI-A is baseline 16/248 to Skill 248/248 (+232), 10 qualified dimensions, baseline/Skill HI 240/400 to 400/400, 30/30 isolation, 36 exact negatives and eight Skill unsafe counters zero. Independent verification remains required. S13N remains NOT_STARTED and forbidden."
+    builder_handoff_id: "2026-08-29T223604Z-S13M-codex-nonempty-evidence-repair"
+    note: "Part A remains byte-identical. Builder repair target 891fd19 requires non-empty, resolving evidence at every closure gate: reproduction, causal SUPPORTS_CAUSE and CONTRADICTS_CAUSE experiments, regression and suite results. Empty arrays downgrade through their existing owning gate and cannot yield REPRODUCED, PROVEN, DISPROVEN, regression PASS, suite PASS or FIX_VERIFIED; HI-005/013/016/022/023/027/039/043 now exercise presence as well as resolution. WSL Node 24.19.0: typecheck PASS; focused 12/12; full pre-build 996/996; genuine dist-absent build PASS with prior ignored dist restored; post-build 996/996. Recomputed OI-A is baseline 16/248 to Skill 248/248 (+232), 10 qualified dimensions, baseline/Skill HI 240/400 to 400/400, 30/30 isolation, 36 exact negatives and eight Skill unsafe counters zero. Independent verification remains required. S13N remains NOT_STARTED and forbidden."
 
 build_day:
   date: "2026-08-29"
