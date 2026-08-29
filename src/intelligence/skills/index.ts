@@ -15,6 +15,7 @@ import { backendApiEngineeringS13I } from "./definitions/backendApiEngineeringS1
 import { postgresDataModelingS13J } from "./definitions/postgresDataModelingS13J.js";
 import { frontendProductSurfaceS13K } from "./definitions/frontendProductSurfaceS13K.js";
 import { guardrailsSecurityS13L } from "./definitions/guardrailsSecurityS13L.js";
+import { qaDebuggingS13M } from "./definitions/qaDebuggingS13M.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
@@ -31,6 +32,7 @@ export { backendApiEngineeringS13I } from "./definitions/backendApiEngineeringS1
 export { postgresDataModelingS13J } from "./definitions/postgresDataModelingS13J.js";
 export { frontendProductSurfaceS13K } from "./definitions/frontendProductSurfaceS13K.js";
 export { guardrailsSecurityS13L } from "./definitions/guardrailsSecurityS13L.js";
+export { qaDebuggingS13M } from "./definitions/qaDebuggingS13M.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -106,5 +108,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(guardrailsSecurityS13L),
     load_definition: async () => guardrailsSecurityS13L,
+  },
+  {
+    descriptor: toSkillDescriptor(qaDebuggingS13M),
+    load_definition: async () => qaDebuggingS13M,
   },
 ];
