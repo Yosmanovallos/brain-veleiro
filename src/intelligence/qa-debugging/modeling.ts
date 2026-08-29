@@ -20,6 +20,7 @@ const optionalText = (v: unknown): boolean => v === undefined || text(v);
 const nonNegativeInteger = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0;
 const uniqueStrings = (v: unknown): v is string[] => strings(v) && new Set(v).size === v.length;
 const equalStrings = (actual: unknown, expected: readonly string[]): boolean => Array.isArray(actual) && actual.length === expected.length && actual.every((value, index) => value === expected[index]);
+const materialDecisionFields = ["status", "task_ref", "incident_ref", "reproduction_state", "root_cause", "candidate_fix_kind", "candidate_revision_ref", "required_suite_refs", "atomic", "blockers", "next_action", "evidence_refs", "contradiction_refs", "residual_unknowns", "limitations", "acceptance", "evidence_required"] as const;
 const check = (v: boolean): QaCheckResult => v ? "PASS" : "FAIL";
 const clone = <T>(value: T): T => structuredClone(value);
 const unique = (values: readonly string[]): string[] => [...new Set(values)];
@@ -118,9 +119,7 @@ export function validateQaDebuggingDecision(candidate: unknown, input: unknown):
   if (!errors.length && ((record!.status === "FIX_VERIFIED" || record!.status === "FIX_CANDIDATE") && root!.state !== "PROVEN")) errors.push("candidate status/root-cause combination is impossible");
   if (!errors.length && (record!.candidate_fix_kind !== expected.candidate_fix_kind || record!.candidate_revision_ref !== expected.candidate_revision_ref)) errors.push("candidate fix kind/revision relation is invalid");
   if (!errors.length && !equalStrings(record!.required_suite_refs, expected.required_suite_refs)) errors.push("candidate required suite references do not match input");
-  if (!errors.length && (record!.task_ref !== expected.task_ref || record!.incident_ref !== expected.incident_ref || record!.reproduction_state !== expected.reproduction_state || record!.next_action !== expected.next_action)) errors.push("candidate identity or next action is not recomputed");
-  if (!errors.length && JSON.stringify(record!.atomic) !== JSON.stringify(expected.atomic)) errors.push("actual candidate atomic claims do not match deterministic gate");
-  if (!errors.length && record!.status !== expected.status) errors.push("candidate status is not recomputed status");
+  if (!errors.length && materialDecisionFields.some((field) => JSON.stringify(record![field]) !== JSON.stringify(expected[field]))) errors.push("candidate material claims do not match deterministic evidence gate");
   const hard = { structural_validation_total: errors.length === 0, actual_candidate_gated: errors.length === 0, input_immutable: true, no_core_special_branch: true, capability_free: true };
   return { valid: errors.length === 0, errors, hard_invariants: hard, recomputed_status: expected.status };
 }
