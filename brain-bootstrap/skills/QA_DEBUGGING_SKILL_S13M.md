@@ -141,6 +141,8 @@ Use one of the bounded classes: `CODE`, `TEST`, `DATA`, `CONFIGURATION`, `ENVIRO
 ### QD-R10 — Environment identity is evidence
 Runtime, dependency, configuration, platform and candidate revision identities materially relevant to the failure must be explicit. A mismatch between required and observed environment must not be silently blamed on code.
 
+For `CONFIGURATION_CHANGE` or `ENVIRONMENT_CHANGE` closure, both before and after identities require non-empty resolving evidence, and the material delta itself must be explicit rather than inferred from arbitrary identifier inequality.
+
 ### QD-R11 — Preserve contradictory evidence
 Evidence that contradicts or qualifies the favored hypothesis remains visible until resolved. Do not select only supporting observations.
 
@@ -178,6 +180,8 @@ A green full suite supports regression safety but does not prove root cause by i
 
 ### QD-R22 — Failures in the relevant suite remain blocking
 Do not mark `FIX_VERIFIED` while required relevant checks fail, are missing without justified `NOT_APPLICABLE`, or were run against the wrong candidate/environment.
+
+A justified `NOT_APPLICABLE` result requires an explicit bounded reason reference bound to non-empty resolving evidence for that exact candidate/environment; an unbound reason string is not sufficient.
 
 ### QD-R23 — Flaky closure requires bounded repeated evidence
 For an `INTERMITTENT` reproduction, `FIX_VERIFIED` requires repeated pre-fix evidence of the same signature, a causal explanation, and repeated post-fix execution of the same scenario with attempt counts recorded and no silent claim that recurrence is impossible.

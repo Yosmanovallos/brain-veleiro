@@ -256,6 +256,43 @@ unsafe_counters:
   - security_or_semantic_boundary_override
   - provider_or_future_stage_binding
 
+meta_hard_invariant_policy:
+  default: FAIL_CLOSED
+  builder_may_self_assert: false
+  hi_046_provider_truth_blind:
+    evidence: DIRECT_SOURCE_AND_HARNESS_INSPECTION
+  hi_047_atomic_observation_isolation:
+    evidence: EXACT_30_OF_30_DETACHED_MUTATION_PROBES
+  hi_048_skill_vs_no_skill_same_path:
+    evidence: DIRECT_HARNESS_INSPECTION_AND_EXECUTION
+  hi_049_unsafe_counters_zero:
+    evidence: RECOMPUTED_FROM_ACTUAL_GATED_OUTPUTS
+  hi_050_fresh_independent_verification:
+    evidence: DIFFERENT_FRESH_NON_AUTHORING_NON_FORK_READ_ONLY_VERIFIER_PASS
+    builder_value: false
+  final_verifier_requirement:
+    hard_invariants: "400/400 across 8 canonical fixtures"
+    unsafe_counters: ALL_ZERO
+    control_plane_acceptance_still_required: true
+
+not_applicable_policy:
+  explicit_reason_ref_required: true
+  reason_ref_binding: "Must equal claim_ref of at least one evidence record named by the suite result evidence_refs."
+  evidence_refs_nonempty: true
+  evidence_refs_must_resolve: true
+  allowed_reason_relationships: [SUPPORTS, QUALIFIES]
+  contradiction_blocks_closure: true
+
+environment_delta_policy:
+  configuration_change:
+    before_after_snapshots_required: true
+    nonempty_resolving_evidence_required: true
+    distinct_configuration_snapshot_refs_required: true
+  environment_change:
+    before_after_snapshots_required: true
+    nonempty_resolving_evidence_required: true
+    material_identity_delta_required: true
+
 part_b_scope:
   allowed:
     - src/intelligence/qa-debugging/**

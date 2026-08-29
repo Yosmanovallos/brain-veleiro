@@ -468,6 +468,9 @@ export interface QaSuiteResultInput {
 
   outcome: SuiteCheckOutcome;
 
+  /** Required only when outcome == "NOT_APPLICABLE"; identifies the bounded evidence claim explaining applicability. */
+  not_applicable_reason_ref?: string;
+
   executed_check_count?: number;
   passed_check_count?: number;
   failed_check_count?: number;
@@ -500,7 +503,7 @@ A candidate may use a narrow suite only when the impact evidence justifies that 
 
 `NOT_RUN` never equals `PASS`.
 
-`NOT_APPLICABLE` requires explicit reason/evidence.
+`NOT_APPLICABLE` requires an explicit bounded reason reference, non-empty resolving evidence, and a reason-bearing referenced evidence record whose `claim_ref` equals that reference and whose relationship is `SUPPORTS` or `QUALIFIES`. The reason reference must be absent for every other outcome; `CONTRADICTS`, unbound, unresolved, empty, unrun or failing evidence cannot close a required suite.
 
 ## 16. Intermittent/flaky failure policy
 
