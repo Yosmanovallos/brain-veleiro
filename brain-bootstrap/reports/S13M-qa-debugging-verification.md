@@ -99,3 +99,19 @@ This is builder-reported execution, not independent verification. A different fr
 non-fork, read-only verifier must reconstruct repository authority, rerun Node 24 deterministic checks,
 exercise adversarial gates/actual candidate path, 30 isolation probes, OI-A and counters, then return
 `PASS`, `FAIL` or `BLOCKED`. S13M remains `IN_PROGRESS`; S13N remains `NOT_STARTED` and forbidden.
+
+## Repair 2 — control-plane FAIL remediation
+
+Repair target: `707ea8ea9dd1f86ff6ef01dff0dc148d6df323c9`.
+
+The former synthetic OI-A construction was removed. Both arms now use the same deterministic,
+truth-blind provider class through `planQaDebugging()` and the real S12→S10→S09 path. It derives each
+candidate only from the bounded input embedded in the objective plus materialized Skill prose; the arms
+differ only because S12 loaded prose is absent/present. Frozen truth is independently authored static
+test data and calls no production helper. OI-A scores actual gated runtime outputs, not manually mutated
+faithful decisions.
+
+HI-001 through HI-050 are exposed and independently evaluated for each arm/input: Skill `400/400` over
+eight fixtures, no hard-invariant regression. Focused S13M PASS, typecheck PASS, full pre-build
+`991/991` PASS. The 36 named fixture loop retains each canonical fixture name and fails each safely;
+future verifier must independently assess the individual downgrade assertions.
