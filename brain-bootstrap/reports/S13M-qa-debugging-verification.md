@@ -171,3 +171,24 @@ restored), and full post-build `994/994`; `git diff --check` passed. The real S1
 `232/248 → 248/248` (+16), with 30/30 isolation, 36 exact negatives, 8/8 positives, 400/400 Skill
 hard invariants and eight unsafe counters at zero. This is builder evidence only: S13M remains
 `IN_PROGRESS` / `INDEPENDENT_VERIFICATION_REQUIRED`; S13N remains `NOT_STARTED` and forbidden.
+
+## Candidate semantic-gate repair — supersedes previous builder target
+
+Implementation target: `f55724d9d8e9535ae8735517ca69701ece6aab0a` (semantic gate `5bf75d2`).
+The candidate is still never replaced: it is returned only when every material decision field equals the
+deterministic evidence decision from the bounded input. This includes root cause, evidence and
+contradiction refs, blockers, residuals, limitations, acceptance and evidence requirements, in addition
+to the existing identity, candidate revision, suite, atomic, status and next-action checks. Well-formed
+tampering regressions cover causal factor/supporting evidence, decision evidence, contradictions and
+fabricated blockers; every tampered actual candidate is invalid and gated to `BLOCKED`.
+
+OI-A was recomputed from the current executable S12→S10→S09 A/B path after this gate change; it was not
+carried forward. The actual scores are baseline `16/248`, Skill `248/248`, dimension-specific delta
+`+232`, ten qualified dimensions, baseline HI `232/400`, Skill HI `400/400`, and all eight Skill unsafe
+counters `0`. These exact scores are regression assertions in the focused test.
+
+On exact target `f55724d`, WSL Node `v24.19.0` / npm `11.17.0` passed typecheck, focused S13M `10/10`,
+full pre-build `994/994`, genuine dist-absent build with prior ignored `dist` restored, full post-build
+`994/994`, all 36 exact negatives, 8/8 positives and 30/30 isolation; `git diff --check` passed. This
+is builder evidence only: S13M remains `IN_PROGRESS` / `INDEPENDENT_VERIFICATION_REQUIRED`; S13N remains
+`NOT_STARTED` and forbidden.
