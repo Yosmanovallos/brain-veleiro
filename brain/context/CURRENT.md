@@ -33,9 +33,9 @@ non-authoring, non-fork, read-only independent verifier. S13N remains forbidden.
 
 ## Current Status
 
-S13M canonical Part A remains byte-identical to integration commit `3458df7`; Part B implementation
-target is `b445863`. Builder evidence passes on WSL Node 24.19.0: typecheck, focused S13M (7 blocks),
-pre-build 991/991, genuine dist-absent build and post-build 991/991. This is not an independent PASS.
+S13M canonical Part A remains byte-identical to integration commit `3458df7`; repair target is `707ea8e`.
+Builder evidence passes on WSL Node 24.19.0: typecheck, focused S13M (7 blocks), pre-build 991/991,
+genuine dist-absent build and post-build 991/991. This is not an independent PASS.
 
 ## Next Exact Action
 

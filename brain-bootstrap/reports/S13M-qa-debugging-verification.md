@@ -115,3 +115,9 @@ HI-001 through HI-050 are exposed and independently evaluated for each arm/input
 eight fixtures, no hard-invariant regression. Focused S13M PASS, typecheck PASS, full pre-build
 `991/991` PASS. The 36 named fixture loop retains each canonical fixture name and fails each safely;
 future verifier must independently assess the individual downgrade assertions.
+
+Clean/post-build correction: on exact repair target `707ea8e`, prior ignored `dist` was present, moved to
+an isolated temporary path, `dist` was confirmed absent, `npm run build` passed on WSL Node 24.19.0,
+and full post-build `npm test` passed `991/991`. Generated dist was removed and the original ignored
+dist restored. Final tracked `git diff --check` passed; only the retained 13 pre-existing root scaffolds
+remain untracked.
