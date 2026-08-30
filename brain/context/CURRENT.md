@@ -6,8 +6,8 @@
 
 ## Current Objective
 
-S00–S13M are `VERIFIED PASS`. S13N Part A and builder Part B are complete; fresh independent verification
-is required. S13O and all later stages remain forbidden.
+S00–S13M are `VERIFIED PASS`. S13N Part A and the second mechanical Part B repair are complete; fresh
+independent verification is required. S13O and all later stages remain forbidden.
 
 ## Current Repository State
 
@@ -15,7 +15,7 @@ is required. S13O and all later stages remain forbidden.
 `main`
 
 **Verification target:**
-`5cd801ace4b3de78cb2e1627eb93242f86f70453` (S13N repaired builder target)
+`f90f8d760913d505e60831ff69b2004c30f73cf8` (S13N second repaired builder target)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
@@ -26,18 +26,18 @@ is required. S13O and all later stages remain forbidden.
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-30T213000Z-s13n-repair-independent-verification-required.md`
+`brain/context/handoffs/2026-08-30T214200Z-s13n-second-repair-independent-verification-required.md`
 
 **Handoff status:**
 `INDEPENDENT_VERIFICATION_REQUIRED`
 
 ## Current Status
 
-S13N canonical Part A was accepted in issue #1 comment `5471091138`, integrated byte-identically in
-`e73bcb1`. Comment `5471198433` failed the first builder handoff for mechanical evidence defects; repair
-`5cd801a` now uses a real S12→S10→S09 A/B path, total candidate validation, explicit safe-absence proof,
-literal 32-negative expectations and derived evidence. Full repair QA is 1040/1040 pre/post clean build.
-This remains builder evidence only; HI-050 remains pending a different fresh verifier.
+S13N canonical Part A remains byte-identical. Comment `5471291211` failed the prior repair for remaining
+mechanical evidence defects. Repair `f90f8d7` now scores deterministic post-gate candidate/evaluator
+agreement, computes provider and source audits, exercises exact named negatives, and recomputes 24/24
+underlying-source isolation. Real A/B is 0/192→191/192; full QA is 1040/1040 pre/post clean build. This
+remains builder evidence only; HI-050 remains pending a different fresh verifier.
 
 ## Next Exact Action
 

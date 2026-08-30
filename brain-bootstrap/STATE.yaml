@@ -1,6 +1,6 @@
 bootstrap_version: 1.2.0
 current_step: S13N
-status: CHATGPT_AUTHORING_REQUIRED
+status: INDEPENDENT_VERIFICATION_REQUIRED
 primary_builder: codex
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
@@ -604,9 +604,11 @@ repository:
     part_a_commit: "e73bcb10abbc1835e64836a8f957c045e583478b"
     part_b_commit: "039782b18f15b62f87f04f1604ae1fd7c7da9755"
     repair_commit: "5cd801ace4b3de78cb2e1627eb93242f86f70453"
+    second_repair_commit: "f90f8d760913d505e60831ff69b2004c30f73cf8"
+    second_verification_fail_comment_id: 5471291211
     verification_report: "brain-bootstrap/reports/S13N-agent-evals-verification.md"
-    independent_verification_handoff: "brain/context/handoffs/2026-08-30T213000Z-s13n-repair-independent-verification-required.md"
-    note: "First builder handoff failed source verification in issue comment 5471198433 for mechanical evidence defects. Repair 5cd801a: actual S12/S10/S09 A/B, total candidate validation, explicit safe absence proof, literal negative expectations and derived HI/unsafe audit. Builder QA PASS only: Node 24.19 typecheck, focused 41/41, full 1040/1040 pre/post dist-absent build, A/B 0/192 to 192/192 (+192), eight qualified dimensions, 24/24 detached evaluator-output isolation and unsafe counters zero. HI-050 remains false/pending. S13O remains forbidden."
+    independent_verification_handoff: "brain/context/handoffs/2026-08-30T214200Z-s13n-second-repair-independent-verification-required.md"
+    note: "Second source verification failed in issue comment 5471291211. Repair f90f8d7 now scores post-gate candidate/evaluator agreement, computes branded identity-bound provider audits, derives HI-001..049 and eight unsafe counters from owning evidence, uses exact named FX-NEG-001..032 probes, and recomputes 24/24 detached underlying-source isolation. Builder QA PASS only: Node 24.19 typecheck, focused 41/41, full 1040/1040 pre/post dist-absent build, real A/B 0/192 to 191/192 (+191), eight qualified dimensions, and all unsafe counters zero. HI-050 remains false/pending. S13O remains forbidden."
 
 build_day:
   date: "2026-08-29"
