@@ -6,8 +6,8 @@
 
 ## Current Objective
 
-S00–S13M are `VERIFIED PASS`. S13N agent-evals is at `CHATGPT_AUTHORING_REQUIRED`; only its factual
-preflight is complete. No S13N semantics or Part B implementation has been authored.
+S00–S13M are `VERIFIED PASS`. S13N Part A and builder Part B are complete; fresh independent verification
+is required. S13O and all later stages remain forbidden.
 
 ## Current Repository State
 
@@ -15,7 +15,7 @@ preflight is complete. No S13N semantics or Part B implementation has been autho
 `main`
 
 **Verification target:**
-`cf7b14e87da5f94b98ca7b1e74815e6104ab580e` (S13M closure / S13N preflight start)
+`039782b18f15b62f87f04f1604ae1fd7c7da9755` (S13N Part B builder target)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
@@ -26,24 +26,22 @@ preflight is complete. No S13N semantics or Part B implementation has been autho
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-30T002925Z-s13n-chatgpt-authoring-preflight.md`
+`brain/context/handoffs/2026-08-30T210000Z-s13n-independent-verification-required.md`
 
 **Handoff status:**
-`CHATGPT_AUTHORING_REQUIRED`
+`INDEPENDENT_VERIFICATION_REQUIRED`
 
 ## Current Status
 
-S13M is independently `VERIFIED PASS`; ChatGPT accepted it in issue #1 comment `5465631151`. S13N
-preflight verified that the existing S12 lazy Skill discovery → S10 compilation → S09 runtime, the
-optional ModelProvider usage/cost hooks, and established deterministic provider/frozen-truth/atomic-
-isolation harness patterns are reusable foundations. No S13N artifact or implementation exists, and no
-general evaluation, reliability, observability, capability or verifier platform is authorized by this gate.
+S13N canonical Part A was accepted in issue #1 comment `5471091138`, integrated byte-identically in
+`e73bcb1`, and builder Part B completed in `039782b`. Builder QA passed typecheck, focused 41/41, full
+1040/1040 pre/post a dist-absent clean build, 8 positives, 32 negatives and 24/24 atomic isolation. This
+is builder evidence only; HI-050 remains pending a different fresh verifier.
 
 ## Next Exact Action
 
-Wait for a matching issue #1 `CHATGPT_RESPONSE` with `decision: AUTHORING_READY`. ChatGPT must return an
-isolated byte-ready S13N Part A transfer; only then may its exact artifacts be integrated verbatim. Do not
-author S13N semantic artifacts or implement S13N Part B.
+Run only a fresh non-authoring, non-fork, read-only S13N independent verification. Do not start S13O or
+later work until that verifier passes and ChatGPT/control plane explicitly accepts it.
 
 ### Operating Rule
 

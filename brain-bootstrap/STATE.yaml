@@ -594,12 +594,18 @@ repository:
     note: "VERIFIED PASS. Corrected Part A was integrated separately at a5fc6e0 from ChatGPT source 4f53a8d and was not modified by the subsequent Part B commits. A fresh non-authoring, non-fork, read-only verifier independently reproduced Node 24.19.0 typecheck, focused 15/15, full 999/999 pre/post a genuine dist-absent build, eight positives, all 36 exact negatives, actual-candidate same-path gating, 30/30 detached isolation, provider/truth separation, OI-A 16/248 to 248/248 (+232) with ten qualified dimensions and max share 0.50, final HI-001..HI-050 400/400, and eight unsafe counters zero. ChatGPT control-plane accepted PASS in issue #1 comment 5465631151. S13N agent-evals is the next allowed step and remains NOT_STARTED pending its ChatGPT Authoring Gate."
 
   agent_evals:
-    status: CHATGPT_AUTHORING_REQUIRED
+    status: IN_PROGRESS
     preflight_at: "2026-08-30T00:29:25Z"
     preflight: "brain/context/handoffs/2026-08-30T002925Z-s13n-chatgpt-authoring-preflight.md"
     verified_start_head: "cf7b14e87da5f94b98ca7b1e74815e6104ab580e"
     authoring_handoff_id: "2026-08-30T002925Z-S13N-chatgpt-authoring"
-    note: "Factual preflight only. No S13N Skill, Quality Contract, SPEC, source module, tests, AgentDefinition, catalog entry, capability, provider, dependency or general evaluation platform exists. ChatGPT must author canonical S13N Part A before any Part B work."
+    authoring_response_comment_id: 5471091138
+    authoring_commit: "ffccfd72f950261cb41a0e40ee97f5750ff201f3"
+    part_a_commit: "e73bcb10abbc1835e64836a8f957c045e583478b"
+    part_b_commit: "039782b18f15b62f87f04f1604ae1fd7c7da9755"
+    verification_report: "brain-bootstrap/reports/S13N-agent-evals-verification.md"
+    independent_verification_handoff: "brain/context/handoffs/2026-08-30T210000Z-s13n-independent-verification-required.md"
+    note: "Builder QA PASS only: WSL Node 24.19.0 typecheck, focused 41/41, full 1040/1040 pre/post dist-absent clean build, 8 positives, 32 negatives, 24/24 detached isolation, same-path A/B 0/192 to 192/192 (+192), eight qualified dimensions and unsafe counters zero. HI-050 remains false/pending until a fresh different non-authoring non-fork read-only verifier passes. S13O remains forbidden."
 
 build_day:
   date: "2026-08-29"
