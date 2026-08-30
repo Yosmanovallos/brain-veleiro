@@ -6,9 +6,8 @@
 
 ## Current Objective
 
-S00–S13L are `VERIFIED PASS`. S13M qa-debugging has integrated the accepted canonical correction and a
-bounded Part B total-validation ordering repair. Control-plane source review is required before any fresh
-independent verifier. S13N remains forbidden.
+S00–S13M are `VERIFIED PASS`. S13N agent-evals is the next allowed step, but it remains `NOT_STARTED`
+until its mandatory ChatGPT Authoring Gate preflight is completed.
 
 ## Current Repository State
 
@@ -16,36 +15,35 @@ independent verifier. S13N remains forbidden.
 `main`
 
 **Verification target:**
-`554f01d27dfa5c2719e1aed27de4342dd7376246` (S13M total-validation ordering repair target)
+`554f01d27dfa5c2719e1aed27de4342dd7376246` (S13M independently verified implementation target)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
 
-**Last builder evidence at:**
-`2026-08-29T23:34:45Z (control-plane source review remains required)`
+**Last independently verified at:**
+`2026-08-29T23:58:03Z (S13M fresh non-authoring, non-fork, read-only executable verifier PASS)`
 
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-29T233445Z-s13m-canonical-alignment-total-validation-repair.md`
+`brain/context/handoffs/2026-08-29T235800Z-S13M-fresh-executable-verifier-pass` (GitHub issue #1 comment `5465618108`)
 
 **Handoff status:**
-`INDEPENDENT_VERIFICATION_REQUIRED`
+`VERIFIED PASS / CLOSED` (ChatGPT control-plane acceptance: issue #1 comment `5465631151`)
 
 ## Current Status
 
-The current frontier is corrected Part A `a5fc6e0` → Part B schema alignment `326c504` → total-validation
-ordering repair `554f01d`. Part A was not modified after `a5fc6e0`. `evidence_records` is now structurally
-validated before any `NOT_APPLICABLE` reference resolution, and null/undefined/malformed adversarials prove
-no-throw fail-closed behavior in derive, validate and gate. Builder evidence on WSL Node 24.19.0 passes
-typecheck, focused S13M 15/15, full 999/999, genuine dist-absent build and post-build full 999/999. One
-known S13H T53 timeout was reproduced once and resolved by the complete clean rerun. OI-A remains
-16/248 to 248/248 (+232), HI 232/400 to 368/400; HI-050 remains false because no fresh verifier ran.
+S13M is independently `VERIFIED PASS`. The corrected Part A `a5fc6e0` remained unchanged through the
+verified implementation target `554f01d`. A fresh verifier reproduced Node 24.19.0 typecheck, focused
+S13M 15/15, full 999/999 before and after a genuinely dist-absent build, eight positives, all 36 exact
+negatives, actual-candidate same-path gating, provider/truth separation, 30/30 detached isolation, OI-A
+`16/248 → 248/248` (`+232`) across ten qualified dimensions with max share `0.50`, final hard invariants
+`400/400`, and all eight unsafe counters zero. ChatGPT accepted this result in issue #1 comment `5465631151`.
 
 ## Next Exact Action
 
-Review source at the new builder handoff. If clean, the next gate is `FRESH_EXEC_VERIFIER_REQUIRED`;
-do not launch it from this builder handoff and do not start S13N.
+With the S13M closure recorded, S13N agent-evals may begin only with repository inspection and a factual
+`CHATGPT_AUTHORING_REQUIRED` evidence pack. Do not author S13N semantic artifacts or implement S13N Part B.
 
 ### Operating Rule
 

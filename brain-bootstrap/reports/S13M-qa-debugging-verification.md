@@ -246,3 +246,22 @@ The current executable builder evidence remains OI-A `16/248 → 248/248` (+232)
 `232/400 → 368/400`, 30/30 isolation, all 36 exact negatives and eight Skill unsafe counters zero.
 The non-400 HI result is intentional and fail-closed: HI-050 remains false because no fresh executable
 verifier was launched. S13M remains `IN_PROGRESS`; S13N remains `NOT_STARTED` and forbidden.
+
+## Independent verification and control-plane closure
+
+Fresh executable verifier handoff `2026-08-29T235800Z-S13M-fresh-executable-verifier-pass` (GitHub
+issue #1 comment `5465618108`) independently verified the final target
+`554f01d27dfa5c2719e1aed27de4342dd7376246` from repository head
+`af9da406359d4d98b831ac7002f720921f66ddb4`. The verifier was non-authoring, non-fork and read-only;
+it made no tracked modification, commit or push.
+
+It reproduced Node `v24.19.0` / npm `11.17.0`, typecheck, focused S13M `15/15`, full `999/999`
+pre-build, a genuine dist-absent build, and full `999/999` post-build. It also independently confirmed
+all eight positives, all exact 36 negatives, actual-candidate same-path gating, provider/frozen-truth
+separation, 30/30 detached atomic isolation, OI-A `16/248 → 248/248` (`+232`) across ten qualified
+dimensions with max single-assertion share `0.50`, final HI-001..HI-050 `400/400`, no hard-invariant
+regression, and all eight unsafe counters zero.
+
+ChatGPT control-plane accepted this as S13M `VERIFIED PASS` in issue #1 comment `5465631151`.
+S13N agent-evals is now the next allowed step, but remains `NOT_STARTED` until its mandatory ChatGPT
+Authoring Gate preflight is complete.
