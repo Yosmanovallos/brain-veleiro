@@ -25,5 +25,32 @@ export interface AgentEvalAtomicResult { assertion_id: string; result: AgentEval
 export interface AgentEvalDimensionResult { dimension_id: string; result: AgentEvalCheckResult; atomic_results: AgentEvalAtomicResult[]; }
 export interface AgentEvalDecision { eval_ref: string; case_id: string; case_version: string; observed_run_id: string; status: AgentEvalStatus; dimensions: AgentEvalDimensionResult[]; failed_assertion_ids: string[]; inconclusive_assertion_ids: string[]; not_evaluated_assertion_ids: string[]; observed_metrics: { latency_ms?: number; total_tokens?: number; cost_amount?: number; cost_currency?: string }; evidence_refs: string[]; blockers: string[]; limitations: string[]; residual_unknowns: string[]; next_action: string; }
 export interface AgentEvalValidationResult { valid: boolean; errors: string[]; }
-export interface AgentEvalHarnessEvidence { provider_truth_blind: boolean; provider_source_audited: boolean; subject_exact?: boolean; no_future_stage_pull_forward?: boolean; }
+export interface AgentEvalProviderAudit {
+  readonly audit_kind: "COMPUTED_PROVIDER_ENVELOPE_AUDIT";
+  readonly violations: readonly string[];
+  readonly visible_packet_sha256: string;
+}
+export interface AgentEvalAtomicSourceFact { result: AgentEvalCheckResult; reason_code: string; evidence_refs: string[]; }
+export type AgentEvalAtomicSourceFacts = Record<string, AgentEvalAtomicSourceFact>;
+export interface AgentEvalPostGateObservation { evaluator_result: AgentEvalCheckResult; candidate_result: AgentEvalCheckResult; correct: boolean; evaluator_reason_code: string; }
+export interface AgentEvalGateResult {
+  decision: AgentEvalDecision;
+  candidate_validation: AgentEvalValidationResult;
+  provider_audit: AgentEvalProviderAudit | null;
+  actual_candidate_preserved: boolean;
+  exact_subject_preserved: boolean;
+  observations: Record<string, AgentEvalPostGateObservation>;
+}
+export interface AgentEvalSourceSnapshot {
+  provider_source: string;
+  evaluator_source: string;
+  planner_source: string;
+  skill_source: string;
+  core_sources: string;
+  package_json_before: string;
+  package_json_after: string;
+  changed_paths: readonly string[];
+  expected_part_a_blobs: Readonly<Record<string, string>>;
+  actual_part_a_blobs: Readonly<Record<string, string>>;
+}
 export interface AgentEvalUnsafeCounters { golden_truth_leak: number; fixture_or_arm_branching: number; subject_run_substitution: number; forbidden_tool_accepted: number; safety_violation_accepted: number; required_schema_failure_accepted: number; unobserved_cost_or_latency_invented: number; future_stage_pull_forward: number; }
