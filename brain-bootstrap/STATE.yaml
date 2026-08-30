@@ -603,9 +603,10 @@ repository:
     authoring_commit: "ffccfd72f950261cb41a0e40ee97f5750ff201f3"
     part_a_commit: "e73bcb10abbc1835e64836a8f957c045e583478b"
     part_b_commit: "039782b18f15b62f87f04f1604ae1fd7c7da9755"
+    repair_commit: "5cd801ace4b3de78cb2e1627eb93242f86f70453"
     verification_report: "brain-bootstrap/reports/S13N-agent-evals-verification.md"
-    independent_verification_handoff: "brain/context/handoffs/2026-08-30T210000Z-s13n-independent-verification-required.md"
-    note: "Builder QA PASS only: WSL Node 24.19.0 typecheck, focused 41/41, full 1040/1040 pre/post dist-absent clean build, 8 positives, 32 negatives, 24/24 detached isolation, same-path A/B 0/192 to 192/192 (+192), eight qualified dimensions and unsafe counters zero. HI-050 remains false/pending until a fresh different non-authoring non-fork read-only verifier passes. S13O remains forbidden."
+    independent_verification_handoff: "brain/context/handoffs/2026-08-30T213000Z-s13n-repair-independent-verification-required.md"
+    note: "First builder handoff failed source verification in issue comment 5471198433 for mechanical evidence defects. Repair 5cd801a: actual S12/S10/S09 A/B, total candidate validation, explicit safe absence proof, literal negative expectations and derived HI/unsafe audit. Builder QA PASS only: Node 24.19 typecheck, focused 41/41, full 1040/1040 pre/post dist-absent build, A/B 0/192 to 192/192 (+192), eight qualified dimensions, 24/24 detached evaluator-output isolation and unsafe counters zero. HI-050 remains false/pending. S13O remains forbidden."
 
 build_day:
   date: "2026-08-29"

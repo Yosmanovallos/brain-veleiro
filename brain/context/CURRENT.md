@@ -15,7 +15,7 @@ is required. S13O and all later stages remain forbidden.
 `main`
 
 **Verification target:**
-`039782b18f15b62f87f04f1604ae1fd7c7da9755` (S13N Part B builder target)
+`5cd801ace4b3de78cb2e1627eb93242f86f70453` (S13N repaired builder target)
 
 **Worktree status:**
 `tracked clean as of this update; 13 retained pre-existing untracked Markdown scaffolds; verify independently`
@@ -26,7 +26,7 @@ is required. S13O and all later stages remain forbidden.
 ## Current Handoff
 
 **Handoff file:**
-`brain/context/handoffs/2026-08-30T210000Z-s13n-independent-verification-required.md`
+`brain/context/handoffs/2026-08-30T213000Z-s13n-repair-independent-verification-required.md`
 
 **Handoff status:**
 `INDEPENDENT_VERIFICATION_REQUIRED`
@@ -34,9 +34,10 @@ is required. S13O and all later stages remain forbidden.
 ## Current Status
 
 S13N canonical Part A was accepted in issue #1 comment `5471091138`, integrated byte-identically in
-`e73bcb1`, and builder Part B completed in `039782b`. Builder QA passed typecheck, focused 41/41, full
-1040/1040 pre/post a dist-absent clean build, 8 positives, 32 negatives and 24/24 atomic isolation. This
-is builder evidence only; HI-050 remains pending a different fresh verifier.
+`e73bcb1`. Comment `5471198433` failed the first builder handoff for mechanical evidence defects; repair
+`5cd801a` now uses a real S12→S10→S09 A/B path, total candidate validation, explicit safe-absence proof,
+literal 32-negative expectations and derived evidence. Full repair QA is 1040/1040 pre/post clean build.
+This remains builder evidence only; HI-050 remains pending a different fresh verifier.
 
 ## Next Exact Action
 

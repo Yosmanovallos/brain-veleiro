@@ -42,3 +42,18 @@ S13N adds the bounded Intelligence-only evaluator, total input validation, actua
 ## Required next action
 
 Run fresh independent, read-only verification only. Do not start S13O or any later stage.
+
+## Repair after independent source verification FAIL
+
+Control-plane comment `5471198433` found mechanical defects in the original builder harness. Repair commit `5cd801ace4b3de78cb2e1627eb93242f86f70453` preserves Part A exactly and adds a real deterministic reference path: S12 selected load, S10 compile, S09 `runAgent`, one truth-blind deterministic ModelProvider, actual parsed runtime candidate, total candidate gate, deterministic evaluator and raw comparison.
+
+- Both arms use the identical eight input objects (including the same frozen truth and observed run objects), same reference provider instance, AgentDefinition, parser, gate, evaluator and observation schema. The only treatment is selected S13N Skill prose/loading.
+- The provider sees only an explicit provider-visible packet; it omits case ID, truth ref, frozen truth and arm state. Its source imports only Core contracts and S13N types, not fixtures, truth builders or evaluator helpers.
+- Actual runtime candidates are structurally validated (all eight canonical dimensions, 24 atomic IDs/results, arrays and required fields) before gating. Malformed candidates block.
+- `SENSITIVE_OUTPUT_ABSENT` now requires a supplied normalized safe absence proof bound to the exact run; lack of proof is `INCONCLUSIVE` with `SAFE_ABSENCE_PROOF_MISSING`.
+- Bounded input validation now fail-closes invalid terminal, requirement, task/safety/type and side-effect enums as well as trace/path/usage structure.
+- Exact negatives FX-NEG-001..032 each assert a literal final status and literal expected blocker/assertion evidence; optional missing cost/token evidence remains explicitly `PASS` with `SD7-C` `NOT_EVALUATED` as Part A requires.
+- Atomic observation isolation is now extracted from a real evaluator decision and tested through detached evaluator-output normalization for all 24 canonical atomic IDs.
+- A/B result from actual S09 runtime candidates: baseline `0/192`, Skill `192/192`, delta `+192`; SD-001..008 qualify. Per dimension, atomic A/B/C contribution counts are `8/8/8`, denominator `24`, maximum share `1/3`; no regression.
+- HI-001..049 and all eight unsafe counters are computed by the comparison audit from the arm inputs, actual candidates and deterministic evaluator results; HI-050 remains false/pending.
+- Repair QA: Node 24.19.0 typecheck PASS; focused 41/41; full pre-build 1040/1040; dist absent before build; build PASS; full post-build 1040/1040.
