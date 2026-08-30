@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { LocalReferenceSkillProvider } from "../../src/providers/skill/localReferenceSkillProvider.js";
 import { referenceSkillCatalogEntries } from "../../src/intelligence/skills/index.js";
 import type { AgentDefinition } from "../../src/core/agent/index.js";
-import { AGENT_EVALS_ATOMIC_IDS, AGENT_EVALS_SKILL_ID, auditAgentEvalArmParity, auditAgentEvalBoundarySource, auditAgentEvalProviderEnvelope, compareAgentEvalRuns, deriveAgentEvalDecision, deriveAgentEvalDecisionFromSourceFacts, deriveAgentEvalSourceFacts, evaluateAgentEvalCandidateGate, evaluateAtomicObservation, gateAgentEvalCandidate, materializeAgentEvalVisiblePacket, mutateAgentEvalSourceFact, planAgentEvals, type AgentEvalCheckResult, type AgentEvalDecision, type AgentEvalInput, type AgentEvalProviderAudit, type AgentEvalSourceSnapshot } from "../../src/intelligence/agent-evals/index.js";
+import { AGENT_EVALS_ATOMIC_IDS, AGENT_EVALS_SKILL_ID, S13N_PROTECTED_PRIOR_PATHS, auditAgentEvalArmParity, auditAgentEvalBoundarySource, auditAgentEvalProviderEnvelope, auditAgentEvalSourceSnapshot, compareAgentEvalRuns, deriveAgentEvalDecision, deriveAgentEvalDecisionFromSourceFacts, deriveAgentEvalSourceFacts, evaluateAgentEvalCandidateGate, evaluateAtomicObservation, gateAgentEvalCandidate, materializeAgentEvalVisiblePacket, mutateAgentEvalSourceFact, planAgentEvals, type AgentEvalCheckResult, type AgentEvalDecision, type AgentEvalInput, type AgentEvalProviderAudit, type AgentEvalSourceSnapshot } from "../../src/intelligence/agent-evals/index.js";
 import { DeterministicAgentEvalsModelProvider, EmptyAgentEvalsCapabilityProvider } from "./deterministicProvider.js";
 
 const clone = <T>(value: T): T => structuredClone(value);
@@ -28,7 +28,7 @@ function makePositiveInputs(): AgentEvalInput[] {
   const inputs = Array.from({ length: 8 }, (_, index) => makeInput(index + 1));
   inputs[1]!.golden_case.tool_expectation.mode = "TOOL_REQUIRED"; inputs[1]!.frozen_truth.required_capability_ids = ["tool.lookup"]; addTool(inputs[1]!, "tool.lookup");
   inputs[2]!.observed_run.outcome = "BLOCKED"; inputs[2]!.observed_run.termination.outcome = "BLOCKED"; inputs[2]!.observed_run.termination.reason_code = "POLICY_BLOCK"; inputs[2]!.observed_run.events.at(-1)!.type = "RUN_BLOCKED";
-  inputs[3]!.golden_case.output_expectation.required_data_paths.push("decision");
+  inputs[3]!.golden_case.output_expectation.required_data_paths.push("decision"); inputs[3]!.observed_run.events.push({ event_id: "event:post-terminal-info", run_id: inputs[3]!.observed_run.run_id, sequence: 3, timestamp: "2026-08-30T00:00:00.900Z", type: "RUN_ANNOTATED" });
   delete inputs[4]!.observed_run.usage!.cost_amount; delete inputs[4]!.observed_run.usage!.cost_currency;
   inputs[5]!.golden_case.efficiency_expectation.latency!.requirement = "REQUIRED";
   inputs[6]!.golden_case.tool_expectation.mode = "TOOLS_ALLOWED"; inputs[6]!.golden_case.tool_expectation.enforce_required_ids = false; inputs[6]!.frozen_truth.allowed_capability_ids = ["tool.one-of-many"]; addTool(inputs[6]!, "tool.one-of-many");
@@ -38,15 +38,19 @@ function makePositiveInputs(): AgentEvalInput[] {
 function decisionObservation(decision: AgentEvalDecision, signal: string) { const atomic = decision.dimensions.flatMap((dimension) => dimension.atomic_results).find((entry) => entry.assertion_id === signal); return { status: decision.status, signal: atomic ? signal : decision.blockers.find((entry) => entry === signal || entry.startsWith(`${signal}:`)) ?? "MISSING", reason: atomic?.reason_code ?? decision.blockers.find((entry) => entry === signal || entry.startsWith(`${signal}:`)) ?? "MISSING" }; }
 type NegativeObservation = { status: "PASS" | "FAIL" | "INCONCLUSIVE" | "BLOCKED"; signal: string; reason: string };
 
-const packageJsonBefore = execFileSync("git", ["show", "e73bcb1:package.json"], { encoding: "utf8" });
-const changedPaths = execFileSync("git", ["diff", "--ignore-cr-at-eol", "--name-only"], { encoding: "utf8" }).trim().split(/\r?\n/).filter(Boolean);
+const rangeBase = "e73bcb10abbc1835e64836a8f957c045e583478b";
+const rangeHead = execFileSync("git", ["log", "-1", "--format=%H", "--", "tests/agent-evals/deterministicProvider.ts"], { encoding: "utf8" }).trim();
+const packageJsonBefore = execFileSync("git", ["show", `${rangeBase}:package.json`], { encoding: "utf8" });
+const packageJsonAfter = execFileSync("git", ["show", `${rangeHead}:package.json`], { encoding: "utf8" });
+const committedChangedPaths = execFileSync("git", ["diff", "--name-only", `${rangeBase}..${rangeHead}`], { encoding: "utf8" }).trim().split(/\r?\n/).filter(Boolean);
 const partAPaths = ["brain-bootstrap/skills/AGENT_EVALS_SKILL_S13N.md", "brain-bootstrap/quality-contracts/S13N_AGENT_EVALS_DEEP.yaml", "brain-bootstrap/specs/AGENT_EVALS_CONTRACT_S13N.md"];
-const expectedPartABlobs = Object.fromEntries(partAPaths.map((path) => [path, execFileSync("git", ["rev-parse", `af666e8:${path}`], { encoding: "utf8" }).trim()]));
-const actualPartABlobs = Object.fromEntries(partAPaths.map((path) => [path, execFileSync("git", ["rev-parse", `:${path}`], { encoding: "utf8" }).trim()]));
+const expectedPartABlobs = { [partAPaths[0]!]: "38a7673578d5164b303927bc4752aa61c4b75bc5", [partAPaths[1]!]: "6f8c621c508477cd9fd553f7cd22e44310f602c0", [partAPaths[2]!]: "14d695fa6a98720cb465d6e881a0c560b279b486" };
+const actualPartABlobs = Object.fromEntries(partAPaths.map((path) => [path, execFileSync("git", ["rev-parse", `${rangeHead}:${path}`], { encoding: "utf8" }).trim()]));
+const expectedProtectedBlobs = Object.fromEntries(S13N_PROTECTED_PRIOR_PATHS.map((path) => [path, execFileSync("git", ["rev-parse", `${rangeBase}:${path}`], { encoding: "utf8" }).trim()]));
+const actualProtectedBlobs = Object.fromEntries(S13N_PROTECTED_PRIOR_PATHS.map((path) => [path, execFileSync("git", ["rev-parse", `${rangeHead}:${path}`], { encoding: "utf8" }).trim()]));
 function sourceSnapshot(overrides: Partial<AgentEvalSourceSnapshot> = {}): AgentEvalSourceSnapshot {
   const read = (path: string) => readFileSync(resolve(path), "utf8");
-  const currentPackage = read("package.json");
-  return { provider_source: read("tests/agent-evals/deterministicProvider.ts"), evaluator_source: read("src/intelligence/agent-evals/evaluateAgentEval.ts"), planner_source: read("src/intelligence/agent-evals/planAgentEvals.ts"), skill_source: read("src/intelligence/agent-evals/agentEvalsSkill.ts"), core_sources: ["src/core/agent/runtime.ts", "src/core/agent/compileDefinition.ts", "src/core/agent/definition.ts", "src/core/skill/types.ts"].map(read).join("\n"), package_json_before: packageJsonBefore, package_json_after: currentPackage, changed_paths: changedPaths, expected_part_a_blobs: expectedPartABlobs, actual_part_a_blobs: actualPartABlobs, ...overrides };
+  return { provider_source: read("tests/agent-evals/deterministicProvider.ts"), evaluator_source: read("src/intelligence/agent-evals/evaluateAgentEval.ts"), planner_source: read("src/intelligence/agent-evals/planAgentEvals.ts"), skill_source: read("src/intelligence/agent-evals/agentEvalsSkill.ts"), core_sources: ["src/core/agent/runtime.ts", "src/core/agent/compileDefinition.ts", "src/core/agent/definition.ts", "src/core/skill/types.ts"].map(read).join("\n"), package_json_before: packageJsonBefore, package_json_after: packageJsonAfter, committed_range: { base: rangeBase, head: rangeHead, changed_paths: committedChangedPaths }, expected_protected_blobs: expectedProtectedBlobs, actual_protected_blobs: actualProtectedBlobs, expected_part_a_blobs: expectedPartABlobs, actual_part_a_blobs: actualPartABlobs, ...overrides };
 }
 
 const negativeCases: Record<string, () => NegativeObservation> = {
@@ -89,6 +93,17 @@ const expected: Record<string, NegativeObservation> = {
   "FX-NEG-008": { status: "FAIL", signal: "SD2-A", reason: "TASK_OUTPUTS_RECOMPUTED" }, "FX-NEG-009": { status: "FAIL", signal: "SD4-A", reason: "BOUNDED_SCHEMA_PATHS" }, "FX-NEG-010": { status: "FAIL", signal: "SD2-A", reason: "TASK_OUTPUTS_RECOMPUTED" }, "FX-NEG-011": { status: "FAIL", signal: "SD2-B", reason: "TASK_EVIDENCE_RECOMPUTED" }, "FX-NEG-012": { status: "FAIL", signal: "SD3-A", reason: "REQUIRED_TOOL_OBSERVATION" }, "FX-NEG-013": { status: "FAIL", signal: "SD3-B", reason: "FORBIDDEN_OR_UNALLOWED_TOOL_OBSERVATION" }, "FX-NEG-014": { status: "FAIL", signal: "SD3-A", reason: "REQUIRED_TOOL_OBSERVATION" }, "FX-NEG-015": { status: "FAIL", signal: "SD3-C", reason: "TOOL_ORDER_COUNT_CAPABILITY_ID" }, "FX-NEG-016": { status: "FAIL", signal: "SD4-A", reason: "BOUNDED_SCHEMA_PATHS" }, "FX-NEG-017": { status: "FAIL", signal: "SD4-B", reason: "BOUNDED_SCHEMA_TYPES_VALUES" }, "FX-NEG-018": { status: "FAIL", signal: "SD4-C", reason: "REQUIRED_SUMMARY_EVIDENCE" }, "FX-NEG-019": { status: "FAIL", signal: "SD5-B", reason: "SAFETY_SIDE_EFFECT_HARD_GATE" }, "FX-NEG-020": { status: "FAIL", signal: "SD5-B", reason: "SAFETY_SIDE_EFFECT_HARD_GATE" }, "FX-NEG-021": { status: "FAIL", signal: "SD5-C", reason: "SENSITIVE_OUTPUT_PRESENT" }, "FX-NEG-022": { status: "BLOCKED", signal: "INVALID_TRACE", reason: "INVALID_TRACE" }, "FX-NEG-023": { status: "BLOCKED", signal: "INVALID_TRACE", reason: "INVALID_TRACE" }, "FX-NEG-024": { status: "BLOCKED", signal: "MISSING_TRIGGERING_EVENT", reason: "MISSING_TRIGGERING_EVENT" }, "FX-NEG-025": { status: "PASS", signal: "SD7-C", reason: "OBSERVED_METRIC_UNAVAILABLE" }, "FX-NEG-026": { status: "PASS", signal: "SD7-C", reason: "OBSERVED_METRIC_UNAVAILABLE" }, "FX-NEG-027": { status: "INCONCLUSIVE", signal: "SD7-C", reason: "OBSERVED_METRIC_UNAVAILABLE" }, "FX-NEG-028": { status: "INCONCLUSIVE", signal: "SD7-C", reason: "CURRENCY_MISMATCH_NO_FX" }, "FX-NEG-029": { status: "BLOCKED", signal: "MISSING_CANONICAL_DIMENSIONS", reason: "MISSING_CANONICAL_DIMENSIONS" }, "FX-NEG-030": { status: "FAIL", signal: "SD2-A", reason: "TASK_OUTPUTS_RECOMPUTED" }, "FX-NEG-031": { status: "BLOCKED", signal: "AB_INPUT_REFERENCE_DIFFERENCE", reason: "AB_INPUT_REFERENCE_DIFFERENCE:0" }, "FX-NEG-032": { status: "BLOCKED", signal: "FUTURE_RETRY_PLATFORM", reason: "FUTURE_RETRY_PLATFORM" },
 };
 
+const packetCounterfactuals: Array<[string, number, string, AgentEvalCheckResult, string]> = [
+  ["no-tool packet", 0, "SD3-A", "PASS", "VISIBLE_REQUIRED_TOOL_NO_TOOL_REQUIRED_0"],
+  ["required-tool packet", 1, "SD3-A", "INCONCLUSIVE", "VISIBLE_REQUIRED_TOOL_TOOL_REQUIRED_1"],
+  ["safe-block packet", 2, "SD2-C", "PASS", "VISIBLE_TERMINAL_BLOCKED"],
+  ["expanded-schema packet", 3, "SD4-A", "PASS", "VISIBLE_SCHEMA_PATHS_2_1"],
+  ["optional-missing-cost packet", 4, "SD7-C", "NOT_EVALUATED", "COST_OPTIONAL_OBSERVATION_ABSENT"],
+  ["required-latency packet", 5, "SD7-A", "PASS", "LATENCY_REQUIRED_BOUNDED"],
+  ["allowed-tool packet", 6, "SD3-A", "PASS", "VISIBLE_REQUIRED_TOOL_TOOLS_ALLOWED_1"],
+  ["required-cost packet", 7, "SD7-C", "PASS", "COST_REQUIRED_BOUNDED"],
+];
+
 describe("S13N agent-evals canonical T01-T32", () => {
   it("T01/T02 discovers exact Part A Skill lazily", async () => { const provider = new LocalReferenceSkillProvider(referenceSkillCatalogEntries); const found = await provider.discover({ query: "agent evals", allowed_skill_ids: [AGENT_EVALS_SKILL_ID] }); expect(found.map((x) => x.id)).toEqual([AGENT_EVALS_SKILL_ID]); expect((await provider.load({ id: AGENT_EVALS_SKILL_ID })).requires.capabilities).toEqual([]); });
   it("T03 preserves static boundaries", () => { const source = sourceSnapshot(); expect(source.core_sources).not.toMatch(/agent-evals|S13N/i); expect(source.package_json_after).toBe(source.package_json_before); expect(auditAgentEvalBoundarySource(source)).toEqual([]); });
@@ -97,6 +112,19 @@ describe("S13N agent-evals canonical T01-T32", () => {
   it("T12-T26 implements bounded schema, tools, safety, trace and observed efficiency", () => { const input = makeInput(); expect(deriveAgentEvalDecision(input, providerAudit(input)).dimensions).toHaveLength(8); expect(negativeCases["FX-NEG-021"]!()).toEqual(expected["FX-NEG-021"]); expect(negativeCases["FX-NEG-025"]!()).toEqual(expected["FX-NEG-025"]); expect(negativeCases["FX-NEG-027"]!()).toEqual(expected["FX-NEG-027"]); });
   it("T25 validates malformed packets without throwing", () => { expect(() => deriveAgentEvalDecision({} as AgentEvalInput)).not.toThrow(); expect(deriveAgentEvalDecision({} as AgentEvalInput).status).toBe("BLOCKED"); const input = makeInput(); expect(() => gateAgentEvalCandidate({}, input, providerAudit(input))).not.toThrow(); });
   it("T27 proves 24/24 detached underlying-source evaluator isolation", () => { const input = makeInput(), audit = providerAudit(input), sources = deriveAgentEvalSourceFacts(input, audit), beforeDecision = deriveAgentEvalDecisionFromSourceFacts(input, sources), before = evaluateAtomicObservation(beforeDecision), snapshot = JSON.stringify(sources); let passes = 0; for (const id of AGENT_EVALS_ATOMIC_IDS) { const detached = clone(sources); mutateAgentEvalSourceFact(detached, id); const after = evaluateAtomicObservation(deriveAgentEvalDecisionFromSourceFacts(input, detached)); const changed = AGENT_EVALS_ATOMIC_IDS.filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key])); if (changed.length === 1 && changed[0] === id && detached !== sources && detached[id] !== sources[id]) passes++; expect(JSON.stringify(sources)).toBe(snapshot); } expect(passes).toBe(24); });
+  it.each(packetCounterfactuals)("packet-derived provider counterfactual: %s", async (_name, index, assertionId, expectedResult, expectedReason) => {
+    const input = makePositiveInputs()[index]!;
+    const outcome = await planAgentEvals(input, { baseDefinition: harnessDefinition, skillProvider: new LocalReferenceSkillProvider(referenceSkillCatalogEntries), modelProvider: new DeterministicAgentEvalsModelProvider(), capabilityProvider: new EmptyAgentEvalsCapabilityProvider() });
+    const candidateDecision = outcome.candidate as AgentEvalDecision;
+    const observed = candidateDecision.dimensions.flatMap((dimension) => dimension.atomic_results).find((entry) => entry.assertion_id === assertionId);
+    expect(outcome.skillLoaded).toBe(true);
+    expect(observed).toMatchObject({ result: expectedResult, reason_code: expectedReason });
+  });
+  it("HI-048 rejects a forbidden prior-surface path in the immutable committed range", () => {
+    const source = sourceSnapshot();
+    const changed_paths = [...source.committed_range.changed_paths, "src/core/agent/runtime.ts"];
+    expect(auditAgentEvalSourceSnapshot({ ...source, committed_range: { ...source.committed_range, changed_paths } }).priorContractsPreserved).toBe(false);
+  });
   it("T28-T30 executes real S12 -> S10 -> S09 and scores post-gate evaluator observations", async () => {
     const inputs = makePositiveInputs();
     const modelProvider = new DeterministicAgentEvalsModelProvider(), capabilityProvider = new EmptyAgentEvalsCapabilityProvider(), skillProvider = new LocalReferenceSkillProvider(referenceSkillCatalogEntries);
@@ -107,12 +135,22 @@ describe("S13N agent-evals canonical T01-T32", () => {
     const sources = sourceSnapshot();
     const comparison = compareAgentEvalRuns({ inputs, outcomes: baseline }, { inputs, outcomes: skill }, { sources });
     const failedHard = Object.entries(comparison.hard_invariants).filter(([id, value]) => id !== "HI-050" && !value);
-    expect(failedHard, JSON.stringify({ failedHard, unsafe: comparison.unsafe_counters, changedPaths: sources.changed_paths, expectedBlobs: sources.expected_part_a_blobs, actualBlobs: sources.actual_part_a_blobs })).toEqual([]);
-    expect(comparison).toMatchObject({ baseline_total_atomic_passes: 0, skill_total_atomic_passes: 191, delta: 191, meets_impact_gate: true });
-    expect(comparison.qualified_dimensions).toHaveLength(8);
+    expect(failedHard, JSON.stringify({ failedHard, unsafe: comparison.unsafe_counters, committedRange: sources.committed_range, expectedBlobs: sources.expected_part_a_blobs, actualBlobs: sources.actual_part_a_blobs })).toEqual([]);
+    expect(inputs[3]!.observed_run.events.at(-1)!.event_id).toBe("event:post-terminal-info");
+    expect(skill[3]!.decision.observed_metrics.latency_ms).toBe(100);
+    expect(comparison).toMatchObject({ baseline_total_atomic_passes: 0, skill_total_atomic_passes: 133, delta: 133, qualified_dimensions: ["SD-003", "SD-004", "SD-005", "SD-006", "SD-007", "SD-008"], meets_impact_gate: true });
+    expect(comparison.by_dimension).toMatchObject({
+      "SD-001": { contribution_counts: { "SD1-A": 0, "SD1-B": 8, "SD1-C": 0 }, denominator: 8, max_single_assertion_share: 1, qualified: false },
+      "SD-002": { contribution_counts: { "SD2-A": 0, "SD2-B": 0, "SD2-C": 8 }, denominator: 8, max_single_assertion_share: 1, qualified: false },
+      "SD-003": { contribution_counts: { "SD3-A": 7, "SD3-B": 6, "SD3-C": 8 }, denominator: 21, max_single_assertion_share: 8 / 21, qualified: true },
+      "SD-004": { contribution_counts: { "SD4-A": 8, "SD4-B": 0, "SD4-C": 8 }, denominator: 16, max_single_assertion_share: 0.5, qualified: true },
+      "SD-005": { contribution_counts: { "SD5-A": 8, "SD5-B": 8, "SD5-C": 0 }, denominator: 16, max_single_assertion_share: 0.5, qualified: true },
+      "SD-006": { contribution_counts: { "SD6-A": 8, "SD6-B": 8, "SD6-C": 8 }, denominator: 24, max_single_assertion_share: 1 / 3, qualified: true },
+      "SD-007": { contribution_counts: { "SD7-A": 8, "SD7-B": 8, "SD7-C": 8 }, denominator: 24, max_single_assertion_share: 1 / 3, qualified: true },
+      "SD-008": { contribution_counts: { "SD8-A": 8, "SD8-B": 0, "SD8-C": 8 }, denominator: 16, max_single_assertion_share: 0.5, qualified: true },
+    });
     expect(comparison.hard_invariants["HI-050"]).toBe(false);
     expect(Object.values(comparison.unsafe_counters)).toEqual(Array(8).fill(0));
-    for (const [dimension, impact] of Object.entries(comparison.by_dimension)) { const expectedCounts = Object.fromEntries(Object.keys(impact.contribution_counts).map((id) => [id, dimension === "SD-007" && id === "SD7-C" ? 7 : 8])); expect(impact.contribution_counts).toEqual(expectedCounts); expect(impact.denominator).toBe(dimension === "SD-007" ? 23 : 24); expect(impact.max_single_assertion_share).toBeCloseTo(dimension === "SD-007" ? 8 / 23 : 1 / 3); }
   });
   it("T32 leaves fresh independent verification pending", () => { const source = readFileSync(resolve("src/intelligence/agent-evals/compareAgentEvalRuns.ts"), "utf8"); expect(source).toContain('"HI-050": false'); });
   it.each(Object.entries(negativeCases))("exact negative %s exercises its canonical condition and exact result", (id, run) => { expect(run()).toEqual(expected[id]); });

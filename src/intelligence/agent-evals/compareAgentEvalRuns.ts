@@ -10,13 +10,50 @@ export interface AgentEvalComparison { baseline_total_atomic_passes: number; ski
 export interface AgentEvalComparisonEvidence { sources: AgentEvalSourceSnapshot; }
 
 type ProbeSet = ReturnType<typeof runAdversarialProbes>;
-type SourceAudit = ReturnType<typeof auditSources>;
+type SourceAudit = ReturnType<typeof auditAgentEvalSourceSnapshot>;
+
+export const S13N_PROTECTED_PRIOR_PATHS = [
+  "brain-bootstrap/specs/AGENT_RUNTIME_LOOP_v1.md",
+  "src/core/agent/runtime.ts",
+  "src/core/agent/types.ts",
+  "src/core/agent/restrictedCapabilityProvider.ts",
+  "brain-bootstrap/specs/AGENT_DEFINITION_v1.md",
+  "src/core/agent/definition.ts",
+  "src/core/agent/compileDefinition.ts",
+  "src/core/agent/validateDefinition.ts",
+  "brain-bootstrap/specs/SKILL_CONTRACT_v1.md",
+  "src/core/skill/types.ts",
+  "src/core/skill/validateSkillDefinition.ts",
+  "src/core/skill/descriptor.ts",
+  "src/core/skill/index.ts",
+  "src/providers/skill/localReferenceSkillProvider.ts",
+  "brain-bootstrap/skills/GUARDRAILS_SECURITY_SKILL_S13L.md",
+  "brain-bootstrap/quality-contracts/S13L_GUARDRAILS_SECURITY_DEEP.yaml",
+  "brain-bootstrap/specs/GUARDRAILS_SECURITY_CONTRACT_S13L.md",
+  "src/intelligence/guardrails-security/types.ts",
+  "src/intelligence/guardrails-security/planGuardrailsSecurity.ts",
+  "src/intelligence/guardrails-security/modeling.ts",
+  "src/intelligence/guardrails-security/compareGuardrailsSecurityRuns.ts",
+  "brain-bootstrap/skills/QA_DEBUGGING_SKILL_S13M.md",
+  "brain-bootstrap/quality-contracts/S13M_QA_DEBUGGING_DEEP.yaml",
+  "brain-bootstrap/specs/QA_DEBUGGING_CONTRACT_S13M.md",
+  "src/intelligence/qa-debugging/types.ts",
+  "src/intelligence/qa-debugging/planQaDebugging.ts",
+  "src/intelligence/qa-debugging/modeling.ts",
+  "src/intelligence/qa-debugging/compareQaDebuggingRuns.ts",
+] as const;
+
+const S13N_PART_A_BLOBS: Readonly<Record<string, string>> = {
+  "brain-bootstrap/skills/AGENT_EVALS_SKILL_S13N.md": "38a7673578d5164b303927bc4752aa61c4b75bc5",
+  "brain-bootstrap/quality-contracts/S13N_AGENT_EVALS_DEEP.yaml": "6f8c621c508477cd9fd553f7cd22e44310f602c0",
+  "brain-bootstrap/specs/AGENT_EVALS_CONTRACT_S13N.md": "14d695fa6a98720cb465d6e881a0c560b279b486",
+};
 
 const clone = <T>(value: T): T => structuredClone(value);
 const atomic = (decision: AgentEvalDecision, id: string) => decision.dimensions.flatMap((dimension) => dimension.atomic_results).find((entry) => entry.assertion_id === id);
 const postGateObservations = (outcome: PlanAgentEvalsOutcome): Record<string, boolean> => Object.fromEntries(AGENT_EVALS_ATOMIC_IDS.map((id) => [id, outcome.gate.observations[id]?.correct === true]));
 
-function auditSources(snapshot: AgentEvalSourceSnapshot) {
+export function auditAgentEvalSourceSnapshot(snapshot: AgentEvalSourceSnapshot) {
   const providerImports = snapshot.provider_source.split(/\r?\n/).filter((line) => /^\s*import\b/.test(line)).join("\n");
   const providerExecutable = snapshot.provider_source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   const boundedSource = [snapshot.provider_source, snapshot.evaluator_source, snapshot.planner_source, snapshot.skill_source].join("\n");
@@ -28,7 +65,15 @@ function auditSources(snapshot: AgentEvalSourceSnapshot) {
   const futurePullForward = retryPullForward || observabilityPullForward || capabilityPlatformPullForward || verifierAgentPullForward;
   const providerForbiddenImport = /(?:fixtures?|evaluateAgentEval|compareAgentEvalRuns|truthBuilder|goldenTruth)/i.test(providerImports);
   const hiddenBranch = /\b(?:if|switch)\s*\([^)]*\b(case_id|truth_ref|frozen_truth|expected_values?|expected_capabilit(?:y|ies)|withSkill|withoutSkill|arm_marker|fixtureTruth)\b|\b(case_id|truth_ref|frozen_truth|expected_values?|expected_capabilit(?:y|ies)|withSkill|withoutSkill|arm_marker|fixtureTruth)\b\s*(?:===|!==|\?)/.test(providerExecutable);
-  const changedPrior = snapshot.changed_paths.some((path) => /^(src\/core\/|brain-bootstrap\/(skills\/AGENT_EVALS|quality-contracts\/S13N_AGENT_EVALS|specs\/AGENT_EVALS))/.test(path.replaceAll("\\", "/")));
+  const normalize = (path: string) => path.replaceAll("\\", "/");
+  const allowedCommittedPath = (path: string): boolean => /^(src\/intelligence\/agent-evals\/|tests\/agent-evals\/|src\/intelligence\/skills\/index\.ts$|brain-bootstrap\/STATE\.yaml$|brain\/context\/CURRENT\.md$|brain-bootstrap\/reports\/S13N-agent-evals-verification\.md$|brain\/context\/handoffs\/[^/]*s13n[^/]*\.md$|tests\/(?:guardrails-security\/guardrailsSecurity|repository-git-workflow\/repositoryGitWorkflow)\.test\.ts$|brain-bootstrap\/(?:skills\/AGENT_EVALS_SKILL_S13N\.md|quality-contracts\/S13N_AGENT_EVALS_DEEP\.yaml|specs\/AGENT_EVALS_CONTRACT_S13N\.md)$)/i.test(normalize(path));
+  const committedRangeValid = snapshot.committed_range.base === "e73bcb10abbc1835e64836a8f957c045e583478b"
+    && /^[0-9a-f]{40}$/.test(snapshot.committed_range.head)
+    && snapshot.committed_range.head !== snapshot.committed_range.base
+    && snapshot.committed_range.changed_paths.length > 0
+    && snapshot.committed_range.changed_paths.every(allowedCommittedPath);
+  const protectedSurfacesPreserved = S13N_PROTECTED_PRIOR_PATHS.every((path) => snapshot.expected_protected_blobs[path] !== undefined && snapshot.expected_protected_blobs[path] === snapshot.actual_protected_blobs[path]);
+  const partAPreserved = Object.entries(S13N_PART_A_BLOBS).every(([path, blob]) => snapshot.expected_part_a_blobs[path] === blob && snapshot.actual_part_a_blobs[path] === blob);
   return {
     providerForbiddenImport,
     hiddenBranch,
@@ -43,7 +88,7 @@ function auditSources(snapshot: AgentEvalSourceSnapshot) {
     newCapabilityBinding: /implements\s+CapabilityProvider|class\s+\w*CapabilityProvider|\.invoke\(/.test(snapshot.skill_source + snapshot.evaluator_source + snapshot.planner_source),
     providerVendorBinding: /from\s+["'][^"']*(openai|anthropic|langsmith|datadog|github-actions)/i.test(providerImports),
     packageUnchanged: JSON.stringify(JSON.parse(snapshot.package_json_before)) === JSON.stringify(JSON.parse(snapshot.package_json_after)),
-    priorContractsPreserved: !changedPrior && JSON.stringify(snapshot.expected_part_a_blobs) === JSON.stringify(snapshot.actual_part_a_blobs),
+    priorContractsPreserved: committedRangeValid && protectedSurfacesPreserved && partAPreserved,
   };
 }
 
@@ -126,7 +171,7 @@ function deriveHard(baseline: AgentEvalArm, skill: AgentEvalArm, source: SourceA
     "HI-025": skill.inputs.every((input) => input.evidence.every((entry) => !/secret|private[_-]?key|api[_-]?key/i.test(JSON.stringify(entry)))),
     "HI-026": skill.inputs.every((input) => input.observed_run.events.every((event, index, events) => event.run_id === input.observed_run.run_id && (index === 0 || event.sequence > events[index - 1]!.sequence))),
     "HI-027": probes.missingTraceDecision.status === "BLOCKED" && probes.missingTraceDecision.blockers.includes("MISSING_TRIGGERING_EVENT"),
-    "HI-028": skill.outcomes.every((outcome, index) => outcome.decision.observed_metrics.latency_ms === Date.parse(skill.inputs[index]!.observed_run.events.at(-1)!.timestamp) - Date.parse(skill.inputs[index]!.observed_run.events[0]!.timestamp)),
+    "HI-028": skill.outcomes.every((outcome, index) => { const run = skill.inputs[index]!.observed_run; const start = run.events.find((event) => event.type === "RUN_STARTED"); const trigger = run.events.find((event) => event.event_id === run.termination.triggering_event_id); return start !== undefined && trigger !== undefined && outcome.decision.observed_metrics.latency_ms === Date.parse(trigger.timestamp) - Date.parse(start.timestamp); }),
     "HI-029": skill.outcomes.every((outcome, index) => outcome.decision.observed_metrics.cost_amount === skill.inputs[index]!.observed_run.usage?.cost_amount),
     "HI-030": probes.noCostInvented,
     "HI-031": probes.optionalDecision.not_evaluated_assertion_ids.includes("SD7-C") && atomic(probes.optionalDecision, "SD7-C")?.result === "NOT_EVALUATED",
@@ -170,7 +215,7 @@ export function compareAgentEvalRuns(baseline: AgentEvalArm, skill: AgentEvalArm
     by_dimension[AGENT_EVALS_DIMENSIONS[d]!] = { delta: denominator, contribution_counts: contributions, denominator, max_single_assertion_share: share, qualified: denominator > 0 && Object.values(contributions).filter((n) => n > 0).length >= 2 && share <= 0.5 };
   }
   const baseTotal = base.reduce((n, x) => n + Object.values(x).filter(Boolean).length, 0), skillTotal = target.reduce((n, x) => n + Object.values(x).filter(Boolean).length, 0), qualified = Object.entries(by_dimension).filter(([, x]) => x.qualified).map(([id]) => id);
-  const sourceAudit = auditSources(evidence.sources), probes = runAdversarialProbes(skill.inputs[0]!, skill.outcomes[0]!);
+  const sourceAudit = auditAgentEvalSourceSnapshot(evidence.sources), probes = runAdversarialProbes(skill.inputs[0]!, skill.outcomes[0]!);
   const unsafeCounters = deriveUnsafe(baseline, skill, sourceAudit, probes), hard = deriveHard(baseline, skill, sourceAudit, probes, unsafeCounters, by_dimension);
   return { baseline_total_atomic_passes: baseTotal, skill_total_atomic_passes: skillTotal, delta: skillTotal - baseTotal, regressions, by_dimension, qualified_dimensions: qualified, hard_invariants: hard.values, hard_invariant_evidence: hard.evidence, unsafe_counters: unsafeCounters, meets_impact_gate: skillTotal > baseTotal && qualified.length >= 6 && regressions.length === 0 && Object.entries(hard.values).filter(([id]) => id !== "HI-050").every(([, value]) => value) && Object.values(unsafeCounters).every((n) => n === 0) };
 }

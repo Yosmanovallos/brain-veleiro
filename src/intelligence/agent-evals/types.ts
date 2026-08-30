@@ -49,7 +49,9 @@ export interface AgentEvalSourceSnapshot {
   core_sources: string;
   package_json_before: string;
   package_json_after: string;
-  changed_paths: readonly string[];
+  committed_range: { readonly base: string; readonly head: string; readonly changed_paths: readonly string[] };
+  expected_protected_blobs: Readonly<Record<string, string>>;
+  actual_protected_blobs: Readonly<Record<string, string>>;
   expected_part_a_blobs: Readonly<Record<string, string>>;
   actual_part_a_blobs: Readonly<Record<string, string>>;
 }
