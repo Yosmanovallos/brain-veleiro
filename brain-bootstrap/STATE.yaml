@@ -1,6 +1,6 @@
 bootstrap_version: 1.2.0
-current_step: S13M
-status: PASS
+current_step: S13N
+status: CHATGPT_AUTHORING_REQUIRED
 primary_builder: codex
 independent_verifier: chatgpt-manual
 researcher: chatgpt-manual
@@ -34,7 +34,7 @@ steps:
   S13K: PASS
   S13L: PASS
   S13M: PASS
-  S13N: NOT_STARTED
+  S13N: IN_PROGRESS
   S13O: NOT_STARTED
   S13P: NOT_STARTED
   S13Q: NOT_STARTED
@@ -592,6 +592,14 @@ repository:
     control_plane_acceptance_comment_id: 5465631151
     independently_verified_at: "2026-08-29T23:58:03Z"
     note: "VERIFIED PASS. Corrected Part A was integrated separately at a5fc6e0 from ChatGPT source 4f53a8d and was not modified by the subsequent Part B commits. A fresh non-authoring, non-fork, read-only verifier independently reproduced Node 24.19.0 typecheck, focused 15/15, full 999/999 pre/post a genuine dist-absent build, eight positives, all 36 exact negatives, actual-candidate same-path gating, 30/30 detached isolation, provider/truth separation, OI-A 16/248 to 248/248 (+232) with ten qualified dimensions and max share 0.50, final HI-001..HI-050 400/400, and eight unsafe counters zero. ChatGPT control-plane accepted PASS in issue #1 comment 5465631151. S13N agent-evals is the next allowed step and remains NOT_STARTED pending its ChatGPT Authoring Gate."
+
+  agent_evals:
+    status: CHATGPT_AUTHORING_REQUIRED
+    preflight_at: "2026-08-30T00:29:25Z"
+    preflight: "brain/context/handoffs/2026-08-30T002925Z-s13n-chatgpt-authoring-preflight.md"
+    verified_start_head: "cf7b14e87da5f94b98ca7b1e74815e6104ab580e"
+    authoring_handoff_id: "2026-08-30T002925Z-S13N-chatgpt-authoring"
+    note: "Factual preflight only. No S13N Skill, Quality Contract, SPEC, source module, tests, AgentDefinition, catalog entry, capability, provider, dependency or general evaluation platform exists. ChatGPT must author canonical S13N Part A before any Part B work."
 
 build_day:
   date: "2026-08-29"
