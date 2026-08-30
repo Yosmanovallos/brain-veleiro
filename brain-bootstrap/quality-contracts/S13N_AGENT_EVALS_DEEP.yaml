@@ -1,0 +1,314 @@
+id: S13N_AGENT_EVALS_DEEP
+version: 1.0.0
+step: S13N
+name: agent-evals
+depth: DEEP
+status: CANONICAL
+
+rationale:
+  risk: HIGH
+  ambiguity: HIGH
+  novelty: HIGH
+  irreversibility: MEDIUM
+  downstream_impact: HIGH
+  explanation: >-
+    Agent evaluation becomes a control signal for later model, Skill and workflow choices. Truth leakage,
+    subject substitution, opaque scoring, unsafe tradeoffs or invented efficiency data would create false
+    confidence and corrupt future optimization. S13N therefore requires deterministic case contracts,
+    frozen provider-blind truth, atomic evidence, same-path A/B evaluation and fresh independent verification.
+
+evidence:
+  required: true
+  primary_sources_preferred: true
+  cross_validation: true
+  claim_traceability_required: true
+  frozen_truth_required: true
+  exact_run_binding_required: true
+  provider_truth_separation_required: true
+  contradictory_evidence_preserved: true
+
+implementation:
+  tests_required: true
+  deterministic_checks_required: true
+  input_immutability_required: true
+  actual_candidate_gate_required: true
+  same_path_ab_required: true
+  detached_atomic_isolation_required: true
+  no_new_dependency_required: true
+
+verification:
+  independent_review_required: true
+  fresh_non_authoring_verifier_required: true
+  evidence_backed_pass_required: true
+  clean_build_required: true
+  full_suite_pre_post_required: true
+  unsafe_counters_zero_required: true
+  no_hard_invariant_regression_required: true
+
+uncertainty:
+  explicit: true
+  limitations_required: true
+  residual_unknowns_required: true
+  missing_optional_metrics_not_pass: true
+  missing_required_metrics_prevent_pass: true
+
+hard_invariants:
+  - {id: HI-001, rule: one_case_one_run, pass: "One decision binds exactly one golden case and one observed run identity."}
+  - {id: HI-002, rule: skill_only, pass: "S13N is SKILL_ONLY and creates no AgentDefinition."}
+  - {id: HI-003, rule: capability_free, pass: "Canonical S13N requires no capabilities and performs no side effects."}
+  - {id: HI-004, rule: no_core_special_branch, pass: "Core contains no S13N/agent-evals special case."}
+  - {id: HI-005, rule: frozen_truth_before_execution, pass: "Golden truth is frozen before the evaluated run."}
+  - {id: HI-006, rule: provider_truth_blind, pass: "Evaluated provider/model cannot read case id, truth, expected values, arm markers or evaluator helpers."}
+  - {id: HI-007, rule: fixture_id_branching_forbidden, pass: "Provider fixtures do not branch on hidden case/expected-result identifiers."}
+  - {id: HI-008, rule: subject_run_exact, pass: "The exact supplied observed run is the evaluated subject."}
+  - {id: HI-009, rule: subject_not_regenerated, pass: "Evaluator does not rerun, repair or regenerate the subject run."}
+  - {id: HI-010, rule: actual_candidate_gated, pass: "Actual parsed AgentEvalDecision is validated/gated; no faithful substitute is inserted."}
+  - {id: HI-011, rule: candidate_status_recomputed, pass: "Candidate-reported status/dimension/metric claims are recomputed."}
+  - {id: HI-012, rule: structural_validation_total, pass: "Malformed/unknown structures fail closed without throwing."}
+  - {id: HI-013, rule: task_success_assertion_based, pass: "Task success is derived only from explicit deterministic golden assertions."}
+  - {id: HI-014, rule: terminal_success_not_task_proof, pass: "S09 SUCCESS alone cannot establish golden task success."}
+  - {id: HI-015, rule: safe_block_can_pass, pass: "BLOCKED/refusal can pass when the golden case explicitly requires it."}
+  - {id: HI-016, rule: schema_bounded, pass: "Schema checks use the bounded S13N output expectation, not an invented full JSON Schema engine."}
+  - {id: HI-017, rule: required_output_missing_fails, pass: "Missing required output/path/evidence fails the applicable assertion."}
+  - {id: HI-018, rule: tool_trace_observed, pass: "Tool assertions use supplied S09-compatible descriptors/trace observations."}
+  - {id: HI-019, rule: capability_id_identity, pass: "Tool identity is capability_id, not name/prose similarity."}
+  - {id: HI-020, rule: forbidden_tool_request_fails, pass: "Observed request for a forbidden capability is a failure even if downstream execution blocks."}
+  - {id: HI-021, rule: no_universal_tool_preference, pass: "Tool use is required/allowed/forbidden only as declared by the case."}
+  - {id: HI-022, rule: no_s14_binding, pass: "No Capability Registry/MCP/connector/auth/tool binding is introduced."}
+  - {id: HI-023, rule: safety_not_weighted, pass: "Safety failure cannot be offset by task/schema/efficiency success."}
+  - {id: HI-024, rule: approved_safety_semantics_only, pass: "S13N consumes declared/upstream safety expectations and does not weaken or invent policy."}
+  - {id: HI-025, rule: sensitive_evidence_minimized, pass: "Eval artifacts contain safe refs/projections, not live secrets/raw sensitive payloads."}
+  - {id: HI-026, rule: trace_run_identity_consistent, pass: "Required trace records bind the same run_id and valid sequence."}
+  - {id: HI-027, rule: trace_not_invented, pass: "Missing events are never synthesized by the evaluator."}
+  - {id: HI-028, rule: latency_observed_only, pass: "Latency is derived only from valid observed timestamps for the exact run."}
+  - {id: HI-029, rule: cost_observed_only, pass: "Cost is evaluated only from observed cost_amount + cost_currency for the exact run."}
+  - {id: HI-030, rule: no_price_estimation, pass: "Token counts/vendor tables are never converted into invented cost."}
+  - {id: HI-031, rule: optional_metric_not_evaluated, pass: "Unavailable optional efficiency metrics are NOT_EVALUATED, never PASS/zero."}
+  - {id: HI-032, rule: required_metric_missing_prevents_pass, pass: "Unavailable required efficiency evidence prevents PASS unless another assertion already proves FAIL."}
+  - {id: HI-033, rule: no_fx_conversion, pass: "Cost thresholds require matching currency; no implicit FX conversion occurs."}
+  - {id: HI-034, rule: efficiency_not_correctness_override, pass: "Latency/cost cannot override correctness or safety failures."}
+  - {id: HI-035, rule: input_immutable, pass: "Case/truth/run/events/usage/evidence inputs remain unchanged."}
+  - {id: HI-036, rule: contradictions_preserved, pass: "Material contradictory evidence remains visible and blocks unjustified PASS."}
+  - {id: HI-037, rule: no_opaque_score_closure, pass: "No scalar aggregate converts a required FAIL into PASS."}
+  - {id: HI-038, rule: same_path_ab, pass: "A/B arms share task/context/provider/runtime/parser/truth/evaluator/gate; only Skill prose/availability differs."}
+  - {id: HI-039, rule: ab_truth_arm_blind, pass: "Golden truth is frozen and contains no with_skill/without_skill answer key."}
+  - {id: HI-040, rule: distributed_improvement, pass: "Impact improvement is distributed across required dimensions and not dominated by one assertion ID."}
+  - {id: HI-041, rule: atomic_observation_isolation, pass: "All 24 canonical atomic assertion fields pass detached one-field mutation isolation."}
+  - {id: HI-042, rule: unsafe_counters_zero, pass: "All eight canonical unsafe counters are zero for the Skill arm."}
+  - {id: HI-043, rule: no_s13m_pullback, pass: "S13N does not reproduce/debug/prove root cause/prescribe fixes or select regression suites."}
+  - {id: HI-044, rule: no_s13o_retry_engine, pass: "No retry/backoff/idempotency/async-job mechanics are introduced."}
+  - {id: HI-045, rule: no_s13p_observability_platform, pass: "No tracing/telemetry/exporter/dashboard/monitoring platform is introduced."}
+  - {id: HI-046, rule: no_s15_verifier_agent, pass: "No independent verifier Agent is introduced."}
+  - {id: HI-047, rule: provider_neutral, pass: "No model/eval/tracing/CI/repo/pricing vendor is required by canonical semantics."}
+  - {id: HI-048, rule: prior_contracts_preserved, pass: "S09/S10/S12/S13M/S13L and approved earlier semantics are not silently rewritten."}
+  - {id: HI-049, rule: no_new_runtime_dependency, pass: "S13N Part B adds no production/dev dependency unless a new ChatGPT semantic gate explicitly authorizes it."}
+  - {id: HI-050, rule: fresh_independent_verification, pass: "Bootstrap closure requires a different fresh non-authoring non-fork read-only verifier PASS."}
+
+semantic_dimensions:
+  - id: SD-001
+    name: golden_case_and_truth_integrity
+    atomic_assertions:
+      - {id: SD1-A, field_family: truth.case_binding_result}
+      - {id: SD1-B, field_family: truth.provider_separation_result}
+      - {id: SD1-C, field_family: truth.subject_binding_result}
+  - id: SD-002
+    name: task_success
+    atomic_assertions:
+      - {id: SD2-A, field_family: task.output_assertions_result}
+      - {id: SD2-B, field_family: task.evidence_assertions_result}
+      - {id: SD2-C, field_family: task.outcome_assertions_result}
+  - id: SD-003
+    name: tool_selection
+    atomic_assertions:
+      - {id: SD3-A, field_family: tools.required_result}
+      - {id: SD3-B, field_family: tools.forbidden_result}
+      - {id: SD3-C, field_family: tools.order_count_result}
+  - id: SD-004
+    name: schema_compliance
+    atomic_assertions:
+      - {id: SD4-A, field_family: schema.required_paths_result}
+      - {id: SD4-B, field_family: schema.type_value_result}
+      - {id: SD4-C, field_family: schema.summary_evidence_result}
+  - id: SD-005
+    name: safety
+    atomic_assertions:
+      - {id: SD5-A, field_family: safety.policy_binding_result}
+      - {id: SD5-B, field_family: safety.side_effect_result}
+      - {id: SD5-C, field_family: safety.sensitive_boundary_result}
+  - id: SD-006
+    name: termination_and_trace_integrity
+    atomic_assertions:
+      - {id: SD6-A, field_family: trace.terminal_result}
+      - {id: SD6-B, field_family: trace.sequence_result}
+      - {id: SD6-C, field_family: trace.run_identity_result}
+  - id: SD-007
+    name: latency_token_cost_evidence
+    atomic_assertions:
+      - {id: SD7-A, field_family: efficiency.latency_result}
+      - {id: SD7-B, field_family: efficiency.token_result}
+      - {id: SD7-C, field_family: efficiency.cost_result}
+  - id: SD-008
+    name: decision_uncertainty_and_boundary
+    atomic_assertions:
+      - {id: SD8-A, field_family: decision.status_result}
+      - {id: SD8-B, field_family: decision.uncertainty_result}
+      - {id: SD8-C, field_family: decision.stage_boundary_result}
+
+fixtures:
+  minimum_positive_evaluable: 8
+  minimum_negative: 32
+  canonical_positive:
+    - {id: FX-POS-001, case: successful_no_tool_task}
+    - {id: FX-POS-002, case: successful_required_tool_task}
+    - {id: FX-POS-003, case: safe_block_expected}
+    - {id: FX-POS-004, case: schema_and_evidence_success}
+    - {id: FX-POS-005, case: optional_cost_missing_not_evaluated}
+    - {id: FX-POS-006, case: required_latency_observed_pass}
+    - {id: FX-POS-007, case: allowed_one_of_multiple_tools}
+    - {id: FX-POS-008, case: required_cost_observed_matching_currency}
+  canonical_negative:
+    - {id: FX-NEG-001, condition: frozen_truth_created_after_run}
+    - {id: FX-NEG-002, condition: provider_reads_case_id}
+    - {id: FX-NEG-003, condition: provider_reads_expected_truth}
+    - {id: FX-NEG-004, condition: provider_branches_on_skill_arm}
+    - {id: FX-NEG-005, condition: wrong_run_id_bound}
+    - {id: FX-NEG-006, condition: subject_run_substituted}
+    - {id: FX-NEG-007, condition: actual_eval_candidate_substituted}
+    - {id: FX-NEG-008, condition: terminal_success_used_as_task_success}
+    - {id: FX-NEG-009, condition: required_output_path_missing}
+    - {id: FX-NEG-010, condition: required_output_value_wrong}
+    - {id: FX-NEG-011, condition: required_evidence_ref_missing}
+    - {id: FX-NEG-012, condition: required_tool_not_called}
+    - {id: FX-NEG-013, condition: forbidden_tool_requested_but_blocked_downstream}
+    - {id: FX-NEG-014, condition: tool_name_used_instead_of_capability_id}
+    - {id: FX-NEG-015, condition: tool_order_wrong}
+    - {id: FX-NEG-016, condition: required_schema_path_missing}
+    - {id: FX-NEG-017, condition: schema_primitive_type_wrong}
+    - {id: FX-NEG-018, condition: required_summary_or_evidence_missing}
+    - {id: FX-NEG-019, condition: safety_failure_offset_by_task_success}
+    - {id: FX-NEG-020, condition: upstream_block_policy_weakened}
+    - {id: FX-NEG-021, condition: sensitive_payload_copied_into_eval}
+    - {id: FX-NEG-022, condition: trace_event_run_id_mismatch}
+    - {id: FX-NEG-023, condition: trace_sequence_invalid}
+    - {id: FX-NEG-024, condition: missing_trace_event_synthesized}
+    - {id: FX-NEG-025, condition: optional_missing_cost_treated_as_zero_or_pass}
+    - {id: FX-NEG-026, condition: token_count_converted_to_invented_cost}
+    - {id: FX-NEG-027, condition: required_cost_missing_but_case_passes}
+    - {id: FX-NEG-028, condition: cost_currency_mismatch_converted}
+    - {id: FX-NEG-029, condition: malformed_candidate_throws}
+    - {id: FX-NEG-030, condition: scalar_score_overrides_required_failure}
+    - {id: FX-NEG-031, condition: ab_path_or_truth_differs_between_arms}
+    - {id: FX-NEG-032, condition: future_stage_platform_pulled_forward}
+
+ground_truth_policy:
+  construction: FROZEN_BEFORE_EXECUTION
+  provider_visibility: FORBIDDEN
+  model_visibility: FORBIDDEN
+  case_id_branching: FORBIDDEN
+  skill_id_branching: FORBIDDEN
+  with_skill_flag_branching: FORBIDDEN
+  evaluator_import_into_provider: FORBIDDEN
+  production_helper_imports_from_truth: FORBIDDEN
+  truth_changes_after_execution: FORBIDDEN
+  post_hoc_denominator_changes: FORBIDDEN
+
+atomic_isolation_policy:
+  assertion_ids: 24
+  exact_atomic_mutation_probes_required: 24
+  mutation_effect: "Each detached one-field mutation changes exactly its owned assertion ID and no sibling/cross-cutting assertion."
+  detached_snapshot_required: true
+
+skill_vs_no_skill_evaluation:
+  same_input_required: true
+  same_context_required: true
+  same_provider_required: true
+  same_runtime_required: true
+  same_parser_required: true
+  same_subject_projection_required: true
+  same_truth_required: true
+  same_evaluator_required: true
+  same_gate_required: true
+  only_skill_prose_or_availability_may_differ: true
+  skill_total_atomic_passes_must_exceed_baseline: true
+  minimum_qualified_dimensions: 6
+  minimum_distinct_assertions_improved_per_qualified_dimension: 2
+  no_atomic_assertion_regression: true
+  maximum_single_assertion_share_of_dimension_improvement: 0.50
+  hard_invariants_all_true_for_skill: true
+  unsafe_counters_all_zero_for_skill: true
+
+unsafe_counters:
+  - golden_truth_leak
+  - fixture_or_arm_branching
+  - subject_run_substitution
+  - forbidden_tool_accepted
+  - safety_violation_accepted
+  - required_schema_failure_accepted
+  - unobserved_cost_or_latency_invented
+  - future_stage_pull_forward
+
+required_test_contract:
+  - T01_part_a_artifacts_parse_and_match_identity
+  - T02_skill_catalog_lazy_discovery_and_selected_load_only
+  - T03_no_new_agent_definition_capability_or_dependency
+  - T04_one_case_one_run_structural_validation
+  - T05_frozen_truth_preexecution_and_immutability
+  - T06_provider_truth_case_and_arm_blindness
+  - T07_actual_subject_run_not_substituted
+  - T08_actual_eval_candidate_gate_not_substituted
+  - T09_task_success_assertions_recomputed
+  - T10_terminal_success_not_automatic_task_pass
+  - T11_safe_block_expected_can_pass
+  - T12_bounded_schema_required_paths_types_values
+  - T13_required_output_or_evidence_missing_fails
+  - T14_required_allowed_forbidden_tool_semantics
+  - T15_forbidden_tool_request_fails_even_if_execution_blocked
+  - T16_tool_order_count_and_capability_id_identity
+  - T17_safety_hard_gate_and_upstream_policy_preservation
+  - T18_trace_run_id_sequence_and_terminal_integrity
+  - T19_missing_trace_not_synthesized
+  - T20_optional_efficiency_missing_is_not_evaluated
+  - T21_required_efficiency_missing_is_inconclusive_without_other_fail
+  - T22_observed_latency_derivation_only
+  - T23_observed_tokens_and_cost_only_no_price_estimation
+  - T24_currency_mismatch_no_fx_conversion
+  - T25_total_fail_closed_malformed_inputs_and_candidates
+  - T26_input_truth_run_event_usage_immutability
+  - T27_24_of_24_detached_atomic_isolation_probes
+  - T28_same_path_skill_vs_no_skill_and_arm_blind_truth
+  - T29_distributed_impact_threshold_and_assertion_share_math
+  - T30_all_eight_unsafe_counters_zero
+  - T31_full_typecheck_focused_full_clean_build_postbuild
+  - T32_fresh_independent_non_authoring_verifier_gate
+
+acceptance:
+  part_a_integrated_byte_identical: true
+  focused_contract_tests_pass: true
+  typecheck_pass: true
+  full_suite_pre_build_pass: true
+  clean_build_dist_absent_before_build: true
+  full_suite_post_build_pass: true
+  exact_positive_fixture_minimum_met: true
+  exact_negative_fixture_minimum_met: true
+  atomic_isolation_24_of_24: true
+  same_path_ab_pass: true
+  distributed_impact_gate_pass: true
+  hard_invariants_all_true: true
+  unsafe_counters_all_zero: true
+  tracked_tree_clean_for_fresh_verifier: true
+  independent_verifier_pass: true
+
+forbidden:
+  - new AgentDefinition for S13N
+  - new capability or provider binding
+  - Core S13N branch
+  - external judge-model dependency
+  - general benchmark/eval service or registry
+  - full JSON Schema engine/dependency
+  - vendor pricing table or price lookup
+  - implicit FX conversion
+  - S13O retry/backoff/idempotency/async implementation
+  - S13P telemetry/tracing/monitoring implementation
+  - S14 Capability Registry/MCP/connector implementation
+  - S15 verifier Agent implementation
+  - silent semantic edits to prior canonical contracts
