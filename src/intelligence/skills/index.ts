@@ -16,6 +16,7 @@ import { postgresDataModelingS13J } from "./definitions/postgresDataModelingS13J
 import { frontendProductSurfaceS13K } from "./definitions/frontendProductSurfaceS13K.js";
 import { guardrailsSecurityS13L } from "./definitions/guardrailsSecurityS13L.js";
 import { qaDebuggingS13M } from "./definitions/qaDebuggingS13M.js";
+import { agentEvalsS13N } from "../agent-evals/agentEvalsSkill.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
@@ -33,6 +34,7 @@ export { postgresDataModelingS13J } from "./definitions/postgresDataModelingS13J
 export { frontendProductSurfaceS13K } from "./definitions/frontendProductSurfaceS13K.js";
 export { guardrailsSecurityS13L } from "./definitions/guardrailsSecurityS13L.js";
 export { qaDebuggingS13M } from "./definitions/qaDebuggingS13M.js";
+export { agentEvalsS13N } from "../agent-evals/agentEvalsSkill.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -112,5 +114,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(qaDebuggingS13M),
     load_definition: async () => qaDebuggingS13M,
+  },
+  {
+    descriptor: toSkillDescriptor(agentEvalsS13N),
+    load_definition: async () => agentEvalsS13N,
   },
 ];

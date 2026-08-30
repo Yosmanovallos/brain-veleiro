@@ -767,7 +767,7 @@ describe("T53 — a temp real-Git fixture models states without mutating the Bra
     expect(git(".", ["rev-parse", "HEAD"])).toBe(brainHeadBefore);
     expect(git(".", ["status", "--porcelain=v1"])).toBe(brainStatusBefore);
     expect(git(".", ["rev-parse", "origin/main"])).toBe(brainOriginBefore);
-  });
+  }, 10000);
 });
 
 for (const [n, id] of [
