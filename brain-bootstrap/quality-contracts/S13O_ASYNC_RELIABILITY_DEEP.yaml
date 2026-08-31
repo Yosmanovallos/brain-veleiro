@@ -1,0 +1,363 @@
+id: S13O_ASYNC_RELIABILITY_DEEP
+version: 1.0.0
+step: S13O
+name: async-reliability
+depth: DEEP
+status: CANONICAL
+
+rationale:
+  risk: HIGH
+  ambiguity: HIGH
+  novelty: HIGH
+  irreversibility: HIGH
+  downstream_impact: HIGH
+  explanation: >-
+    Retry, timeout, cancellation and idempotency mistakes can duplicate irreversible side effects,
+    widen authority, create retry storms, falsify remote outcomes or claim exactly-once guarantees
+    that do not exist. S13O therefore uses a pure deterministic reference decision layer, hard
+    attempt/time/deadline budgets, phase-aware ambiguity handling, explicit replay evidence,
+    packet-derived provider fixtures, atomic isolation and fresh independent verification.
+
+evidence:
+  required: true
+  primary_sources_preferred: true
+  cross_validation: true
+  claim_traceability_required: true
+  exact_attempt_binding_required: true
+  side_effect_evidence_required: true
+  idempotency_evidence_scoped: true
+  ambiguity_preservation_required: true
+  authority_binding_required: true
+  secret_minimization_required: true
+
+implementation:
+  tests_required: true
+  deterministic_checks_required: true
+  input_immutability_required: true
+  actual_candidate_gate_required: true
+  same_path_ab_required: true
+  detached_atomic_isolation_required: true
+  pure_reference_mechanics_required: true
+  no_new_dependency_required: true
+  no_core_special_branch_required: true
+  no_agent_definition_change_required: true
+
+verification:
+  independent_review_required: true
+  fresh_non_authoring_verifier_required: true
+  evidence_backed_pass_required: true
+  clean_build_required: true
+  full_suite_pre_post_required: true
+  unsafe_counters_zero_required: true
+  no_hard_invariant_regression_required: true
+  packet_derived_provider_counterfactuals_required: true
+
+uncertainty:
+  explicit: true
+  limitations_required: true
+  residual_unknowns_required: true
+  ambiguous_post_dispatch_requires_reconcile: true
+  exactly_once_claim_forbidden: true
+
+hard_invariants:
+  - {id: HI-001, rule: one_operation_one_latest_attempt, pass: "One decision binds one operation, one job projection and one exact latest attempt."}
+  - {id: HI-002, rule: skill_only, pass: "S13O is SKILL_ONLY and creates no AgentDefinition."}
+  - {id: HI-003, rule: capability_free, pass: "Canonical S13O executes no capability and performs no external side effect."}
+  - {id: HI-004, rule: no_core_special_branch, pass: "Core contains no S13O/async-reliability special case."}
+  - {id: HI-005, rule: no_s10_schema_change, pass: "S10 AgentDefinition schema/validation remains unchanged by S13O v1."}
+  - {id: HI-006, rule: s09_deadline_preserved, pass: "S09 whole-run deadline/terminal semantics remain authoritative and are not replaced."}
+  - {id: HI-007, rule: structural_validation_total, pass: "Unknown/malformed reliability input deterministically BLOCKS without throwing."}
+  - {id: HI-008, rule: input_immutable, pass: "Operation/job/attempt/policy/authority/evidence inputs remain byte-equivalent after evaluation."}
+  - {id: HI-009, rule: failure_class_recomputed, pass: "Failure class is derived from normalized observed facts, not candidate prose."}
+  - {id: HI-010, rule: retryable_hint_not_authority, pass: "retryable=true never independently authorizes RETRY."}
+  - {id: HI-011, rule: success_not_retried, pass: "Observed SUCCESS produces COMPLETE and is never retried."}
+  - {id: HI-012, rule: policy_block_not_retried, pass: "POLICY_BLOCKED never produces RETRY."}
+  - {id: HI-013, rule: auth_not_blindly_retried, pass: "AUTH_REQUIRED never produces RETRY without a new upstream authorization event; S13O v1 stops/blocks."}
+  - {id: HI-014, rule: invalid_input_not_retried, pass: "INVALID_INPUT never produces RETRY."}
+  - {id: HI-015, rule: permanent_not_retried, pass: "PERMANENT failure never produces RETRY."}
+  - {id: HI-016, rule: transient_retry_conditional, pass: "TRANSIENT may RETRY only when budget, deadline, authority and replay safety all pass."}
+  - {id: HI-017, rule: rate_limit_retry_conditional, pass: "RATE_LIMITED may RETRY only when safe and Retry-After/budgets permit it."}
+  - {id: HI-018, rule: timeout_phase_sensitive, pass: "TIMEOUT handling distinguishes NOT_DISPATCHED from DISPATCHED/ACKNOWLEDGED."}
+  - {id: HI-019, rule: ambiguous_post_dispatch_reconciles, pass: "Effectful post-dispatch ambiguity without replay proof is INCONCLUSIVE + RECONCILE."}
+  - {id: HI-020, rule: unknown_not_blind_retry, pass: "UNKNOWN/AMBIGUOUS outcome never becomes blind RETRY or invented success/cancel."}
+  - {id: HI-021, rule: attempt_budget_hard, pass: "Next attempt number never exceeds finite positive max_attempts."}
+  - {id: HI-022, rule: elapsed_budget_hard, pass: "Retry never exceeds finite positive max_elapsed_ms."}
+  - {id: HI-023, rule: deadline_not_extended, pass: "Retry delay never extends or schedules at/after the effective deadline."}
+  - {id: HI-024, rule: retry_after_respected, pass: "Observed valid retry_after_ms is a minimum wait after eligibility; it is never shortened to force retry."}
+  - {id: HI-025, rule: deterministic_backoff, pass: "FIXED/EXPONENTIAL reference delay follows the canonical bounded formula exactly."}
+  - {id: HI-026, rule: one_next_attempt_only, pass: "One decision schedules at most one next attempt and creates no recursive/fan-out loop."}
+  - {id: HI-027, rule: read_only_replay_safe, pass: "READ_ONLY replay requires only retry eligibility/budget/deadline/authority because no declared side effect repeats."}
+  - {id: HI-028, rule: idempotent_write_stable_fingerprint, pass: "Post-dispatch IDEMPOTENT_WRITE retry requires explicit idempotence and unchanged operation/request fingerprint."}
+  - {id: HI-029, rule: non_idempotent_external_requires_proof, pass: "NON_IDEMPOTENT_WRITE/EXTERNAL_SIDE_EFFECT post-dispatch retry requires trusted replay-safe or NOT_APPLIED evidence."}
+  - {id: HI-030, rule: no_exactly_once_claim, pass: "No S13O decision/evidence claims distributed exactly-once execution."}
+  - {id: HI-031, rule: idempotency_evidence_scoped, pass: "Idempotency/reconciliation evidence binds the same operation and request fingerprint with safe opaque refs."}
+  - {id: HI-032, rule: no_raw_secret_or_key, pass: "Reliability state/evidence contains no credentials, auth headers, cookies, private keys, raw idempotency secrets or sensitive payloads."}
+  - {id: HI-033, rule: authority_preserved, pass: "Next attempt cannot widen caller/tenant/policy authority."}
+  - {id: HI-034, rule: approval_required_for_retry, pass: "Retry requiring approval has current matching approved evidence; approval is not assumed across attempts."}
+  - {id: HI-035, rule: capability_not_widened, pass: "Retry cannot add capabilities or a broader side-effect class than upstream S10/S13L authority."}
+  - {id: HI-036, rule: predispatch_cancel_truthful, pass: "Cancellation before dispatch may CANCEL without pretending a remote effect occurred."}
+  - {id: HI-037, rule: postdispatch_cancel_not_fabricated, pass: "Post-dispatch cancellation without acknowledgement/terminal evidence RECONCILES rather than inventing CANCELLED."}
+  - {id: HI-038, rule: success_after_cancel_truthful, pass: "Later observed SUCCESS remains COMPLETE with a race limitation, not retroactive cancellation."}
+  - {id: HI-039, rule: legal_job_transition_only, pass: "Derived next job state is one of the canonical allowed transitions."}
+  - {id: HI-040, rule: terminal_job_not_reopened, pass: "SUCCEEDED/FAILED/CANCELLED/BLOCKED job projections have no outgoing retry transition."}
+  - {id: HI-041, rule: no_durable_queue_store_claim, pass: "S13O v1 adds no queue, worker, lease, durable scheduler, durable dedupe or persistence platform."}
+  - {id: HI-042, rule: job_state_minimized, pass: "Job/attempt state contains bounded safe metadata only, not raw payload/credential material."}
+  - {id: HI-043, rule: retry_not_semantic_replan, pass: "S13O repetition preserves the same operation/input semantics and does not become task/tool replanning or S13M debugging."}
+  - {id: HI-044, rule: no_s13p_platform, pass: "No tracing/telemetry/exporter/dashboard/durable metrics platform is introduced."}
+  - {id: HI-045, rule: no_s14_binding, pass: "No MCP/connector/OAuth/auth/HTTP-client/dynamic capability binding is introduced."}
+  - {id: HI-046, rule: no_s15_verifier_agent, pass: "No verifier Agent is introduced."}
+  - {id: HI-047, rule: provider_neutral_no_dependency, pass: "Canonical S13O adds no vendor binding or production/dev dependency without a new ChatGPT gate."}
+  - {id: HI-048, rule: same_path_ab, pass: "A/B arms share task/input/provider/runtime/parser/gate/evaluator/truth; only Skill prose/availability differs."}
+  - {id: HI-049, rule: prior_contracts_preserved, pass: "S09/S10/S12/S13I/S13K/S13L/S13M/S13N and approved earlier semantics are not silently rewritten; atomic isolation/unsafe audits remain non-vacuous."}
+  - {id: HI-050, rule: fresh_independent_verification, pass: "Bootstrap closure requires a different fresh non-authoring non-fork read-only verifier PASS."}
+
+semantic_dimensions:
+  - id: SD-001
+    name: input_policy_and_subject_integrity
+    atomic_assertions:
+      - {id: SD1-A, field_family: subject.operation_job_attempt_binding_result}
+      - {id: SD1-B, field_family: policy.structural_validation_result}
+      - {id: SD1-C, field_family: subject.input_immutability_result}
+  - id: SD-002
+    name: failure_classification
+    atomic_assertions:
+      - {id: SD2-A, field_family: failure.normalized_mapping_result}
+      - {id: SD2-B, field_family: failure.retryable_hint_authority_result}
+      - {id: SD2-C, field_family: failure.dispatch_ambiguity_result}
+  - id: SD-003
+    name: retry_eligibility
+    atomic_assertions:
+      - {id: SD3-A, field_family: retry.failure_class_eligibility_result}
+      - {id: SD3-B, field_family: retry.side_effect_eligibility_result}
+      - {id: SD3-C, field_family: retry.single_next_attempt_result}
+  - id: SD-004
+    name: budgets_and_deadline
+    atomic_assertions:
+      - {id: SD4-A, field_family: budget.attempt_count_result}
+      - {id: SD4-B, field_family: budget.elapsed_window_result}
+      - {id: SD4-C, field_family: budget.deadline_fit_result}
+  - id: SD-005
+    name: backoff_and_rate_limit
+    atomic_assertions:
+      - {id: SD5-A, field_family: backoff.formula_result}
+      - {id: SD5-B, field_family: backoff.retry_after_result}
+      - {id: SD5-C, field_family: backoff.schedule_result}
+  - id: SD-006
+    name: idempotency_and_reconciliation
+    atomic_assertions:
+      - {id: SD6-A, field_family: idempotency.operation_class_result}
+      - {id: SD6-B, field_family: idempotency.evidence_binding_result}
+      - {id: SD6-C, field_family: idempotency.ambiguity_reconciliation_result}
+  - id: SD-007
+    name: cancellation_and_races
+    atomic_assertions:
+      - {id: SD7-A, field_family: cancellation.predispatch_result}
+      - {id: SD7-B, field_family: cancellation.postdispatch_result}
+      - {id: SD7-C, field_family: cancellation.success_race_result}
+  - id: SD-008
+    name: async_job_state
+    atomic_assertions:
+      - {id: SD8-A, field_family: job.transition_result}
+      - {id: SD8-B, field_family: job.terminal_state_result}
+      - {id: SD8-C, field_family: job.durability_boundary_result}
+  - id: SD-009
+    name: security_authority_and_secrets
+    atomic_assertions:
+      - {id: SD9-A, field_family: security.authority_result}
+      - {id: SD9-B, field_family: security.approval_capability_result}
+      - {id: SD9-C, field_family: security.secret_minimization_result}
+  - id: SD-010
+    name: decision_uncertainty_and_stage_boundary
+    atomic_assertions:
+      - {id: SD10-A, field_family: decision.status_action_recompute_result}
+      - {id: SD10-B, field_family: decision.uncertainty_result}
+      - {id: SD10-C, field_family: decision.stage_boundary_result}
+
+fixtures:
+  minimum_positive_evaluable: 12
+  minimum_negative: 46
+  canonical_positive:
+    - {id: FX-POS-001, case: observed_success_completes}
+    - {id: FX-POS-002, case: transient_read_only_retries_with_budget}
+    - {id: FX-POS-003, case: rate_limited_read_respects_retry_after}
+    - {id: FX-POS-004, case: idempotent_write_postdispatch_stable_fingerprint_retries}
+    - {id: FX-POS-005, case: non_idempotent_failure_not_dispatched_retries}
+    - {id: FX-POS-006, case: non_idempotent_postdispatch_timeout_reconciles}
+    - {id: FX-POS-007, case: external_side_effect_durable_keyed_replay_proven_retries}
+    - {id: FX-POS-008, case: reconciliation_not_applied_allows_retry}
+    - {id: FX-POS-009, case: attempt_budget_exhausted_stops}
+    - {id: FX-POS-010, case: cancellation_before_dispatch_cancels}
+    - {id: FX-POS-011, case: success_after_cancel_request_completes_with_race_limit}
+    - {id: FX-POS-012, case: running_job_transitions_to_waiting_retry}
+  canonical_negative:
+    - {id: FX-NEG-001, condition: malformed_input_throws_or_allows}
+    - {id: FX-NEG-002, condition: unknown_enum_or_invalid_budget_accepted}
+    - {id: FX-NEG-003, condition: provider_reads_hidden_fixture_or_expected_truth}
+    - {id: FX-NEG-004, condition: provider_branches_on_skill_arm_or_skill_identity}
+    - {id: FX-NEG-005, condition: actual_candidate_substituted_before_gate}
+    - {id: FX-NEG-006, condition: retryable_hint_alone_authorizes_retry}
+    - {id: FX-NEG-007, condition: observed_success_retried}
+    - {id: FX-NEG-008, condition: invalid_input_retried}
+    - {id: FX-NEG-009, condition: auth_required_retried}
+    - {id: FX-NEG-010, condition: policy_blocked_retried}
+    - {id: FX-NEG-011, condition: permanent_failure_retried}
+    - {id: FX-NEG-012, condition: next_attempt_exceeds_max_attempts}
+    - {id: FX-NEG-013, condition: retry_exceeds_max_elapsed_ms}
+    - {id: FX-NEG-014, condition: retry_scheduled_at_or_after_deadline}
+    - {id: FX-NEG-015, condition: retry_after_shortened_or_ignored}
+    - {id: FX-NEG-016, condition: exponential_backoff_formula_or_cap_wrong}
+    - {id: FX-NEG-017, condition: multiple_next_attempts_or_recursive_retry_loop}
+    - {id: FX-NEG-018, condition: postdispatch_non_idempotent_timeout_blindly_retried}
+    - {id: FX-NEG-019, condition: unknown_postdispatch_outcome_blindly_retried}
+    - {id: FX-NEG-020, condition: idempotent_write_request_fingerprint_changed}
+    - {id: FX-NEG-021, condition: non_idempotent_postdispatch_without_replay_evidence_retried}
+    - {id: FX-NEG-022, condition: external_side_effect_without_replay_evidence_retried}
+    - {id: FX-NEG-023, condition: distributed_exactly_once_claimed}
+    - {id: FX-NEG-024, condition: raw_idempotency_key_or_secret_persisted}
+    - {id: FX-NEG-025, condition: idempotency_scope_mismatch_accepted}
+    - {id: FX-NEG-026, condition: reconciliation_evidence_for_other_operation_accepted}
+    - {id: FX-NEG-027, condition: request_fingerprint_mismatch_accepted}
+    - {id: FX-NEG-028, condition: authority_widened_on_retry}
+    - {id: FX-NEG-029, condition: required_approval_missing_on_retry}
+    - {id: FX-NEG-030, condition: capability_or_side_effect_class_widened_on_retry}
+    - {id: FX-NEG-031, condition: predispatch_cancellation_ignored_and_retry_scheduled}
+    - {id: FX-NEG-032, condition: postdispatch_cancel_marked_cancelled_without_ack}
+    - {id: FX-NEG-033, condition: success_after_cancel_request_reported_cancelled}
+    - {id: FX-NEG-034, condition: illegal_job_state_transition_accepted}
+    - {id: FX-NEG-035, condition: terminal_job_state_reopened_for_retry}
+    - {id: FX-NEG-036, condition: raw_sensitive_payload_copied_into_job_state}
+    - {id: FX-NEG-037, condition: durable_queue_worker_or_store_pulled_forward}
+    - {id: FX-NEG-038, condition: retry_changes_operation_or_becomes_semantic_replanning}
+    - {id: FX-NEG-039, condition: s13p_observability_platform_pulled_forward}
+    - {id: FX-NEG-040, condition: s14_connector_auth_or_http_binding_pulled_forward}
+    - {id: FX-NEG-041, condition: s15_verifier_agent_pulled_forward}
+    - {id: FX-NEG-042, condition: ab_input_provider_truth_or_runtime_differs_between_arms}
+    - {id: FX-NEG-043, condition: candidate_status_or_delay_self_certifies_without_recompute}
+    - {id: FX-NEG-044, condition: atomic_isolation_mutates_final_decision_instead_of_source_fact}
+    - {id: FX-NEG-045, condition: core_special_branch_or_agent_definition_change_added}
+    - {id: FX-NEG-046, condition: new_runtime_dependency_or_vendor_binding_added_without_gate}
+
+ground_truth_policy:
+  construction: FROZEN_BEFORE_BOTH_ARMS
+  provider_visibility: FORBIDDEN
+  fixture_id_branching: FORBIDDEN
+  skill_id_branching: FORBIDDEN
+  with_skill_flag_branching: FORBIDDEN
+  mere_skill_presence_as_answer_key: FORBIDDEN
+  evaluator_import_into_provider: FORBIDDEN
+  production_helper_imports_from_truth: FORBIDDEN
+  expected_action_visibility: FORBIDDEN
+  expected_delay_visibility: FORBIDDEN
+  post_hoc_denominator_changes: FORBIDDEN
+
+atomic_isolation_policy:
+  assertion_ids: 30
+  exact_atomic_mutation_probes_required: 30
+  detached_snapshot_required: true
+  mutation_effect: "Each detached underlying source-fact mutation changes exactly its owned assertion ID after real evaluator recomputation and no sibling/cross-cutting assertion."
+
+skill_vs_no_skill_evaluation:
+  real_path: "S12 -> S10 -> S09 -> actual candidate -> validation/gate -> deterministic evaluator -> atomic correctness observations"
+  same_input_object_required: true
+  same_context_required: true
+  same_provider_instance_required: true
+  same_runtime_required: true
+  same_parser_required: true
+  same_candidate_gate_required: true
+  same_truth_required: true
+  same_evaluator_required: true
+  only_skill_prose_or_availability_may_differ: true
+  provider_candidate_must_be_packet_derived: true
+  skill_total_atomic_passes_must_exceed_baseline: true
+  minimum_qualified_dimensions: 7
+  minimum_distinct_assertions_improved_per_qualified_dimension: 2
+  no_atomic_assertion_regression: true
+  maximum_single_assertion_share_of_dimension_improvement: 0.50
+  hard_invariants_all_true_for_skill: true
+  unsafe_counters_all_zero_for_skill: true
+
+backoff_reference:
+  first_retry_ordinal: 1
+  fixed_formula: "base_delay_ms"
+  exponential_formula: "min(max_delay_ms, ceil(base_delay_ms * multiplier^(retry_ordinal - 1)))"
+  retry_after_rule: "final_delay_ms = max(policy_delay_ms, retry_after_ms ?? 0)"
+  retry_after_may_be_capped_down: false
+  final_delay_must_fit_elapsed_budget: true
+  final_delay_must_fit_deadline: true
+  random_jitter_generated_by_reference_v1: false
+
+retry_safety:
+  retryable_hint_alone_authorizes_retry: false
+  permitted_failure_classes_for_retry_consideration:
+    - TRANSIENT
+    - RATE_LIMITED
+    - TIMEOUT
+  never_blind_retry_classes:
+    - PERMANENT
+    - INVALID_INPUT
+    - AUTH_REQUIRED
+    - POLICY_BLOCKED
+    - CANCELLED
+    - AMBIGUOUS_OUTCOME
+    - UNKNOWN
+  postdispatch_effectful_ambiguity_requires_reconciliation_or_replay_proof: true
+  exactly_once_claim_forbidden: true
+
+job_state_policy:
+  states:
+    - PENDING
+    - RUNNING
+    - WAITING_RETRY
+    - RECONCILING
+    - SUCCEEDED
+    - FAILED
+    - CANCELLED
+    - BLOCKED
+  terminal_states:
+    - SUCCEEDED
+    - FAILED
+    - CANCELLED
+    - BLOCKED
+  allowed_transitions:
+    PENDING: [RUNNING, CANCELLED, BLOCKED]
+    RUNNING: [WAITING_RETRY, RECONCILING, SUCCEEDED, FAILED, CANCELLED, BLOCKED]
+    WAITING_RETRY: [RUNNING, CANCELLED, FAILED, BLOCKED]
+    RECONCILING: [RUNNING, SUCCEEDED, FAILED, CANCELLED, BLOCKED]
+    SUCCEEDED: []
+    FAILED: []
+    CANCELLED: []
+    BLOCKED: []
+  durability_claim: REFERENCE_IN_MEMORY_ONLY
+
+unsafe_counters:
+  - retryable_hint_authorized_retry
+  - unsafe_side_effect_retried
+  - postdispatch_ambiguity_retried_without_proof
+  - attempt_budget_exceeded
+  - deadline_or_elapsed_budget_extended_or_ignored
+  - retry_after_ignored_or_shortened
+  - authority_approval_or_capability_widened
+  - secret_or_raw_idempotency_material_persisted
+  - false_cancellation_or_exactly_once_claim
+  - unbounded_retry_or_job_loop
+  - provider_fixture_or_arm_branching
+  - future_stage_core_or_dependency_pull_forward
+
+source_boundaries:
+  no_core_change: true
+  no_agent_definition_change: true
+  no_dependency_change: true
+  no_provider_vendor_binding: true
+  no_queue_worker_store: true
+  no_s13p_platform: true
+  no_s14_connector_auth_http_binding: true
+  no_s15_verifier_agent: true
+  s09_runtime_semantics_preserved: true
+  s10_permissions_preserved: true
+  s13l_security_semantics_consumed_not_reauthored: true
+
+closure:
+  builder_cannot_self_verify: true
+  hi_050_initial_state: false
+  fresh_verifier_required_for_hi_050: true
+  s13p_forbidden_until_s13o_verified_pass: true
