@@ -606,9 +606,11 @@ repository:
     repair_commit: "5cd801ace4b3de78cb2e1627eb93242f86f70453"
     second_repair_commit: "f90f8d760913d505e60831ff69b2004c30f73cf8"
     second_verification_fail_comment_id: 5471291211
+    third_verification_fail_comment_id: 5471458550
+    final_mechanical_repair_commit: "a36f387fcb829b10fbea07255cd2b683cee74915"
     verification_report: "brain-bootstrap/reports/S13N-agent-evals-verification.md"
-    independent_verification_handoff: "brain/context/handoffs/2026-08-30T214200Z-s13n-second-repair-independent-verification-required.md"
-    note: "Second source verification failed in issue comment 5471291211. Repair f90f8d7 now scores post-gate candidate/evaluator agreement, computes branded identity-bound provider audits, derives HI-001..049 and eight unsafe counters from owning evidence, uses exact named FX-NEG-001..032 probes, and recomputes 24/24 detached underlying-source isolation. Builder QA PASS only: Node 24.19 typecheck, focused 41/41, full 1040/1040 pre/post dist-absent build, real A/B 0/192 to 191/192 (+191), eight qualified dimensions, and all unsafe counters zero. HI-050 remains false/pending. S13O remains forbidden."
+    independent_verification_handoff: "brain/context/handoffs/2026-08-30T220234Z-s13n-final-mechanical-repair-independent-verification-required.md"
+    note: "Third source verification failed in issue comment 5471458550 on three mechanical defects. Final repair a36f387 replaces the Skill-presence oracle with a truth-blind packet-derived provider and eight counterfactuals, proves HI-048 from immutable range e73bcb10..a36f387 with prior-surface blob checks, and binds HI-028 to the exact triggering terminal event. Builder QA PASS only: Node 24.19 typecheck, focused 50/50, exact negatives 32/32, detached isolation 24/24, full 1049/1049 pre/post genuine dist-absent build, real post-gate A/B 0/192 to 133/192 (+133), six qualified dimensions, HI-001..049 PASS, and all eight unsafe counters zero. HI-050 remains false/pending. S13O remains forbidden."
 
 build_day:
   date: "2026-08-29"

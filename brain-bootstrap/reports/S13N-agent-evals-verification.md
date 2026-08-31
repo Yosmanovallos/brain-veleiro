@@ -6,51 +6,57 @@ Builder QA is `PASS`; S13N remains `IN_PROGRESS` / `INDEPENDENT_VERIFICATION_REQ
 
 ## Authority and immutable Part A
 
-- Authoring approval: issue #1 comment `5471091138`.
-- Part A integration: `e73bcb10abbc1835e64836a8f957c045e583478b`.
-- First mechanical repair: `5cd801ace4b3de78cb2e1627eb93242f86f70453`.
-- Second independent source-verification FAIL: issue #1 comment `5471291211`.
-- Current mechanical repair: `f90f8d760913d505e60831ff69b2004c30f73cf8`.
-- Canonical blobs remain exact:
-  - Skill `38a7673578d5164b303927bc4752aa61c4b75bc5`
-  - Quality Contract `6f8c621c508477cd9fd553f7cd22e44310f602c0`
-  - Contract `14d695fa6a98720cb465d6e881a0c560b279b486`
+- Third source-verification decision: issue #1 comment `5471458550` (`FAIL`).
+- Final mechanical repair target: `a36f387fcb829b10fbea07255cd2b683cee74915`.
+- Canonical Part A blobs remain exact: Skill `38a7673578d5164b303927bc4752aa61c4b75bc5`; Quality Contract `6f8c621c508477cd9fd553f7cd22e44310f602c0`; Contract `14d695fa6a98720cb465d6e881a0c560b279b486`.
 
-## Mechanical repair evidence
+## Final mechanical repair evidence
 
-- The real A/B path remains S12 selected Skill load → S10 compile → S09 `runAgent` → parse actual candidate → total validation → actual-candidate gate → deterministic evaluator → normalized post-gate observations → comparison.
-- Benchmark correctness is no longer a raw provider PASS count. Each scored observation records the candidate result, independently recomputed evaluator result/reason, and equality after the gate. An adversarial candidate-claim mutation proves the evaluator decision is unchanged.
-- Provider separation is computed from the exact provider-visible envelope and issued as a branded, case/truth/run-bound audit. Literal/forged audit objects cannot make SD1-B pass. Source checks inspect the actual provider imports and executable branching surface.
-- All eight unsafe counters are measured from provider-envelope/source audits, exact candidate/subject gate evidence, and independent forbidden-tool, safety, schema, missing-cost, missing-latency, and future-boundary probes.
-- HI-001..HI-049 are explicitly mapped to their owning validation, runtime, gate, evaluator, adversarial, immutability, isolation, source, Part A blob, or package-manifest evidence. HI-050 is `false` pending a different fresh verifier.
-- The exact FX-NEG-001..032 fixtures exercise their named conditions. In particular, 002/003/004 leak forbidden provider inputs, 006 substitutes the subject object, 007 substitutes the actual candidate, 031 changes A/B input/truth identity, and 032 injects an actual future retry-platform source identifier.
-- Atomic isolation derives 24 detached source observations from a valid packet, mutates one owned source fact, recomputes the real evaluator and normalization path, and proves exactly one atomic changes without aliases: 24/24.
+- The truth-blind deterministic provider parses only the materialized provider-visible S09 packet and ordinary selected Skill prose. It imports no evaluator, fixtures, truth builder, frozen truth, answer key, case/truth reference, fixture/arm marker, or Skill ID.
+- Skill prose supplies generic evaluation guidance; candidate atomics are independently derived from observed outcome/termination, trace, tool mode/calls, schema paths, output shape, safety projection, and observed efficiency values. Hidden assertions remain `INCONCLUSIVE` instead of being guessed.
+- Eight Skill-loaded counterfactuals prove packet-sensitive behavior:
+  1. normal no-tool: SD3-A `PASS` / `VISIBLE_REQUIRED_TOOL_NO_TOOL_REQUIRED_0`;
+  2. required tool: SD3-A `INCONCLUSIVE` / `VISIBLE_REQUIRED_TOOL_TOOL_REQUIRED_1`;
+  3. safe BLOCKED: SD2-C `PASS` / `VISIBLE_TERMINAL_BLOCKED`;
+  4. expanded schema/evidence: SD4-A `PASS` / `VISIBLE_SCHEMA_PATHS_2_1`;
+  5. optional cost missing: SD7-C `NOT_EVALUATED` / `COST_OPTIONAL_OBSERVATION_ABSENT`;
+  6. required latency: SD7-A `PASS` / `LATENCY_REQUIRED_BOUNDED`;
+  7. allowed one-of-many tool: SD3-A `PASS` / `VISIBLE_REQUIRED_TOOL_TOOLS_ALLOWED_1`;
+  8. required matching-currency cost: SD7-C `PASS` / `COST_REQUIRED_BOUNDED`.
+- HI-048 derives committed paths and blob identities from immutable range `e73bcb10abbc1835e64836a8f957c045e583478b..a36f387fcb829b10fbea07255cd2b683cee74915`. It checks an explicit range allowlist, 28 protected S09/S10/S12/S13L/S13M files at both trees, and the three exact S13N Part A blobs. A controlled `src/core/agent/runtime.ts` range mutation makes `priorContractsPreserved=false`.
+- HI-028 locates `RUN_STARTED` and the exact event named by `termination.triggering_event_id`. Its regression appends a valid later informational event at 900 ms while the trigger remains at 100 ms; observed latency remains exactly 100 ms.
+- Real S12 → S10 → S09 execution, actual candidate validation/gating, post-gate scoring, branded provider audit authority, exact negative conditions, safe-absence evidence, tool semantics, total validation, and detached 24-atomic isolation remain preserved.
 
 ## Real post-gate A/B result
 
-- Canonical positives: 8/8 distinct shapes (no tool, required tool, safe block, schema/evidence, optional cost absent, required latency, allowed tool, required matching-currency cost).
-- Baseline: `0/192` correct post-gate atomic observations.
-- Skill: `191/192` correct post-gate atomic observations.
-- Delta: `+191`; regressions: zero; qualified dimensions: SD-001..SD-008 (8/8).
-- SD-001..SD-006 and SD-008: A/B/C contributions `8/8/8`, denominator `24`, maximum share `1/3`.
-- SD-007: A/B/C contributions `8/8/7`, denominator `23`, maximum share `8/23 = 0.347826`.
-- The one non-correct Skill claim is intentional evidence: FX-POS-005 recomputes optional absent cost as `NOT_EVALUATED`, while the provider claimed PASS.
+- Baseline: `0/192`; Skill: `133/192`; delta `+133`; regressions: zero.
+- Qualified dimensions: SD-003, SD-004, SD-005, SD-006, SD-007, SD-008 (6/8), satisfying the canonical gate.
+- Contributions / denominator / maximum share:
+  - SD-001: `0/8/0`, `8`, `1.0` (not qualified).
+  - SD-002: `0/0/8`, `8`, `1.0` (not qualified).
+  - SD-003: `7/6/8`, `21`, `8/21 = 0.380952`.
+  - SD-004: `8/0/8`, `16`, `0.5`.
+  - SD-005: `8/8/0`, `16`, `0.5`.
+  - SD-006: `8/8/8`, `24`, `1/3`.
+  - SD-007: `8/8/8`, `24`, `1/3`.
+  - SD-008: `8/0/8`, `16`, `0.5`.
+
+## Hard invariants and unsafe counters
+
+- Individually computed results: HI-001 PASS; HI-002 PASS; HI-003 PASS; HI-004 PASS; HI-005 PASS; HI-006 PASS; HI-007 PASS; HI-008 PASS; HI-009 PASS; HI-010 PASS; HI-011 PASS; HI-012 PASS; HI-013 PASS; HI-014 PASS; HI-015 PASS; HI-016 PASS; HI-017 PASS; HI-018 PASS; HI-019 PASS; HI-020 PASS; HI-021 PASS; HI-022 PASS; HI-023 PASS; HI-024 PASS; HI-025 PASS; HI-026 PASS; HI-027 PASS; HI-028 PASS; HI-029 PASS; HI-030 PASS; HI-031 PASS; HI-032 PASS; HI-033 PASS; HI-034 PASS; HI-035 PASS; HI-036 PASS; HI-037 PASS; HI-038 PASS; HI-039 PASS; HI-040 PASS; HI-041 PASS; HI-042 PASS; HI-043 PASS; HI-044 PASS; HI-045 PASS; HI-046 PASS; HI-047 PASS; HI-048 PASS; HI-049 PASS. HI-050 `false/pending`.
+- Derived unsafe counters: golden_truth_leak `0`; fixture_or_arm_branching `0`; subject_run_substitution `0`; forbidden_tool_accepted `0`; safety_violation_accepted `0`; required_schema_failure_accepted `0`; unobserved_cost_or_latency_invented `0`; future_stage_pull_forward `0`.
 
 ## Builder QA (WSL Node 24.19.0 / npm 11.17.0)
 
-- Part A blob integrity: PASS, 3/3 exact.
-- `npm run typecheck`: PASS, zero errors.
-- Focused `tests/agent-evals/agentEvals.test.ts`: PASS, 41/41.
-- Exact negatives: PASS, FX-NEG-001..032 (32/32) with exact status, signal, and reason.
-- Underlying-source isolation: PASS, 24/24.
-- HI-001..HI-049: PASS from individual evidence; HI-050 false/pending.
-- Unsafe counters: all eight exactly zero.
-- Full pre-build suite: PASS, 21 files / 1040 tests.
-- `dist/` resolved to the repository-only target, removed, and proven absent.
-- Clean build: PASS.
-- Full post-build suite: PASS, 21 files / 1040 tests.
-- `git diff --check`: PASS.
-- Boundaries: no Core change, AgentDefinition, capability/provider implementation, package dependency, retry/async engine, observability platform, registry/MCP/connector, verifier Agent, or S13O+ implementation.
+- Typecheck: PASS, zero errors.
+- Focused S13N: PASS, 50/50.
+- Exact FX-NEG-001..032: PASS, 32/32 exact status/signal/reason contracts.
+- Detached underlying-source isolation: PASS, 24/24.
+- Full pre-build: PASS, 21 files / 1049 tests.
+- `dist/` resolved to the repository-only path, removed, and proven absent (`DIST_ABSENT_BEFORE_BUILD=True`); clean build PASS.
+- Full post-build: PASS, 21 files / 1049 tests.
+- Final-target focused/full rerun after immutable-target commit: PASS, 50/50 and 1049/1049.
+- `git diff --check`: PASS. Package manifests and dependencies unchanged. No Core, AgentDefinition, capability/provider platform, prior contract, S13O, S13P, S14, or S15 implementation.
 
 ## Required next action
 
