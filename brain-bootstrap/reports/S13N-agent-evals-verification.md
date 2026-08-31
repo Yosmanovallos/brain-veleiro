@@ -2,12 +2,14 @@
 
 ## Status
 
-Builder QA is `PASS`; S13N remains `IN_PROGRESS` / `INDEPENDENT_VERIFICATION_REQUIRED`. HI-050 is deliberately pending. S13O and later stages remain forbidden.
+S13N is `VERIFIED PASS` / `CLOSED`. ChatGPT control-plane acceptance is Issue #1 comment `5472786135`, based on fresh-verifier evidence relay `5472784727`. HI-050 is `PASS`. S13O implementation and later implementation remain forbidden; only S13O preflight/authoring-gate preparation is eligible.
 
 ## Authority and immutable Part A
 
-- Third source-verification decision: issue #1 comment `5471458550` (`FAIL`).
+- Third source-verification decision: issue #1 comment `5471458550` (`FAIL`), repaired at the target below.
 - Final mechanical repair target: `a36f387fcb829b10fbea07255cd2b683cee74915`.
+- Accepted documentation HEAD before closure: `5559065353535fd333898afe7fe35b9ba9c7ef32`.
+- Fresh independent verifier relay: Issue #1 comment `5472784727`; final control-plane acceptance: Issue #1 comment `5472786135`.
 - Canonical Part A blobs remain exact: Skill `38a7673578d5164b303927bc4752aa61c4b75bc5`; Quality Contract `6f8c621c508477cd9fd553f7cd22e44310f602c0`; Contract `14d695fa6a98720cb465d6e881a0c560b279b486`.
 
 ## Final mechanical repair evidence
@@ -43,7 +45,7 @@ Builder QA is `PASS`; S13N remains `IN_PROGRESS` / `INDEPENDENT_VERIFICATION_REQ
 
 ## Hard invariants and unsafe counters
 
-- Individually computed results: HI-001 PASS; HI-002 PASS; HI-003 PASS; HI-004 PASS; HI-005 PASS; HI-006 PASS; HI-007 PASS; HI-008 PASS; HI-009 PASS; HI-010 PASS; HI-011 PASS; HI-012 PASS; HI-013 PASS; HI-014 PASS; HI-015 PASS; HI-016 PASS; HI-017 PASS; HI-018 PASS; HI-019 PASS; HI-020 PASS; HI-021 PASS; HI-022 PASS; HI-023 PASS; HI-024 PASS; HI-025 PASS; HI-026 PASS; HI-027 PASS; HI-028 PASS; HI-029 PASS; HI-030 PASS; HI-031 PASS; HI-032 PASS; HI-033 PASS; HI-034 PASS; HI-035 PASS; HI-036 PASS; HI-037 PASS; HI-038 PASS; HI-039 PASS; HI-040 PASS; HI-041 PASS; HI-042 PASS; HI-043 PASS; HI-044 PASS; HI-045 PASS; HI-046 PASS; HI-047 PASS; HI-048 PASS; HI-049 PASS. HI-050 `false/pending`.
+- Independently accepted results: HI-001 PASS; HI-002 PASS; HI-003 PASS; HI-004 PASS; HI-005 PASS; HI-006 PASS; HI-007 PASS; HI-008 PASS; HI-009 PASS; HI-010 PASS; HI-011 PASS; HI-012 PASS; HI-013 PASS; HI-014 PASS; HI-015 PASS; HI-016 PASS; HI-017 PASS; HI-018 PASS; HI-019 PASS; HI-020 PASS; HI-021 PASS; HI-022 PASS; HI-023 PASS; HI-024 PASS; HI-025 PASS; HI-026 PASS; HI-027 PASS; HI-028 PASS; HI-029 PASS; HI-030 PASS; HI-031 PASS; HI-032 PASS; HI-033 PASS; HI-034 PASS; HI-035 PASS; HI-036 PASS; HI-037 PASS; HI-038 PASS; HI-039 PASS; HI-040 PASS; HI-041 PASS; HI-042 PASS; HI-043 PASS; HI-044 PASS; HI-045 PASS; HI-046 PASS; HI-047 PASS; HI-048 PASS; HI-049 PASS; HI-050 PASS (fresh independent non-authoring/non-fork/read-only execution accepted by control plane).
 - Derived unsafe counters: golden_truth_leak `0`; fixture_or_arm_branching `0`; subject_run_substitution `0`; forbidden_tool_accepted `0`; safety_violation_accepted `0`; required_schema_failure_accepted `0`; unobserved_cost_or_latency_invented `0`; future_stage_pull_forward `0`.
 
 ## Builder QA (WSL Node 24.19.0 / npm 11.17.0)
@@ -58,6 +60,7 @@ Builder QA is `PASS`; S13N remains `IN_PROGRESS` / `INDEPENDENT_VERIFICATION_REQ
 - Final-target focused/full rerun after immutable-target commit: PASS, 50/50 and 1049/1049.
 - `git diff --check`: PASS. Package manifests and dependencies unchanged. No Core, AgentDefinition, capability/provider platform, prior contract, S13O, S13P, S14, or S15 implementation.
 
-## Required next action
+## Closure evidence and next action
 
-Run only a different fresh non-authoring, non-fork, read-only S13N verifier against the committed/pushed target. Do not start S13O.
+- Accepted independent evidence: Node 24 typecheck PASS; focused 50/50; full pre-build 1049/1049; genuine dist-absent clean build PASS; full post-build 1049/1049; provider counterfactuals 8/8; exact negatives 32/32; detached isolation 24/24; A/B `0/192 → 133/192` (+133), six qualified dimensions, zero regressions; all eight unsafe counters zero; architecture boundaries PASS; tracked verifier worktree unchanged with the same 13 pre-existing untracked Markdown scaffolds retained.
+- S13N is closed. Do not implement S13O. Only S13O preflight/authoring-gate preparation may begin when separately authorized.
