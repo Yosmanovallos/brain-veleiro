@@ -1,6 +1,6 @@
 # S13P Observability for AI Systems — Builder Verification
 
-Status: `PART B IMPLEMENTED / INDEPENDENT VERIFICATION REQUIRED`
+Status: `VERIFIED PASS / CLOSED`
 
 Documentation HEAD before Part B: `9ca9affad062e04f989eed02067b0f68da81ef31`
 
@@ -12,9 +12,13 @@ S13P Part B implements a pure, deterministic, provider-neutral and privacy-safe
 per-run observability bundle builder in Intelligence, reachable through the real
 S12 → S10 → S09 path. No Core, AgentDefinition, dependency, provider binding,
 durable store, exporter, network handle or prior canonical Part A was changed.
-All builder-side deterministic gates pass. HI-051 remains a candidate and is not
-awarded; S13P is not marked PASS. A fresh non-authoring, non-fork, read-only
-verifier must independently reproduce the evidence before closure.
+All builder-side deterministic gates pass. A fresh non-authoring, non-fork,
+read-only verifier independently reproduced the evidence for exactly candidate
+`0a278220f7498249ec2ade2790ea9abe5e7f32b9` and returned `PASS` (issue #1 comment
+`5498346326`); ChatGPT control-plane accepted the result and authorized factual
+closure in comment `5498956095`. `HI-051` is awarded during this closure, `main`
+was fast-forwarded to the verified candidate with no candidate modification, and
+S13P is `VERIFIED PASS` and closed.
 
 ## Canonical Part A integrity
 
@@ -92,9 +96,25 @@ updated the equivalent `async-reliability` markers.
 - Architecture / dependency / boundary audit: `package.json` and `package-lock.json` unchanged; no provider SDK, store, exporter, network, queue, `Date.now`, `new Date()` or unseeded randomness in the module; Core and prior canonical Part A untouched.
 - `git diff --check` on the builder's tracked edits: clean. The only tracked modifications are `src/intelligence/skills/index.ts` and the two adjacent boundary tests; the six S13N/S13O files show WSL LF/CRLF noise only (`git diff --ignore-space-at-eol` is empty) and predate this step.
 
-## Not done (requires a separate authorized step)
+## Closure evidence
 
-- No fresh independent non-authoring verification.
-- HI-051 not awarded.
-- `STATE.yaml` / `CURRENT.md` not moved to PASS/closed.
-- No S13Q or later step started.
+- Fresh independent non-authoring, non-fork, read-only VERIF1: `PASS` for exactly
+  `0a278220f7498249ec2ade2790ea9abe5e7f32b9` against baseline
+  `9ca9affad062e04f989eed02067b0f68da81ef31` — issue #1 comment `5498346326`.
+  Reproduced: the three Part A hashes; focused 88/88 (positives 14/14, negatives
+  52/52, atomic isolation 32/32, hard invariants 24/24, unsafe counters 16/16
+  zero and each fireable, actual S12→S10→S09 path, anti-gaming hygiene); A/B
+  baseline 214 → candidate 384 (+170), 9/10 qualified dimensions, 0 regressions,
+  concentration ≈ 0.053; full 1240/1240 before and after a genuine clean build
+  (756 files); architecture / dependency / diff hygiene.
+- Verified branch published non-force to `origin/s13p-observability-ai-systems-part-b`
+  — issue #1 comment `5498924829`.
+- ChatGPT control-plane acceptance and factual closure authorization — issue #1
+  comment `5498956095` (`VERIFIED_PASS_ACCEPTED / FACTUAL_CLOSURE_AUTHORIZED`).
+- `HI-051`: `AWARDED`.
+- Integration: `git merge --ff-only 0a278220f7498249ec2ade2790ea9abe5e7f32b9` on
+  `main`; no squash, rebase, amend, cherry-pick or semantic edit; the verified
+  candidate remains an ancestor of `main`.
+- `STATE.yaml` `results.S13P: PASS`; `CURRENT.md` `S13P — VERIFIED PASS / CLOSED`.
+- S13Q remains `NOT_STARTED` and was not started, inspected or authored by this
+  closure.
