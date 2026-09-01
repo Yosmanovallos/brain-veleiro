@@ -140,9 +140,10 @@ describe("real same-path A/B impact", () => {
     const skill = await Promise.all(inputs.map((value) => planAsyncReliability(value, { baseDefinition: host, skillProvider, modelProvider, capabilityProvider })));
     expect(inputs.every((value, index) => baseline[index]!.visiblePacket === value && skill[index]!.visiblePacket === value)).toBe(true);
     expect(baseline.every((run, index) => run.materializedDefinition.objective !== skill[index]!.materializedDefinition.objective)).toBe(true);
+    expect(baseline.some((run) => !run.decisionValidation.valid && run.decision.status === "BLOCKED")).toBe(true);
 
-    const baselineAtoms = baseline.map((run, index) => scorePostGateAtomics(inputs[index]!, run.candidate as AsyncReliabilityDecision, frozenFacts[index]!, {...audits[index]!,input_snapshot_before:run.inputSnapshotBefore,input_snapshot_after:run.inputSnapshotAfter,candidate_gate_valid:run.decisionValidation.valid}));
-    const skillAtoms = skill.map((run, index) => scorePostGateAtomics(inputs[index]!, run.candidate as AsyncReliabilityDecision, frozenFacts[index]!, {...audits[index]!,input_snapshot_before:run.inputSnapshotBefore,input_snapshot_after:run.inputSnapshotAfter,candidate_gate_valid:run.decisionValidation.valid}));
+    const baselineAtoms = baseline.map((run, index) => scorePostGateAtomics(inputs[index]!, run.decision, frozenFacts[index]!, {...audits[index]!,input_snapshot_before:run.inputSnapshotBefore,input_snapshot_after:run.inputSnapshotAfter,candidate_gate_valid:run.decisionValidation.valid}));
+    const skillAtoms = skill.map((run, index) => scorePostGateAtomics(inputs[index]!, run.decision, frozenFacts[index]!, {...audits[index]!,input_snapshot_before:run.inputSnapshotBefore,input_snapshot_after:run.inputSnapshotAfter,candidate_gate_valid:run.decisionValidation.valid}));
     const total = (rows: readonly Record<AsyncReliabilityAtomicId, boolean>[]) => rows.reduce((sum, row) => sum + ASYNC_RELIABILITY_ATOMIC_IDS.filter((id) => row[id]).length, 0);
     const regressions: string[] = [];
     const dimensions = Object.fromEntries(Array.from({ length: 10 }, (_, index) => {
@@ -166,20 +167,20 @@ describe("real same-path A/B impact", () => {
       atomic_regressions: regressions,
     };
     expect(report).toEqual({
-      baseline_total: 302,
+      baseline_total: 280,
       skill_total: 360,
-      delta: 58,
+      delta: 80,
       dimensions: {
         "SD-001": { contribution_counts: { "SD1-A": 0, "SD1-B": 5, "SD1-C": 0 }, denominator: 5, max_single_assertion_share: 1, qualified: false },
-        "SD-002": { contribution_counts: { "SD2-A": 0, "SD2-B": 0, "SD2-C": 3 }, denominator: 3, max_single_assertion_share: 1, qualified: false },
-        "SD-003": { contribution_counts: { "SD3-A": 3, "SD3-B": 3, "SD3-C": 3 }, denominator: 9, max_single_assertion_share: 1 / 3, qualified: true },
-        "SD-004": { contribution_counts: { "SD4-A": 3, "SD4-B": 4, "SD4-C": 4 }, denominator: 11, max_single_assertion_share: 4 / 11, qualified: true },
-        "SD-005": { contribution_counts: { "SD5-A": 4, "SD5-B": 1, "SD5-C": 4 }, denominator: 9, max_single_assertion_share: 4 / 9, qualified: true },
-        "SD-006": { contribution_counts: { "SD6-A": 1, "SD6-B": 3, "SD6-C": 3 }, denominator: 7, max_single_assertion_share: 3 / 7, qualified: true },
+        "SD-002": { contribution_counts: { "SD2-A": 5, "SD2-B": 0, "SD2-C": 5 }, denominator: 10, max_single_assertion_share: 0.5, qualified: true },
+        "SD-003": { contribution_counts: { "SD3-A": 4, "SD3-B": 4, "SD3-C": 1 }, denominator: 9, max_single_assertion_share: 4 / 9, qualified: true },
+        "SD-004": { contribution_counts: { "SD4-A": 4, "SD4-B": 5, "SD4-C": 5 }, denominator: 14, max_single_assertion_share: 5 / 14, qualified: true },
+        "SD-005": { contribution_counts: { "SD5-A": 1, "SD5-B": 0, "SD5-C": 5 }, denominator: 6, max_single_assertion_share: 5 / 6, qualified: false },
+        "SD-006": { contribution_counts: { "SD6-A": 4, "SD6-B": 5, "SD6-C": 5 }, denominator: 14, max_single_assertion_share: 5 / 14, qualified: true },
         "SD-007": { contribution_counts: { "SD7-A": 1, "SD7-B": 0, "SD7-C": 1 }, denominator: 2, max_single_assertion_share: 0.5, qualified: true },
-        "SD-008": { contribution_counts: { "SD8-A": 3, "SD8-B": 3, "SD8-C": 0 }, denominator: 6, max_single_assertion_share: 0.5, qualified: true },
+        "SD-008": { contribution_counts: { "SD8-A": 5, "SD8-B": 5, "SD8-C": 0 }, denominator: 10, max_single_assertion_share: 0.5, qualified: true },
         "SD-009": { contribution_counts: { "SD9-A": 0, "SD9-B": 0, "SD9-C": 0 }, denominator: 0, max_single_assertion_share: 0, qualified: false },
-        "SD-010": { contribution_counts: { "SD10-A": 3, "SD10-B": 3, "SD10-C": 0 }, denominator: 6, max_single_assertion_share: 0.5, qualified: true },
+        "SD-010": { contribution_counts: { "SD10-A": 5, "SD10-B": 5, "SD10-C": 0 }, denominator: 10, max_single_assertion_share: 0.5, qualified: true },
       },
       qualified_dimensions: 7,
       atomic_regressions: [],
