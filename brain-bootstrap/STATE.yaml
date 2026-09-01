@@ -1,8 +1,8 @@
 bootstrap_version: 1.2.0
-current_step: S13N
-status: VERIFIED_PASS
+current_step: S13O
+status: INDEPENDENT_VERIFICATION_REQUIRED
 primary_builder: codex
-independent_verifier: chatgpt-manual
+independent_verifier: pending-fresh-non-authoring-non-fork-read-only
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
@@ -35,7 +35,7 @@ steps:
   S13L: PASS
   S13M: PASS
   S13N: PASS
-  S13O: NOT_STARTED
+  S13O: IN_PROGRESS
   S13P: NOT_STARTED
   S13Q: NOT_STARTED
   S13R: NOT_STARTED
@@ -58,9 +58,9 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 66
-  head_sha: "3eac82efcd102b2375ac383b1aa75a92c074c68d"
-  head_sha_note: "S13L VERIFIED PASS closure; S13M authoring preflight target."
+  commits: 112
+  head_sha: "11624869e6ab6b95127200ec5870090e52750e73"
+  head_sha_note: "S13O builder implementation target; continuity-only handoff commit follows. HI-050 remains pending."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -615,6 +615,22 @@ repository:
     independently_verified_at: "2026-08-31T01:52:23Z"
     closure_handoff: "brain/context/handoffs/2026-08-31T015223Z-s13n-verified-pass-closure.md"
     note: "VERIFIED PASS. Implementation target a36f387fcb829b10fbea07255cd2b683cee74915 was independently verified at documentation HEAD 5559065353535fd333898afe7fe35b9ba9c7ef32 and accepted by ChatGPT control plane in issue comment 5472786135 after fresh-verifier relay 5472784727. Node 24 typecheck, focused 50/50, full 1049/1049 pre/post genuine dist-absent build, eight provider counterfactuals, exact negatives 32/32, detached isolation 24/24, post-gate A/B 0/192 to 133/192 (+133), six qualified dimensions, zero regressions, HI-001..050 PASS, eight unsafe counters zero, architecture boundaries PASS, and unchanged tracked verifier worktree are accepted facts. S13O implementation remains NOT_STARTED; only its preflight/authoring gate is eligible."
+
+  async_reliability:
+    status: INDEPENDENT_VERIFICATION_REQUIRED
+    part_a_commit: "5b7a68980f0bb86103a417740518782c3d0dae0d"
+    part_a_blobs:
+      skill: "f4e151a79f1768465c711c5a433bd43df325430d"
+      quality_contract: "e967aaeaa0c85e93e6a2af818a369ec0ffbe3979"
+      contract: "e973db80e98f37fbe8e41e700926f170373af70d"
+    part_b_commit: "11624869e6ab6b95127200ec5870090e52750e73"
+    builder_report: "brain-bootstrap/reports/S13O-async-reliability-verification.md"
+    independent_verification_handoff: "brain/context/handoffs/2026-09-01T005132Z-s13o-independent-verification-required.md"
+    contract_tests: "Focused S13O 99/99 PASS: exact 12 positives, exact 46 negatives, A-F prose/guidance-consumption evidence, provider counterfactuals, 30/30 detached atomic isolation, HI-001..HI-049 individually true, and all 12 Skill-arm unsafe counters zero. HI-050 was not self-awarded."
+    quality_checks: "WSL Node 24.19.0 typecheck PASS; full 1148/1148 pre-build; exact repo-local dist proved absent; clean build PASS with 711 files; full 1148/1148 post-build; diff-check PASS; protected Core/AgentDefinition/package/Part A diff empty; canonical Part A filtered Git blobs exactly match HEAD."
+    skill_vs_no_skill: "Same visible packets, PacketProvider implementation, S09/S10/S12 path, parser, candidate gate, evaluator, and provider-blind truth. Baseline 252/360; Skill 360/360; delta +108; seven qualified dimensions; zero atomic regressions."
+    boundaries: "No Core special branch, AgentDefinition change, package dependency, vendor binding, queue/worker/scheduler, network/provider integration, persistent handle, S13P implementation, or semantic edit to canonical Part A."
+    note: "Builder evidence is PASS at the Part B target, but S13O remains open until HI-050 is reproduced by a different fresh non-authoring non-fork read-only verifier. S13P remains NOT_STARTED and forbidden."
 
 build_day:
   date: "2026-08-29"
