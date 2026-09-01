@@ -283,51 +283,16 @@ export function synthesizePacketDerivedCandidate(
     requires_reconciliation: false,
   });
 
-  if (features.preserveTerminalJob) {
-    if (packet.job.state === "SUCCEEDED") {
-      return {
-        ...common,
-        status: "READY",
-        action: "COMPLETE",
-        failure_class: "NONE",
-        reason_code: "OBSERVED_SUCCESS",
-        next_job_state: "SUCCEEDED",
-        replay_disposition: "NOT_REQUIRED",
-        requires_reconciliation: false,
-        limitations: [...common.limitations, "TERMINAL_JOB_PRESERVED"],
-      };
-    }
-    if (packet.job.state === "FAILED") {
-      return {
-        ...stop("NON_RETRYABLE_FAILURE", "NOT_REQUIRED"),
-        next_job_state: "FAILED",
-        limitations: [...common.limitations, "TERMINAL_JOB_PRESERVED"],
-      };
-    }
-    if (packet.job.state === "CANCELLED") {
-      return {
-        ...common,
-        status: "READY",
-        action: "CANCEL",
-        reason_code: "CANCELLATION_CONFIRMED",
-        next_job_state: "CANCELLED",
-        replay_disposition: "NOT_REQUIRED",
-        requires_reconciliation: false,
-        limitations: [...common.limitations, "TERMINAL_JOB_PRESERVED"],
-      };
-    }
-    if (packet.job.state === "BLOCKED") {
-      return {
-        ...common,
-        status: "READY",
-        action: "BLOCK",
-        reason_code: "POLICY_BLOCKED",
-        next_job_state: "BLOCKED",
-        replay_disposition: "NOT_REQUIRED",
-        requires_reconciliation: false,
-        limitations: [...common.limitations, "TERMINAL_JOB_PRESERVED"],
-      };
-    }
+  if (features.preserveTerminalJob && ["SUCCEEDED","FAILED","CANCELLED","BLOCKED"].includes(packet.job.state)) {
+    const activePacket=structuredClone(packet);
+    activePacket.job.state="RUNNING";
+    const activeProjection=synthesizePacketDerivedCandidate(activePacket,prose);
+    if (activeProjection.next_job_state!==packet.job.state) return {
+      status:"BLOCKED",action:"BLOCK",task_ref:packet.task_ref,operation_ref:packet.operation.operation_ref,job_id:packet.job.job_id,latest_attempt_id:packet.latest_attempt_id,
+      failure_class:"UNKNOWN",reason_code:"INVALID_RELIABILITY_INPUT",next_job_state:"BLOCKED",remaining_attempts:0,remaining_elapsed_ms:0,replay_disposition:"INSUFFICIENT",requires_reconciliation:false,
+      authority_ref:packet.operation.authority_ref,evidence_refs:[],blockers:["terminal job state conflicts with observed facts"],limitations:[],residual_unknowns:[],
+    };
+    return {...activeProjection,next_job_state:packet.job.state,limitations:[...activeProjection.limitations,"TERMINAL_JOB_PRESERVED"]};
   }
 
   if (latest.observed_status === "SUCCESS") {
