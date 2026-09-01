@@ -509,7 +509,7 @@ Running the real mechanism against `baseInput()`:
   | A04 | `verification_evidence[ev-test-parser].subject_ref` | `[A03]` | `buildClaims`/`deriveClaimStatus` :360-383 — A03 observes the whole `delivered` [subject,status] table; `claims_total`/`claims_with_evidence` are claim-status functions |
   | A05 | `repository_facts[rf-feat-reporter].subject_ref` | `[A03]` | same shared claim table; A05's UNKNOWN-count / AVAILABLE_NOT_VERIFIED-subjects are claim-status functions |
   | A06 | `repository_facts[rf-feat-builder].source_ref` | `[A03]` | same shared claim table; A06's DEFERRED-subjects is a claim-status function |
-  | A09 | remove all `architecture_facts[kind=BOUNDARY]` | `[A08]` | `architecture_summary.partial = components.length===0 || boundaries.length===0` :396; A08 observes boundaries (declared also_changes `[A07,A08]` — A07 unmoved, subset holds) |
+  | A09 | remove all `architecture_facts[kind=BOUNDARY]` | `[A08]` | `architecture_summary.partial = components.length===0 || boundaries.length===0` :396; A08 observes boundaries. Declared `also_changes` is the **superset** `[A07,A08]` — under this BOUNDARY-only mutation A07 (components) provably does not move, but the forcing expression reads `components` too, so a components mutation of the same fact family would move A07; the declaration is deliberately conservative and `cross ⊆ also_changes` still holds |
   | A13 | `demo_surface.steps` last removed | `[A14,A15]` | `buildDemo` :422-450 — A13's `demo_script.length` element needs a step add/remove, which moves the per-step tuples A14/A15 observe |
   | A16 | `policy.suppress_limitation_ids = ["lim-crlf"]` | `[A18]` | `buildLimitations` :452-466 — A16 and A18 both `.map` the same `pkg.limitations` array and read `limitation_id` |
   | A23 | append `ev-probe-fail` FAIL (subject `repo`) | `[A22]` | `detectEvidenceConflicts` :513-527 — inducing a same-subject PASS+FAIL conflict requires growing the evidence set A22's evidence-index observation reads |
@@ -541,7 +541,7 @@ Running the real mechanism against `baseInput()`:
 | gate | result |
 |---|---|
 | `tsc --noEmit` | PASS (0 errors) |
-| focused `tests/delivery-documentation-demo/` | **81/81** |
+| focused `tests/delivery-documentation-demo/` | **81/81** (was 82/82 at `1782a16`: the rewrite deleted two sub-tests that read the now-removed projection layer — `pins the fixture cells that index-addressed owned fields depend on` and `wrong-field negative control` — and added one — `partitions the 30 atomics into 19/9/2`; net −1) |
 | canonical positives `P01..P10` | 10/10 |
 | canonical negatives `N01..N40` | 40/40 |
 | owned-source-fact isolation `A01..A30` | **30/30** — `classify` never `FAIL`; 19 STRICT / 9 STRUCTURAL_DEPENDENCY / 2 GATE_CLASS; every diff path under `input.` / `audit.`; shared raw source + canonical decision byte-stable |
@@ -563,7 +563,7 @@ Running the real mechanism against `baseInput()`:
 | A/B baseline gate-valid scenarios | **3** (the minimal scenarios) |
 | A/B max single-assertion share per qualified dim | 9/27 = 0.333 (≤ 0.50); global 9/234 ≈ 0.038 |
 | A/B Skill-arm unsafe counters | 12/12 zero |
-| full suite before clean build | **1321/1321** across 24 files |
+| full suite before clean build | **1321/1321** across 24 files (was 1322/1322 at `1782a16` — same net −1 from the two removed / one added isolation sub-tests) |
 | genuine `rm -rf dist` (absent) → `tsc -p tsconfig.json` | clean — **786** files (`262 .js` + 262 `.d.ts` + 262 maps) |
 | full suite after build | **1321/1321** across 24 files — equal pre/post |
 | `git diff --check` on `quality.ts` + S13Q test | clean |
@@ -589,7 +589,12 @@ isolation". Control-plane ruling requested: (a) declare these 9 + 2 dependencies
 in semantic contract §21 (the QC rule already anticipates "unless the semantic
 contract explicitly declares a dependency"), OR (b) re-decompose the coupled
 observations to be source-disjoint, OR (c) define "family" as the 3-assertion
-`semantic_dimension`.
+`semantic_dimension`. One sub-question for the ruling: A09's declared
+`also_changes` `[A07,A08]` is a deliberate **superset** of its measured cross
+`[A08]` (the forcing expression at `deliveryModel.ts:396` reads both `components`
+and `boundaries`); the control plane should also state whether declared
+dependencies must be tight to the measured cross or may be conservative over the
+forcing expression's inputs.
 
 ### Still required
 

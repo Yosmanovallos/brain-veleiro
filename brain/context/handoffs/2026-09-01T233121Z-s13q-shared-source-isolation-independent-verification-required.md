@@ -57,7 +57,11 @@ replaced with:
 
 - 19/30 STRICT (zero cross): A02 A03 A07 A08 A10 A11 A12 A14 A15 A17 A18 A19 A20 A21 A22 A24 A28 A29 A30
 - 9/30 STRUCTURAL_DEPENDENCY (measured `cross` ⊆ declared `also_changes`):
-  A01→[A24], A04→[A03], A05→[A03], A06→[A03], A09→[A08] (declared [A07,A08]),
+  A01→[A24], A04→[A03], A05→[A03], A06→[A03],
+  A09→[A08] (declared also_changes `[A07,A08]` — deliberate superset: the
+  forcing expression deliveryModel.ts:396 also reads `components`, which A07
+  observes; A07 unmoved under this BOUNDARY-only mutation; `cross ⊆ also_changes`
+  holds),
   A13→[A14,A15], A16→[A18], A23→[A22], A26→[A12]
 - 2/30 GATE_CLASS: A25 (forced BLOCKED via SECRET_MATERIAL), A27
   (`governing_changed === false`, forced BLOCKED via overclaim — same fact as
@@ -67,7 +71,11 @@ replaced with:
 ## Fresh DEEP QA (Node v24.19.0 / npm 11.17.0 — everything recomputed)
 
 - `tsc --noEmit`: PASS
-- focused `tests/delivery-documentation-demo/`: 81/81
+- focused `tests/delivery-documentation-demo/`: 81/81 (was 82/82 at `1782a16`;
+  the rewrite removed two sub-tests that read the deleted projection layer —
+  `pins the fixture cells…` and `wrong-field negative control` — and added one,
+  `partitions the 30 atomics into 19/9/2`; net −1, same for the full suite
+  1322 → 1321)
 - positives 10/10; negatives 40/40; ablation 7/7; hard invariants 30/30
 - isolation 30/30 (19 STRICT / 9 STRUCTURAL_DEPENDENCY / 2 GATE_CLASS; FAIL 0)
 - anti-tautology: expected_observation mutation REJECTED, derived-decision
@@ -102,7 +110,10 @@ the material reaches the producer). The QC `source_fact_isolation.rule` says
 while the Skill says "single-observation isolation". Control plane to rule:
 (a) declare these dependencies in semantic contract §21, OR (b) re-decompose the
 coupled observations to be source-disjoint, OR (c) define "family" as the
-3-assertion `semantic_dimension`.
+3-assertion `semantic_dimension`. Sub-question: A09's declared `also_changes`
+`[A07,A08]` is a deliberate superset of its measured cross `[A08]` — rule whether
+declared dependencies must be tight to the measured cross or may be conservative
+over the forcing expression's inputs.
 
 ## Do NOT
 
