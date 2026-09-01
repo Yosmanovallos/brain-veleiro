@@ -17,6 +17,7 @@ import { frontendProductSurfaceS13K } from "./definitions/frontendProductSurface
 import { guardrailsSecurityS13L } from "./definitions/guardrailsSecurityS13L.js";
 import { qaDebuggingS13M } from "./definitions/qaDebuggingS13M.js";
 import { agentEvalsS13N } from "../agent-evals/agentEvalsSkill.js";
+import { asyncReliabilitySkillS13O } from "../async-reliability/asyncReliabilitySkill.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
@@ -35,6 +36,7 @@ export { frontendProductSurfaceS13K } from "./definitions/frontendProductSurface
 export { guardrailsSecurityS13L } from "./definitions/guardrailsSecurityS13L.js";
 export { qaDebuggingS13M } from "./definitions/qaDebuggingS13M.js";
 export { agentEvalsS13N } from "../agent-evals/agentEvalsSkill.js";
+export { asyncReliabilitySkillS13O } from "../async-reliability/asyncReliabilitySkill.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -118,5 +120,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(agentEvalsS13N),
     load_definition: async () => agentEvalsS13N,
+  },
+  {
+    descriptor: toSkillDescriptor(asyncReliabilitySkillS13O),
+    load_definition: async () => asyncReliabilitySkillS13O,
   },
 ];

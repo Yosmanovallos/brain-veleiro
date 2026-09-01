@@ -1,0 +1,14 @@
+import { randomUUID } from "node:crypto";
+import { compileAgentDefinition, runAgent } from "../../core/agent/index.js";
+import type { AgentDefinition, AgentRunResult, CapabilityProvider, ModelProvider } from "../../core/agent/index.js";
+import type { SkillDefinition, SkillProvider } from "../../core/skill/index.js";
+import { selectSkillForTask } from "../skills/selectSkillForTask.js";
+import { ASYNC_RELIABILITY_INPUT_MARKER, ASYNC_RELIABILITY_SKILL_ID } from "./constants.js";
+import { evaluateAsyncReliabilityCandidateGate, validateAsyncReliabilityDecision } from "./modeling.js";
+import type { AsyncReliabilityDecision, AsyncReliabilityInput } from "./types.js";
+
+export interface AsyncReliabilityHarness { baseDefinition: AgentDefinition; skillProvider?: SkillProvider; modelProvider: ModelProvider; capabilityProvider: CapabilityProvider; }
+export interface PlanAsyncReliabilityOutcome { candidate: unknown; decision: AsyncReliabilityDecision; run: AgentRunResult; decisionValidation: ReturnType<typeof validateAsyncReliabilityDecision>; skillLoaded: boolean; materializedDefinition: AgentDefinition; visiblePacket: AsyncReliabilityInput; inputSnapshotBefore: string; inputSnapshotAfter: string; }
+const task = "assess one already-observed async reliability operation retry safety";
+function materialize(base:AgentDefinition,input:AsyncReliabilityInput,skill?:SkillDefinition):AgentDefinition { const prose=skill?.rules.map(x=>x.statement).join("\n")??""; return {...structuredClone(base),id:`${base.id}-s13o-${randomUUID()}`,objective:`${base.objective}\n${ASYNC_RELIABILITY_INPUT_MARKER}\n${JSON.stringify(input)}${prose?`\n${prose}`:""}`}; }
+export async function planAsyncReliability(input:AsyncReliabilityInput,harness:AsyncReliabilityHarness):Promise<PlanAsyncReliabilityOutcome> { const before=JSON.stringify(input); let skill:SkillDefinition|undefined; if(harness.skillProvider&&harness.baseDefinition.skills.length){const selected=await selectSkillForTask({task,agent_definition:harness.baseDefinition,provider:harness.skillProvider}); if(selected.loaded?.id!==ASYNC_RELIABILITY_SKILL_ID) throw new Error("S12 did not load S13O Skill"); skill=selected.loaded;} const materializedDefinition=materialize(harness.baseDefinition,input,skill); const compiled=compileAgentDefinition(materializedDefinition,{model_provider:harness.modelProvider,capability_provider:harness.capabilityProvider}); const run=await runAgent(compiled.run_options); const candidate=run.outcome==="SUCCESS"?run.output?.data:undefined; const decisionValidation=validateAsyncReliabilityDecision(candidate,input); const gate=evaluateAsyncReliabilityCandidateGate(input,candidate); return {candidate,decision:gate.decision,run,decisionValidation,skillLoaded:Boolean(skill),materializedDefinition,visiblePacket:input,inputSnapshotBefore:before,inputSnapshotAfter:JSON.stringify(input)}; }

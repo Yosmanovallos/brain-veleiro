@@ -340,9 +340,9 @@ describe("OI-A-safe Skill-vs-no-Skill and scope closure T79–T92", () => {
     expect(files.some((name) => /baseline|bad/i.test(name))).toBe(false);
   });
 
-  it("T89/T90 — no S13J/S13L/S13O/S13P/S14 implementation artifacts or persistent server were created", () => {
+  it("T89/T90 — no S13J/S13L/S13P/S14 implementation artifacts or persistent server were created", () => {
     const files = readdirSync("src/intelligence");
-    expect(files.some((name) => /persistence|authorization-platform|reliability|observability-platform|capability-registry/i.test(name))).toBe(false);
+    expect(files.some((name) => /persistence|authorization-platform|observability-platform|capability-registry/i.test(name))).toBe(false);
     const source = readdirSync(sourceDir).filter((name) => name.endsWith(".ts")).map((name) => readFileSync(join(sourceDir, name), "utf8")).join("\n");
     expect(source).not.toMatch(/from ["']node:http|createServer\(|\.listen\(/);
   });

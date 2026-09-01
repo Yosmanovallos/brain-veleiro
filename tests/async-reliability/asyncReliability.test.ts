@@ -1,0 +1,299 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import type { AgentDefinition, CapabilityProvider } from "../../src/core/agent/index.js";
+import { LocalReferenceSkillProvider } from "../../src/providers/skill/localReferenceSkillProvider.js";
+import { ASYNC_RELIABILITY_ATOMIC_IDS, ASYNC_RELIABILITY_SKILL_ID, assessReplaySafety, asyncReliabilitySkillS13O, classifyReliabilityFailure, computeReliabilityBackoff, deriveAsyncReliabilityDecision, deriveAsyncReliabilitySourceFacts, deriveAsyncReliabilityUnsafeCounters, evaluateAsyncReliabilityAtomicObservations, evaluateAsyncReliabilityCandidateGate, mutateAsyncReliabilitySourceFact, planAsyncReliability, validateAsyncJobTransition, validateAsyncReliabilityDecision, validateAsyncReliabilityInput, type AsyncReliabilityAtomicId, type AsyncReliabilityDecision, type AsyncReliabilityInput } from "../../src/intelligence/async-reliability/index.js";
+import { referenceSkillCatalogEntries } from "../../src/intelligence/skills/index.js";
+import { PacketProvider, extractReliabilityMethodFeatures, synthesizePacketDerivedCandidate } from "./packetProvider.js";
+
+function input(overrides: Partial<AsyncReliabilityInput> = {}): AsyncReliabilityInput { const value: AsyncReliabilityInput = { task_ref:"task:async",source_refs:["spec:s13o"],operation:{operation_ref:"op:1",side_effect_class:"READ_ONLY",declared_idempotent:false,request_fingerprint:"fp:1",authority_ref:"auth:1",approval_required:false},policy:{max_attempts:3,max_elapsed_ms:1000,backoff:{strategy:"EXPONENTIAL",base_delay_ms:10,max_delay_ms:100,multiplier:2},respect_retry_after:true},clock:{operation_started_at_ms:0,now_ms:10,effective_deadline_at_ms:1000},attempts:[{attempt_id:"attempt:1",attempt_number:1,operation_ref:"op:1",request_fingerprint:"fp:1",authority_ref:"auth:1",started_at_ms:0,ended_at_ms:10,dispatch_state:"NOT_DISPATCHED",observed_status:"FAIL",source:"UPSTREAM",error_code:"UNAVAILABLE",retryable_hint:true,evidence_refs:["ev:1"]}],latest_attempt_id:"attempt:1",replay_evidence:{kind:"NONE",operation_ref:"op:1",request_fingerprint:"fp:1"},cancellation:{requested:false,acknowledged:false},job:{job_id:"job:1",state:"RUNNING",created_at_ms:0,operation_ref:"op:1",request_fingerprint:"fp:1"},security:{authority_ref:"auth:1",approval_required:false,allowed_capability_ids:[],allowed_side_effect_classes:["READ_ONLY"]},evidence_refs:["ev:1"],limitations:[]}; return Object.assign(value,structuredClone(overrides)); }
+function mutate(value:AsyncReliabilityInput,fn:(v:AsyncReliabilityInput)=>void){const x=structuredClone(value);fn(x);return x;}
+
+const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
+function scorePostGateAtomics(packet: AsyncReliabilityInput, decision: AsyncReliabilityDecision): Record<AsyncReliabilityAtomicId, boolean> {
+  const truth = deriveAsyncReliabilityDecision(packet), retryAfter = packet.attempts.at(-1)?.retry_after_ms;
+  return {
+    "SD1-A": same([decision.task_ref,decision.operation_ref,decision.job_id,decision.latest_attempt_id],[truth.task_ref,truth.operation_ref,truth.job_id,truth.latest_attempt_id]),
+    "SD1-B": same([decision.remaining_attempts,decision.remaining_elapsed_ms,decision.remaining_deadline_ms],[truth.remaining_attempts,truth.remaining_elapsed_ms,truth.remaining_deadline_ms]),
+    "SD1-C": same(decision.evidence_refs,truth.evidence_refs),
+    "SD2-A": decision.failure_class===truth.failure_class,
+    "SD2-B": decision.reason_code===truth.reason_code,
+    "SD2-C": decision.status===truth.status,
+    "SD3-A": decision.action===truth.action,
+    "SD3-B": decision.next_attempt_number===truth.next_attempt_number,
+    "SD3-C": decision.replay_disposition===truth.replay_disposition,
+    "SD4-A": decision.remaining_attempts===truth.remaining_attempts,
+    "SD4-B": decision.remaining_elapsed_ms===truth.remaining_elapsed_ms,
+    "SD4-C": decision.remaining_deadline_ms===truth.remaining_deadline_ms,
+    "SD5-A": decision.delay_ms===truth.delay_ms,
+    "SD5-B": truth.action!=="RETRY" ? decision.delay_ms===undefined : retryAfter===undefined || (decision.delay_ms??-1)>=retryAfter,
+    "SD5-C": decision.next_job_state===truth.next_job_state,
+    "SD6-A": decision.replay_disposition===truth.replay_disposition,
+    "SD6-B": decision.requires_reconciliation===truth.requires_reconciliation,
+    "SD6-C": same(decision.residual_unknowns,truth.residual_unknowns),
+    "SD7-A": decision.action===truth.action,
+    "SD7-B": decision.next_job_state===truth.next_job_state,
+    "SD7-C": same(decision.limitations,truth.limitations),
+    "SD8-A": decision.next_job_state===truth.next_job_state,
+    "SD8-B": decision.reason_code===truth.reason_code,
+    "SD8-C": same(decision.blockers,truth.blockers),
+    "SD9-A": decision.authority_ref===truth.authority_ref,
+    "SD9-B": decision.approval_ref===truth.approval_ref,
+    "SD9-C": !/(secret|api[_-]?key|bearer|cookie|password)/i.test(JSON.stringify(decision))&&same(decision.evidence_refs,truth.evidence_refs),
+    "SD10-A": same([decision.status,decision.action],[truth.status,truth.action]),
+    "SD10-B": same([decision.failure_class,decision.reason_code,decision.requires_reconciliation],[truth.failure_class,truth.reason_code,truth.requires_reconciliation]),
+    "SD10-C": same([decision.blockers,decision.limitations,decision.residual_unknowns],[truth.blockers,truth.limitations,truth.residual_unknowns]),
+  };
+}
+
+describe("S13O deterministic reliability mechanics",()=>{
+  it("validates total inputs and preserves source immutability",()=>{const x=input(),before=JSON.stringify(x);expect(validateAsyncReliabilityInput(x).valid).toBe(true);deriveAsyncReliabilityDecision(x);expect(JSON.stringify(x)).toBe(before);expect(()=>deriveAsyncReliabilityDecision(null)).not.toThrow();expect(deriveAsyncReliabilityDecision(null).status).toBe("BLOCKED");});
+  it("maps canonical failures without treating retryable as authorization",()=>{expect(classifyReliabilityFailure({observed_status:"FAIL",error_code:"RATE_LIMITED"})).toBe("RATE_LIMITED");expect(classifyReliabilityFailure({observed_status:"FAIL",error_code:"INTERNAL_ERROR",retryable_hint:true})).toBe("TRANSIENT");expect(deriveAsyncReliabilityDecision(mutate(input(),x=>{x.attempts[0].error_code="INVALID_INPUT";x.attempts[0].retryable_hint=true;})).action).toBe("STOP");});
+  it("FX-NEG-002 fails closed for an unknown observed error enum",()=>{const x=input();(x.attempts[0] as {error_code:string}).error_code="NOT_CANONICAL";const d=deriveAsyncReliabilityDecision(x);expect(d).toMatchObject({status:"BLOCKED",action:"BLOCK",reason_code:"INVALID_RELIABILITY_INPUT"});});
+  it("FX-NEG-034 fails closed when a pending job falsely carries a completed attempt",()=>{const d=deriveAsyncReliabilityDecision(mutate(input(),x=>{x.job.state="PENDING";}));expect(d).toMatchObject({status:"BLOCKED",action:"BLOCK",reason_code:"INVALID_RELIABILITY_INPUT"});});
+  it("implements canonical fixed/exponential and Retry-After formula",()=>{const x=input();expect(computeReliabilityBackoff({...x.policy,backoff:{...x.policy.backoff,strategy:"FIXED"}},1)).toBe(10);expect(computeReliabilityBackoff(x.policy,3)).toBe(40);expect(computeReliabilityBackoff(x.policy,1,80)).toBe(80);});
+  it("enforces replay safety and no exactly-once claim",()=>{const x=mutate(input(),v=>{v.operation.side_effect_class="NON_IDEMPOTENT_WRITE";v.security.allowed_side_effect_classes=["NON_IDEMPOTENT_WRITE"];v.attempts[0].dispatch_state="DISPATCHED";v.attempts[0].error_code="TIMEOUT";});const d=deriveAsyncReliabilityDecision(x);expect([d.status,d.action,d.reason_code]).toEqual(["INCONCLUSIVE","RECONCILE","IDEMPOTENCY_EVIDENCE_INSUFFICIENT"]);expect(JSON.stringify(d)).not.toMatch(/exactly[ -]?once/i);const safe=mutate(x,v=>{v.replay_evidence={kind:"DURABLE_KEYED_DEDUPLICATION",operation_ref:"op:1",request_fingerprint:"fp:1",evidence_ref:"ev:dedupe",key_scope_ref:"scope:opaque",replay_safe:true};});expect(assessReplaySafety(safe).retryable).toBe(true);expect(deriveAsyncReliabilityDecision(safe).action).toBe("RETRY");});
+  it("honors cancellation precedence and job transition rules",()=>{expect(deriveAsyncReliabilityDecision(mutate(input(),v=>{v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};})).action).toBe("CANCEL");expect(deriveAsyncReliabilityDecision(mutate(input(),v=>{v.attempts[0].dispatch_state="DISPATCHED";v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};})).action).toBe("RECONCILE");expect(deriveAsyncReliabilityDecision(mutate(input(),v=>{v.attempts[0].observed_status="SUCCESS";delete v.attempts[0].error_code;v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};})).action).toBe("COMPLETE");expect(validateAsyncJobTransition("RUNNING","WAITING_RETRY")).toBe(true);expect(validateAsyncJobTransition("SUCCEEDED","RUNNING")).toBe(false);});
+  it("candidate gate recomputes actual claims rather than self-certifying",()=>{const x=input(),candidate=deriveAsyncReliabilityDecision(x);candidate.delay_ms=1;const gated=evaluateAsyncReliabilityCandidateGate(x,candidate);expect(gated.decision.status).toBe("BLOCKED");expect(gated.candidate).toBe(candidate);});
+});
+
+describe("S13O detached source-fact quality evidence",()=>{
+  it("proves 30/30 isolated canonical atomics without mutating input or output",()=>{const x=input(),before=JSON.stringify(x),facts=deriveAsyncReliabilitySourceFacts(x),factsBefore=JSON.stringify(facts),base=evaluateAsyncReliabilityAtomicObservations(x,facts);let passes=0;for(const id of ASYNC_RELIABILITY_ATOMIC_IDS){const detached=structuredClone(facts);mutateAsyncReliabilitySourceFact(detached,id);const after=evaluateAsyncReliabilityAtomicObservations(x,detached);const changed=ASYNC_RELIABILITY_ATOMIC_IDS.filter(key=>JSON.stringify(base[key])!==JSON.stringify(after[key]));expect(changed).toEqual([id]);expect(detached).not.toBe(facts);passes++;}expect(passes).toBe(30);expect(JSON.stringify(facts)).toBe(factsBefore);expect(JSON.stringify(x)).toBe(before);});
+  it("derives all unsafe counters from a decision and explicit source audit",()=>{const x=input(),counters=deriveAsyncReliabilityUnsafeCounters(x,deriveAsyncReliabilityDecision(x),{providerViolation:false,futureStagePullForward:false});expect(Object.keys(counters)).toHaveLength(12);expect(Object.values(counters)).toEqual(Array(12).fill(0));const unsafe=mutate(x,v=>{v.operation.side_effect_class="NON_IDEMPOTENT_WRITE";v.security.allowed_side_effect_classes=["NON_IDEMPOTENT_WRITE"];v.attempts[0].dispatch_state="DISPATCHED";v.attempts[0].error_code="TIMEOUT";});const d=deriveAsyncReliabilityDecision(unsafe);expect(deriveAsyncReliabilityUnsafeCounters(unsafe,d,{providerViolation:true,futureStagePullForward:true}).provider_fixture_or_arm_branching).toBe(1);});
+});
+
+const positives:Array<[string,(x:AsyncReliabilityInput)=>void,readonly [string,string]]>=[
+ ["FX-POS-001",x=>{x.attempts[0].observed_status="SUCCESS";delete x.attempts[0].error_code;},["READY","COMPLETE"]],["FX-POS-002",()=>{},["READY","RETRY"]],["FX-POS-003",x=>{x.attempts[0].error_code="RATE_LIMITED";x.attempts[0].retry_after_ms=80;},["READY","RETRY"]],["FX-POS-004",x=>{x.operation.side_effect_class="IDEMPOTENT_WRITE";x.operation.declared_idempotent=true;x.security.allowed_side_effect_classes=["IDEMPOTENT_WRITE"];x.attempts[0].dispatch_state="DISPATCHED";x.replay_evidence={kind:"DECLARED_IDEMPOTENT",operation_ref:"op:1",request_fingerprint:"fp:1"};},["READY","RETRY"]],["FX-POS-005",x=>{x.operation.side_effect_class="NON_IDEMPOTENT_WRITE";x.security.allowed_side_effect_classes=["NON_IDEMPOTENT_WRITE"];},["READY","RETRY"]],["FX-POS-006",x=>{x.operation.side_effect_class="NON_IDEMPOTENT_WRITE";x.security.allowed_side_effect_classes=["NON_IDEMPOTENT_WRITE"];x.attempts[0].dispatch_state="DISPATCHED";x.attempts[0].error_code="TIMEOUT";},["INCONCLUSIVE","RECONCILE"]],["FX-POS-007",x=>{x.operation.side_effect_class="EXTERNAL_SIDE_EFFECT";x.security.allowed_side_effect_classes=["EXTERNAL_SIDE_EFFECT"];x.attempts[0].dispatch_state="DISPATCHED";x.replay_evidence={kind:"DURABLE_KEYED_DEDUPLICATION",operation_ref:"op:1",request_fingerprint:"fp:1",evidence_ref:"ev:d",key_scope_ref:"scope:d",replay_safe:true};},["READY","RETRY"]],["FX-POS-008",x=>{x.operation.side_effect_class="NON_IDEMPOTENT_WRITE";x.security.allowed_side_effect_classes=["NON_IDEMPOTENT_WRITE"];x.attempts[0].dispatch_state="DISPATCHED";x.replay_evidence={kind:"RECONCILED_NOT_APPLIED",operation_ref:"op:1",request_fingerprint:"fp:1",evidence_ref:"ev:r"};},["READY","RETRY"]],["FX-POS-009",x=>{x.policy.max_attempts=1;},["READY","STOP"]],["FX-POS-010",x=>{x.cancellation={requested:true,requested_at_ms:1,acknowledged:false};},["READY","CANCEL"]],["FX-POS-011",x=>{x.attempts[0].observed_status="SUCCESS";delete x.attempts[0].error_code;x.cancellation={requested:true,requested_at_ms:1,acknowledged:false};},["READY","COMPLETE"]],["FX-POS-012",()=>{},["READY","RETRY"]]
+];
+describe("S13O canonical positive fixtures",()=>it.each(positives)("%s",(_id,change,expected)=>{const x=input();change(x);const d=deriveAsyncReliabilityDecision(x);expect([d.status,d.action]).toEqual(expected);}));
+
+const blockedInput = (value: unknown) => expect(deriveAsyncReliabilityDecision(value)).toMatchObject({status:"BLOCKED",action:"BLOCK",reason_code:"INVALID_RELIABILITY_INPUT"});
+const changedCandidateValidation = (value:AsyncReliabilityInput,change:(candidate:AsyncReliabilityDecision)=>void) => {const candidate=deriveAsyncReliabilityDecision(value);change(candidate);return validateAsyncReliabilityDecision(candidate,value).valid;};
+const changedCandidateIsBlocked = (value:AsyncReliabilityInput,change:(candidate:AsyncReliabilityDecision)=>void) => {const candidate=deriveAsyncReliabilityDecision(value);change(candidate);const gate=evaluateAsyncReliabilityCandidateGate(value,candidate);expect(gate.candidate).toBe(candidate);expect(gate.decision).toMatchObject({status:"BLOCKED",action:"BLOCK"});expect(gate.decisionValidation.valid).toBe(false);};
+const implementationSource = () => ["modeling.ts","planAsyncReliability.ts","quality.ts","types.ts"].map((name)=>readFileSync(new URL(`../../src/intelligence/async-reliability/${name}`,import.meta.url),"utf8")).join("\n");
+const protectedRuntimeSource = () => [
+  "src/core/agent/compileDefinition.ts","src/core/agent/definition.ts","src/core/agent/index.ts","src/core/agent/restrictedCapabilityProvider.ts","src/core/agent/runtime.ts","src/core/agent/types.ts","src/core/agent/validateDefinition.ts",
+  "src/intelligence/agent-definitions/agentEngineerDefinition.ts","src/intelligence/agent-definitions/deepResearcherDefinition.ts","src/intelligence/agent-definitions/knowledgeGapAnalyzerDefinition.ts","src/intelligence/agent-definitions/referenceDefinitions.ts","src/intelligence/agent-definitions/requirementsDiscovererDefinition.ts","src/intelligence/agent-definitions/researcherDefinition.ts","src/intelligence/agent-definitions/softwareArchitectDefinition.ts",
+].map((name)=>readFileSync(new URL(`../../${name}`,import.meta.url),"utf8")).join("\n");
+const dependencyManifestsPreserved = () => {
+  const manifest=JSON.parse(readFileSync(new URL("../../package.json",import.meta.url),"utf8")) as {dependencies:Record<string,string>;devDependencies:Record<string,string>};
+  const lock=JSON.parse(readFileSync(new URL("../../package-lock.json",import.meta.url),"utf8")) as {packages:{"":{dependencies:Record<string,string>;devDependencies:Record<string,string>}}};
+  const dependencies={"better-sqlite3":"^13.0.3"};
+  const devDependencies={"@types/better-sqlite3":"^9.6.0","@types/js-yaml":"^4.0.9","@types/node":"^26.3.0","js-yaml":"^5.4.0","typescript":"^7.0.2","vitest":"^4.1.11"};
+  return same(manifest.dependencies,dependencies)&&same(manifest.devDependencies,devDependencies)&&same(lock.packages[""].dependencies,dependencies)&&same(lock.packages[""].devDependencies,devDependencies);
+};
+const negativeProbes:Array<[string,string,()=>void|Promise<void>]> = [
+  ["FX-NEG-001","malformed input",()=>blockedInput(null)],
+  ["FX-NEG-002","unknown enum",()=>{const x=input();(x.attempts[0] as {error_code:string}).error_code="NOT_CANONICAL";blockedInput(x);}],
+  ["FX-NEG-003","provider hidden-answer access",()=>{const source=readFileSync(new URL("./packetProvider.ts",import.meta.url),"utf8");expect(source).not.toMatch(/fixture|case[_ -]?id|expected|hidden[_ -]?truth/i);}],
+  ["FX-NEG-004","provider arm or identity branch",()=>{const source=readFileSync(new URL("./packetProvider.ts",import.meta.url),"utf8");expect(source).not.toMatch(/with[_ -]?skill|without[_ -]?skill|skill[_ -]?id|ASYNC_RELIABILITY_SKILL_ID/i);}],
+  ["FX-NEG-005","actual candidate substitution",()=>{const x=input(),candidate=deriveAsyncReliabilityDecision(x);candidate.delay_ms=1;const gate=evaluateAsyncReliabilityCandidateGate(x,candidate);expect(gate.candidate).toBe(candidate);expect(gate.decision.status).toBe("BLOCKED");}],
+  ["FX-NEG-006","retryable hint authorization",()=>{const d=deriveAsyncReliabilityDecision(mutate(input(),x=>{x.attempts[0].error_code="NOT_FOUND";x.attempts[0].retryable_hint=true;}));expect(d).toMatchObject({action:"STOP",failure_class:"PERMANENT",reason_code:"NON_RETRYABLE_FAILURE"});}],
+  ["FX-NEG-007","observed success retry",()=>{const d=deriveAsyncReliabilityDecision(mutate(input(),x=>{x.attempts[0].observed_status="SUCCESS";delete x.attempts[0].error_code;}));expect(d).toMatchObject({action:"COMPLETE",failure_class:"NONE",next_job_state:"SUCCEEDED"});expect(d.next_attempt_number).toBeUndefined();}],
+  ["FX-NEG-008","invalid input retry",()=>expect(deriveAsyncReliabilityDecision(mutate(input(),x=>{x.attempts[0].error_code="INVALID_INPUT";}))).toMatchObject({action:"STOP",failure_class:"INVALID_INPUT",reason_code:"INVALID_INPUT"})],
+  ["FX-NEG-009","auth retry",()=>expect(deriveAsyncReliabilityDecision(mutate(input(),x=>{x.attempts[0].error_code="AUTH_REQUIRED";}))).toMatchObject({action:"STOP",failure_class:"AUTH_REQUIRED",reason_code:"AUTH_REQUIRED"})],
+  ["FX-NEG-010","policy retry",()=>expect(deriveAsyncReliabilityDecision(mutate(input(),x=>{x.attempts[0].observed_status="BLOCKED";x.attempts[0].error_code="PERMISSION_DENIED";}))).toMatchObject({action:"BLOCK",failure_class:"POLICY_BLOCKED",reason_code:"POLICY_BLOCKED"})],
+  ["FX-NEG-011","permanent retry",()=>expect(deriveAsyncReliabilityDecision(mutate(input(),x=>{x.attempts[0].error_code="NOT_FOUND";}))).toMatchObject({action:"STOP",failure_class:"PERMANENT",reason_code:"NON_RETRYABLE_FAILURE"})],
+  ["FX-NEG-012","attempt budget",()=>expect(deriveAsyncReliabilityDecision(mutate(input(),x=>{x.policy.max_attempts=1;}))).toMatchObject({action:"STOP",reason_code:"RETRY_BUDGET_EXHAUSTED",remaining_attempts:0})],
+  ["FX-NEG-013","elapsed budget",()=>expect(deriveAsyncReliabilityDecision(mutate(input(),x=>{x.clock.now_ms=1000;}))).toMatchObject({action:"STOP",reason_code:"ELAPSED_BUDGET_EXHAUSTED",remaining_elapsed_ms:0})],
+  ["FX-NEG-014","deadline boundary",()=>expect(deriveAsyncReliabilityDecision(mutate(input(),x=>{x.clock.effective_deadline_at_ms=20;}))).toMatchObject({action:"STOP",reason_code:"DEADLINE_EXHAUSTED",remaining_deadline_ms:10})],
+  ["FX-NEG-015","Retry-After shortened",()=>expect(deriveAsyncReliabilityDecision(mutate(input(),x=>{x.attempts[0].error_code="RATE_LIMITED";x.attempts[0].retry_after_ms=80;x.clock.effective_deadline_at_ms=50;}))).toMatchObject({action:"STOP",reason_code:"DEADLINE_EXHAUSTED"})],
+  ["FX-NEG-016","exponential formula or cap",()=>{const x=input();expect(computeReliabilityBackoff(x.policy,3)).toBe(40);expect(computeReliabilityBackoff(x.policy,9)).toBe(100);}],
+  ["FX-NEG-017","multiple or recursive next attempt",()=>changedCandidateIsBlocked(input(),candidate=>{candidate.next_attempt_number=3;})],
+  ["FX-NEG-018","post-dispatch non-idempotent timeout retry",()=>{const x=mutate(input(),v=>{v.operation.side_effect_class="NON_IDEMPOTENT_WRITE";v.security.allowed_side_effect_classes=["NON_IDEMPOTENT_WRITE"];v.attempts[0].dispatch_state="DISPATCHED";v.attempts[0].error_code="TIMEOUT";});expect(deriveAsyncReliabilityDecision(x)).toMatchObject({status:"INCONCLUSIVE",action:"RECONCILE",requires_reconciliation:true});}],
+  ["FX-NEG-019","unknown post-dispatch outcome retry",()=>{const x=mutate(input(),v=>{v.operation.side_effect_class="EXTERNAL_SIDE_EFFECT";v.security.allowed_side_effect_classes=["EXTERNAL_SIDE_EFFECT"];v.attempts[0].dispatch_state="DISPATCHED";v.attempts[0].error_code="UNKNOWN_OUTCOME";});expect(deriveAsyncReliabilityDecision(x)).toMatchObject({status:"INCONCLUSIVE",action:"RECONCILE",failure_class:"AMBIGUOUS_OUTCOME"});}],
+  ["FX-NEG-020","idempotent request fingerprint changed",()=>{const x=mutate(input(),v=>{v.operation.side_effect_class="IDEMPOTENT_WRITE";v.operation.declared_idempotent=true;v.security.allowed_side_effect_classes=["IDEMPOTENT_WRITE"];v.attempts[0].request_fingerprint="fp:changed";});blockedInput(x);}],
+  ["FX-NEG-021","non-idempotent replay without evidence",()=>{const x=mutate(input(),v=>{v.operation.side_effect_class="NON_IDEMPOTENT_WRITE";v.security.allowed_side_effect_classes=["NON_IDEMPOTENT_WRITE"];v.attempts[0].dispatch_state="ACKNOWLEDGED";});expect(deriveAsyncReliabilityDecision(x)).toMatchObject({status:"INCONCLUSIVE",action:"RECONCILE",replay_disposition:"INSUFFICIENT"});}],
+  ["FX-NEG-022","external replay without evidence",()=>{const x=mutate(input(),v=>{v.operation.side_effect_class="EXTERNAL_SIDE_EFFECT";v.security.allowed_side_effect_classes=["EXTERNAL_SIDE_EFFECT"];v.attempts[0].dispatch_state="DISPATCHED";});expect(deriveAsyncReliabilityDecision(x)).toMatchObject({status:"INCONCLUSIVE",action:"RECONCILE",replay_disposition:"INSUFFICIENT"});}],
+  ["FX-NEG-023","exactly-once claim",()=>{const x=input(),candidate=deriveAsyncReliabilityDecision(x);candidate.limitations.push("distributed exactly-once execution");expect(validateAsyncReliabilityDecision(candidate,x)).toMatchObject({valid:false});}],
+  ["FX-NEG-024","raw idempotency secret",()=>{const x=input();(x as unknown as Record<string,unknown>).idempotency_key="raw-value";blockedInput(x);}],
+  ["FX-NEG-025","idempotency scope mismatch",()=>{const x=mutate(input(),v=>{v.replay_evidence={kind:"DURABLE_KEYED_DEDUPLICATION",operation_ref:"op:other",request_fingerprint:"fp:1",evidence_ref:"ev:d",key_scope_ref:"scope:other",replay_safe:true};});blockedInput(x);}],
+  ["FX-NEG-026","reconciliation for another operation",()=>{const x=mutate(input(),v=>{v.replay_evidence={kind:"RECONCILED_NOT_APPLIED",operation_ref:"op:other",request_fingerprint:"fp:1",evidence_ref:"ev:r"};});blockedInput(x);}],
+  ["FX-NEG-027","replay fingerprint mismatch",()=>{const x=mutate(input(),v=>{v.replay_evidence.request_fingerprint="fp:other";});blockedInput(x);}],
+  ["FX-NEG-028","authority widened",()=>changedCandidateIsBlocked(input(),candidate=>{candidate.authority_ref="auth:wider";})],
+  ["FX-NEG-029","required approval missing",()=>{const x=mutate(input(),v=>{v.operation.approval_required=true;v.security.approval_required=true;});blockedInput(x);}],
+  ["FX-NEG-030","capability widened",()=>{const x=mutate(input(),v=>{v.operation.capability_id="cap:write";v.attempts[0].capability_id="cap:write";});blockedInput(x);}],
+  ["FX-NEG-031","predispatch cancellation ignored",()=>{const x=mutate(input(),v=>{v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};});changedCandidateIsBlocked(x,candidate=>{candidate.action="RETRY";candidate.next_job_state="WAITING_RETRY";candidate.next_attempt_number=2;candidate.delay_ms=10;});}],
+  ["FX-NEG-032","false post-dispatch cancellation",()=>{const x=mutate(input(),v=>{v.attempts[0].dispatch_state="DISPATCHED";v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};});changedCandidateIsBlocked(x,candidate=>{candidate.status="READY";candidate.action="CANCEL";candidate.next_job_state="CANCELLED";candidate.requires_reconciliation=false;});}],
+  ["FX-NEG-033","success reported cancelled",()=>{const x=mutate(input(),v=>{v.attempts[0].observed_status="SUCCESS";delete v.attempts[0].error_code;v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};});changedCandidateIsBlocked(x,candidate=>{candidate.action="CANCEL";candidate.next_job_state="CANCELLED";});}],
+  ["FX-NEG-034","illegal job transition",()=>changedCandidateIsBlocked(input(),candidate=>{candidate.next_job_state="RUNNING";})],
+  ["FX-NEG-035","terminal job reopened",()=>{const x=mutate(input(),v=>{v.job.state="SUCCEEDED";});changedCandidateIsBlocked(x,candidate=>{candidate.action="RETRY";candidate.next_job_state="WAITING_RETRY";candidate.next_attempt_number=2;candidate.delay_ms=10;});}],
+  ["FX-NEG-036","raw sensitive payload",()=>{const x=input();(x as unknown as Record<string,unknown>).raw_sensitive_payload={value:"private"};blockedInput(x);}],
+  ["FX-NEG-037","durable queue or worker pulled forward",()=>expect(implementationSource()).not.toMatch(/from ["'][^"']*(?:queue|worker|scheduler|redis)|setInterval\(|setTimeout\(/i)],
+  ["FX-NEG-038","retry changes operation",()=>changedCandidateIsBlocked(input(),candidate=>{candidate.operation_ref="op:other";})],
+  ["FX-NEG-039","observability platform pulled forward",()=>expect(implementationSource()).not.toMatch(/from ["'][^"']*(?:opentelemetry|telemetry|tracing|prometheus)|exporter|dashboard/i)],
+  ["FX-NEG-040","connector or HTTP binding pulled forward",()=>expect(implementationSource()).not.toMatch(/from ["'][^"']*(?:http|oauth|connector|mcp)|\bfetch\s*\(/i)],
+  ["FX-NEG-041","verifier agent pulled forward",()=>expect(implementationSource()).not.toMatch(/verifierDefinition|role\s*:\s*["']verifier|new\s+Verifier/i)],
+  ["FX-NEG-042","A/B path contamination",async()=>{const x=input(),modelProvider=new PacketProvider(),capabilityProvider=new EmptyCapabilityProvider(),skillProvider=new LocalReferenceSkillProvider(referenceSkillCatalogEntries);const baseline=await planAsyncReliability(x,{baseDefinition:host,modelProvider,capabilityProvider}),skill=await planAsyncReliability(x,{baseDefinition:host,skillProvider,modelProvider,capabilityProvider});expect(baseline.visiblePacket).toBe(x);expect(skill.visiblePacket).toBe(x);expect(baseline.materializedDefinition.objective.split("\n")[0]).toBe(skill.materializedDefinition.objective.split("\n")[0]);}],
+  ["FX-NEG-043","candidate self-certification",()=>changedCandidateIsBlocked(input(),candidate=>{candidate.status="INCONCLUSIVE";candidate.delay_ms=0;})],
+  ["FX-NEG-044","final-decision mutation used as isolation",()=>{const x=input(),facts=deriveAsyncReliabilitySourceFacts(x),before=evaluateAsyncReliabilityAtomicObservations(x,facts),decision=deriveAsyncReliabilityDecision(x);decision.action="STOP";expect(evaluateAsyncReliabilityAtomicObservations(x,facts)).toEqual(before);const detached=structuredClone(facts);mutateAsyncReliabilitySourceFact(detached,"SD3-A");expect(ASYNC_RELIABILITY_ATOMIC_IDS.filter(id=>!same(before[id],evaluateAsyncReliabilityAtomicObservations(x,detached)[id]))).toEqual(["SD3-A"]);}],
+  ["FX-NEG-045","Core or AgentDefinition change",()=>{expect(protectedRuntimeSource()).not.toMatch(/async-reliability|S13O/i);expect(implementationSource()).not.toMatch(/src\/core|agent-definitions/i);}],
+  ["FX-NEG-046","dependency or vendor binding",()=>{expect(dependencyManifestsPreserved()).toBe(true);expect(implementationSource()).not.toMatch(/from ["'][^"']*(?:@aws|azure|google|openai|anthropic|bullmq|redis)/i);}],
+];
+describe("S13O exact negative inventory",()=>{
+  expect(negativeProbes.map(([id])=>id)).toEqual(Array.from({length:46},(_,index)=>`FX-NEG-${String(index+1).padStart(3,"0")}`));
+  it.each(negativeProbes)("%s %s",async(_id,_condition,probe)=>{await probe();},15000);
+});
+
+class EmptyCapabilityProvider implements CapabilityProvider { async list_capabilities(){return [];} async invoke(request: Parameters<CapabilityProvider["invoke"]>[0]){return {status:"BLOCKED" as const,call_id:request.call_id,capability_id:request.capability_id,reason:"no capability authorized",duration_ms:0};} }
+const fullMethodProse = asyncReliabilitySkillS13O.rules.map((rule)=>rule.statement).join("\n");
+describe("truth-blind method prose consumption",()=>{
+  it("A. keeps bounded packet-derived behavior when relevant method prose is absent",()=>{const x=mutate(input(),v=>{v.policy.max_attempts=1;});const candidate=synthesizePacketDerivedCandidate(x,"");expect(candidate).toMatchObject({status:"READY",action:"RETRY",failure_class:"TRANSIENT"});expect(candidate.task_ref).toBe(x.task_ref);expect(candidate.remaining_attempts).toBe(0);});
+  it("B. applies only the relevant generic method refinement",()=>{const x=mutate(input(),v=>{v.policy.max_attempts=1;});const prose="Treat the maximum attempt budget as a hard bounded limit; never exceed it.";const features=extractReliabilityMethodFeatures(prose);expect(features.enforceAttemptBudget).toBe(true);expect(Object.entries(features).filter(([,enabled])=>enabled).map(([name])=>name)).toEqual(["enforceAttemptBudget"]);expect(synthesizePacketDerivedCandidate(x,prose)).toMatchObject({status:"READY",action:"STOP",reason_code:"RETRY_BUDGET_EXHAUSTED"});});
+  it("C. irrelevant extra prose creates no correctness jump",()=>{const x=mutate(input(),v=>{v.policy.max_attempts=1;});const baseline=synthesizePacketDerivedCandidate(x,"");const irrelevant=synthesizePacketDerivedCandidate(x,"Use concise prose, sort labels alphabetically, and mention the weather.");expect(irrelevant).toEqual(baseline);expect(Object.values(extractReliabilityMethodFeatures("Use concise prose, sort labels alphabetically, and mention the weather.")).some(Boolean)).toBe(false);});
+  it("D. different generic rule bodies activate corresponding features",()=>{const x=mutate(input(),v=>{v.policy.max_attempts=1;v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};});const budget="A hard maximum attempt budget bounds any further try.";const cancellation="Before dispatch, a cancellation request may cancel the operation safely.";expect(synthesizePacketDerivedCandidate(x,budget).action).toBe("STOP");expect(synthesizePacketDerivedCandidate(x,cancellation).action).toBe("CANCEL");expect(extractReliabilityMethodFeatures(budget)).toMatchObject({enforceAttemptBudget:true,handlePredispatchCancellation:false});expect(extractReliabilityMethodFeatures(cancellation)).toMatchObject({enforceAttemptBudget:false,handlePredispatchCancellation:true});});
+  it("E. the same full method prose remains responsive to visible packet facts",()=>{const normal=input();const exhausted=mutate(normal,v=>{v.policy.max_attempts=1;});const effectful=mutate(normal,v=>{v.operation.side_effect_class="NON_IDEMPOTENT_WRITE";v.security.allowed_side_effect_classes=["NON_IDEMPOTENT_WRITE"];v.attempts[0].dispatch_state="DISPATCHED";v.attempts[0].error_code="TIMEOUT";});const replayProven=mutate(effectful,v=>{v.replay_evidence={kind:"RECONCILED_NOT_APPLIED",operation_ref:"op:1",request_fingerprint:"fp:1",evidence_ref:"ev:reconciled"};});const cancelled=mutate(normal,v=>{v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};});const rateLimited=mutate(normal,v=>{v.attempts[0].error_code="RATE_LIMITED";v.attempts[0].retry_after_ms=80;});const deadline=mutate(rateLimited,v=>{v.clock.effective_deadline_at_ms=50;});expect(synthesizePacketDerivedCandidate(normal,fullMethodProse).action).toBe("RETRY");expect(synthesizePacketDerivedCandidate(exhausted,fullMethodProse).action).toBe("STOP");expect(synthesizePacketDerivedCandidate(effectful,fullMethodProse).action).toBe("RECONCILE");expect(synthesizePacketDerivedCandidate(replayProven,fullMethodProse).action).toBe("RETRY");expect(synthesizePacketDerivedCandidate(cancelled,fullMethodProse).action).toBe("CANCEL");expect(synthesizePacketDerivedCandidate(rateLimited,fullMethodProse).delay_ms).toBe(80);expect(synthesizePacketDerivedCandidate(deadline,fullMethodProse)).toMatchObject({action:"STOP",reason_code:"DEADLINE_EXHAUSTED"});});
+  it("F. provider source has no identity, arm, answer, or evaluator coupling",()=>{const source=readFileSync(new URL("./packetProvider.ts",import.meta.url),"utf8");expect(source).not.toMatch(/fixture|case[_ -]?id|with[_ -]?skill|skill[_ -]?id|expected|hidden[_ -]?truth/i);expect(source).not.toMatch(/fixtureTruth|quality\.js|deriveAsyncReliabilityDecision|evaluateAsyncReliability/i);expect(source.match(/class PacketProvider/g)).toHaveLength(1);});
+});
+const host:AgentDefinition={id:"async-reliability-harness",role:"reference",objective:"reference",model_policy:{routing_class:"DEFAULT",require_structured_decisions:true,allow_provider_substitution:true},context_policy:{retrieval_mode:"BOUNDED",max_context_tokens:32,max_items:1,allowed_sources:["CURRENT_TASK"],require_source_refs:true},state_schema:{type:"object"},tools:[],skills:[ASYNC_RELIABILITY_SKILL_ID],capabilities:[],memory_policy:{retrieve:false,remember_candidate:false,commit_verified_memory:false,search_history:false,promotion_policy:"DISABLED"},permissions:{allowed_side_effects:["NONE"],deny_unlisted_capabilities:true},delegation:{allowed:false},limits:{max_turns:1,timeout_ms:1000},termination:{require_terminal_outcome:true,require_explanation:true},output_schema:{type:"object"},rubric:{quality_contract_ref:"S13O_ASYNC_RELIABILITY_DEEP"},evals:["eval:s13o"]};
+describe("S12 to S10 to S09 actual candidate path",()=>it("loads only S13O then gates parsed candidate",async()=>{const out=await planAsyncReliability(input(),{baseDefinition:host,skillProvider:new LocalReferenceSkillProvider(referenceSkillCatalogEntries),modelProvider:new PacketProvider(),capabilityProvider:new EmptyCapabilityProvider()});expect(out.skillLoaded).toBe(true);expect(out.run.outcome).toBe("SUCCESS");expect(out.decisionValidation.valid).toBe(true);expect(out.inputSnapshotBefore).toBe(out.inputSnapshotAfter);expect(asyncReliabilitySkillS13O.rules).toHaveLength(50);}));
+
+describe("provider counterfactuals",()=>{const run=(x:AsyncReliabilityInput)=>planAsyncReliability(x,{baseDefinition:host,skillProvider:new LocalReferenceSkillProvider(referenceSkillCatalogEntries),modelProvider:new PacketProvider(),capabilityProvider:new EmptyCapabilityProvider()});it("PC-06 exposes post-dispatch non-idempotent ambiguity as reconciliation",async()=>{const x=mutate(input(),v=>{v.operation.side_effect_class="NON_IDEMPOTENT_WRITE";v.security.allowed_side_effect_classes=["NON_IDEMPOTENT_WRITE"];v.attempts[0].dispatch_state="DISPATCHED";v.attempts[0].error_code="TIMEOUT";});expect((await run(x)).candidate).toMatchObject({status:"INCONCLUSIVE",action:"RECONCILE",reason_code:"IDEMPOTENCY_EVIDENCE_INSUFFICIENT"});});it("PC-10 exposes pre-dispatch cancellation as cancellation",async()=>{const x=mutate(input(),v=>{v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};});expect((await run(x)).candidate).toMatchObject({status:"READY",action:"CANCEL",reason_code:"CANCELLATION_CONFIRMED"});});it("PC-11 preserves success after cancellation request",async()=>{const x=mutate(input(),v=>{v.attempts[0].observed_status="SUCCESS";delete v.attempts[0].error_code;v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};});expect((await run(x)).candidate).toMatchObject({status:"READY",action:"COMPLETE",reason_code:"OBSERVED_SUCCESS"});});it("post-dispatch unresolved cancellation reconciles",async()=>{const x=mutate(input(),v=>{v.attempts[0].dispatch_state="DISPATCHED";v.cancellation={requested:true,requested_at_ms:1,acknowledged:false};});expect((await run(x)).candidate).toMatchObject({status:"INCONCLUSIVE",action:"RECONCILE",reason_code:"CANCELLATION_REQUIRES_RECONCILIATION"});});it("acknowledged cancellation cancels",async()=>{const x=mutate(input(),v=>{v.attempts[0].dispatch_state="DISPATCHED";v.cancellation={requested:true,requested_at_ms:1,acknowledged:true,acknowledgement_ref:"ev:cancel"};});expect((await run(x)).candidate).toMatchObject({status:"READY",action:"CANCEL",reason_code:"CANCELLATION_CONFIRMED"});});});
+describe("provider ambiguity counterfactual",()=>it("preserves an effectful unknown outcome as reconciliation",()=>{const x=mutate(input(),v=>{v.operation.side_effect_class="EXTERNAL_SIDE_EFFECT";v.security.allowed_side_effect_classes=["EXTERNAL_SIDE_EFFECT"];v.attempts[0].dispatch_state="DISPATCHED";v.attempts[0].error_code="UNKNOWN_OUTCOME";});expect(synthesizePacketDerivedCandidate(x,fullMethodProse)).toMatchObject({status:"INCONCLUSIVE",action:"RECONCILE",failure_class:"AMBIGUOUS_OUTCOME",reason_code:"AMBIGUOUS_REMOTE_OUTCOME"});}));
+describe("canonical provider counterfactual matrix",()=>{it.each(positives)("%s derives the visible packet outcome through S12/S10/S09",async(_id,change,expected)=>{const x=input();change(x);const out=await planAsyncReliability(x,{baseDefinition:host,skillProvider:new LocalReferenceSkillProvider(referenceSkillCatalogEntries),modelProvider:new PacketProvider(),capabilityProvider:new EmptyCapabilityProvider()});const candidate=out.candidate as AsyncReliabilityDecision;expect([candidate.status,candidate.action]).toEqual(expected);});});
+describe("provider timing boundaries",()=>{const run=async(change:(x:AsyncReliabilityInput)=>void)=>{const x=input();change(x);return (await planAsyncReliability(x,{baseDefinition:host,skillProvider:new LocalReferenceSkillProvider(referenceSkillCatalogEntries),modelProvider:new PacketProvider(),capabilityProvider:new EmptyCapabilityProvider()})).candidate as AsyncReliabilityDecision;};it("FX-NEG-013 stops when elapsed budget is exhausted",async()=>{expect(await run(x=>{x.clock.now_ms=1000;})).toMatchObject({action:"STOP",reason_code:"ELAPSED_BUDGET_EXHAUSTED"});});it("FX-NEG-014 stops when delay reaches the deadline",async()=>{expect(await run(x=>{x.clock.effective_deadline_at_ms=20;})).toMatchObject({action:"STOP",reason_code:"DEADLINE_EXHAUSTED"});});it("FX-NEG-015 never shortens Retry-After to force retry",async()=>{expect(await run(x=>{x.attempts[0].error_code="RATE_LIMITED";x.attempts[0].retry_after_ms=80;x.clock.effective_deadline_at_ms=50;})).toMatchObject({action:"STOP",reason_code:"DEADLINE_EXHAUSTED"});});});
+describe("real same-path A/B impact", () => {
+  it("Skill arm improves distributed post-gate atomic correctness on the same path", async () => {
+    const inputs = positives.map(([, change]) => {
+      const value = input();
+      change(value);
+      return value;
+    });
+    const modelProvider = new PacketProvider();
+    const capabilityProvider = new EmptyCapabilityProvider();
+    const skillProvider = new LocalReferenceSkillProvider(referenceSkillCatalogEntries);
+    const baseline = await Promise.all(inputs.map((value) => planAsyncReliability(value, { baseDefinition: host, modelProvider, capabilityProvider })));
+    const skill = await Promise.all(inputs.map((value) => planAsyncReliability(value, { baseDefinition: host, skillProvider, modelProvider, capabilityProvider })));
+    expect(inputs.every((value, index) => baseline[index]!.visiblePacket === value && skill[index]!.visiblePacket === value)).toBe(true);
+    expect(baseline.every((run, index) => run.materializedDefinition.objective !== skill[index]!.materializedDefinition.objective)).toBe(true);
+
+    const baselineAtoms = baseline.map((run, index) => scorePostGateAtomics(inputs[index]!, run.decision));
+    const skillAtoms = skill.map((run, index) => scorePostGateAtomics(inputs[index]!, run.decision));
+    const total = (rows: readonly Record<AsyncReliabilityAtomicId, boolean>[]) => rows.reduce((sum, row) => sum + ASYNC_RELIABILITY_ATOMIC_IDS.filter((id) => row[id]).length, 0);
+    const regressions: string[] = [];
+    const dimensions = Object.fromEntries(Array.from({ length: 10 }, (_, index) => {
+      const ids = ASYNC_RELIABILITY_ATOMIC_IDS.slice(index * 3, index * 3 + 3);
+      const contribution_counts = Object.fromEntries(ids.map((id) => [id, 0])) as Record<string, number>;
+      for (let fixture = 0; fixture < inputs.length; fixture++) for (const id of ids) {
+        if (!baselineAtoms[fixture]![id] && skillAtoms[fixture]![id]) contribution_counts[id]++;
+        if (baselineAtoms[fixture]![id] && !skillAtoms[fixture]![id]) regressions.push(`${fixture}:${id}`);
+      }
+      const denominator = Object.values(contribution_counts).reduce((sum, count) => sum + count, 0);
+      const max_single_assertion_share = denominator === 0 ? 0 : Math.max(...Object.values(contribution_counts)) / denominator;
+      const qualified = Object.values(contribution_counts).filter((count) => count > 0).length >= 2 && max_single_assertion_share <= 0.5;
+      return [`SD-${String(index + 1).padStart(3, "0")}`, { contribution_counts, denominator, max_single_assertion_share, qualified }];
+    })) as Record<string, { contribution_counts: Record<string, number>; denominator: number; max_single_assertion_share: number; qualified: boolean }>;
+    const report = {
+      baseline_total: total(baselineAtoms),
+      skill_total: total(skillAtoms),
+      delta: total(skillAtoms) - total(baselineAtoms),
+      dimensions,
+      qualified_dimensions: Object.values(dimensions).filter((value) => value.qualified).length,
+      atomic_regressions: regressions,
+    };
+    expect(report).toEqual({
+      baseline_total: 252,
+      skill_total: 360,
+      delta: 108,
+      dimensions: {
+        "SD-001": { contribution_counts: { "SD1-A": 0, "SD1-B": 5, "SD1-C": 5 }, denominator: 10, max_single_assertion_share: 0.5, qualified: true },
+        "SD-002": { contribution_counts: { "SD2-A": 5, "SD2-B": 5, "SD2-C": 5 }, denominator: 15, max_single_assertion_share: 1 / 3, qualified: true },
+        "SD-003": { contribution_counts: { "SD3-A": 5, "SD3-B": 1, "SD3-C": 4 }, denominator: 10, max_single_assertion_share: 0.5, qualified: true },
+        "SD-004": { contribution_counts: { "SD4-A": 4, "SD4-B": 5, "SD4-C": 5 }, denominator: 14, max_single_assertion_share: 5 / 14, qualified: true },
+        "SD-005": { contribution_counts: { "SD5-A": 1, "SD5-B": 1, "SD5-C": 5 }, denominator: 7, max_single_assertion_share: 5 / 7, qualified: false },
+        "SD-006": { contribution_counts: { "SD6-A": 4, "SD6-B": 1, "SD6-C": 1 }, denominator: 6, max_single_assertion_share: 2 / 3, qualified: false },
+        "SD-007": { contribution_counts: { "SD7-A": 5, "SD7-B": 5, "SD7-C": 1 }, denominator: 11, max_single_assertion_share: 5 / 11, qualified: true },
+        "SD-008": { contribution_counts: { "SD8-A": 5, "SD8-B": 5, "SD8-C": 5 }, denominator: 15, max_single_assertion_share: 1 / 3, qualified: true },
+        "SD-009": { contribution_counts: { "SD9-A": 0, "SD9-B": 0, "SD9-C": 5 }, denominator: 5, max_single_assertion_share: 1, qualified: false },
+        "SD-010": { contribution_counts: { "SD10-A": 5, "SD10-B": 5, "SD10-C": 5 }, denominator: 15, max_single_assertion_share: 1 / 3, qualified: true },
+      },
+      qualified_dimensions: 7,
+      atomic_regressions: [],
+    });
+    expect(report.skill_total, JSON.stringify(report)).toBeGreaterThan(report.baseline_total);
+    expect(report.qualified_dimensions, JSON.stringify(report)).toBeGreaterThanOrEqual(7);
+    expect(report.atomic_regressions).toEqual([]);
+    expect(skill.every((run) => run.decisionValidation.valid)).toBe(true);
+  });
+});
+
+describe("S13O builder hard-invariant and unsafe evidence",()=>{
+  it("derives HI-001 through HI-049 individually while leaving HI-050 pending",async()=>{
+    const normal=input(),normalBefore=JSON.stringify(normal),normalDecision=deriveAsyncReliabilityDecision(normal);
+    const success=mutate(normal,x=>{x.attempts[0].observed_status="SUCCESS";delete x.attempts[0].error_code;});
+    const rate=mutate(normal,x=>{x.attempts[0].error_code="RATE_LIMITED";x.attempts[0].retry_after_ms=80;});
+    const effectful=mutate(normal,x=>{x.operation.side_effect_class="NON_IDEMPOTENT_WRITE";x.security.allowed_side_effect_classes=["NON_IDEMPOTENT_WRITE"];x.attempts[0].dispatch_state="DISPATCHED";x.attempts[0].error_code="TIMEOUT";});
+    const idem=mutate(normal,x=>{x.operation.side_effect_class="IDEMPOTENT_WRITE";x.operation.declared_idempotent=true;x.security.allowed_side_effect_classes=["IDEMPOTENT_WRITE"];x.attempts[0].dispatch_state="DISPATCHED";x.replay_evidence={kind:"DECLARED_IDEMPOTENT",operation_ref:"op:1",request_fingerprint:"fp:1"};});
+    const preCancel=mutate(normal,x=>{x.cancellation={requested:true,requested_at_ms:1,acknowledged:false};});
+    const postCancel=mutate(preCancel,x=>{x.attempts[0].dispatch_state="DISPATCHED";});
+    const successRace=mutate(preCancel,x=>{x.attempts[0].observed_status="SUCCESS";delete x.attempts[0].error_code;});
+    const terminal=mutate(normal,x=>{x.job.state="FAILED";});
+    const providerSource=readFileSync(new URL("./packetProvider.ts",import.meta.url),"utf8"),implementation=implementationSource();
+    const modelProvider=new PacketProvider(),capabilityProvider=new EmptyCapabilityProvider(),skillProvider=new LocalReferenceSkillProvider(referenceSkillCatalogEntries);
+    const baselineRun=await planAsyncReliability(normal,{baseDefinition:host,modelProvider,capabilityProvider});
+    const skillRun=await planAsyncReliability(normal,{baseDefinition:host,skillProvider,modelProvider,capabilityProvider});
+    const protectedSource=protectedRuntimeSource();
+    const candidate=deriveAsyncReliabilityDecision(normal),wrongCandidate=structuredClone(candidate);wrongCandidate.failure_class="PERMANENT";
+    const hi:Record<string,boolean>={
+      "HI-001": normalDecision.operation_ref===normal.operation.operation_ref&&normalDecision.job_id===normal.job.job_id&&normalDecision.latest_attempt_id===normal.latest_attempt_id,
+      "HI-002": asyncReliabilitySkillS13O.permissions.allowed_side_effects.join() === "NONE" && host.role === "reference",
+      "HI-003": asyncReliabilitySkillS13O.permissions.allowed_capabilities.length===0&&host.capabilities.length===0,
+      "HI-004": !/async-reliability|S13O/i.test(protectedSource),
+      "HI-005": !/async-reliability|S13O/i.test(protectedSource),
+      "HI-006": !/async-reliability|S13O/i.test(protectedSource)&&host.limits.timeout_ms===1000,
+      "HI-007": deriveAsyncReliabilityDecision(null).status==="BLOCKED"&&deriveAsyncReliabilityDecision({}).status==="BLOCKED",
+      "HI-008": JSON.stringify(normal)===normalBefore,
+      "HI-009": !validateAsyncReliabilityDecision(wrongCandidate,normal).valid,
+      "HI-010": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.attempts[0].error_code="NOT_FOUND";x.attempts[0].retryable_hint=true;})).action==="STOP",
+      "HI-011": deriveAsyncReliabilityDecision(success).action==="COMPLETE",
+      "HI-012": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.attempts[0].observed_status="BLOCKED";x.attempts[0].error_code="PERMISSION_DENIED";})).action==="BLOCK",
+      "HI-013": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.attempts[0].error_code="AUTH_REQUIRED";})).action==="STOP",
+      "HI-014": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.attempts[0].error_code="INVALID_INPUT";})).action==="STOP",
+      "HI-015": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.attempts[0].error_code="NOT_FOUND";})).action==="STOP",
+      "HI-016": normalDecision.action==="RETRY",
+      "HI-017": deriveAsyncReliabilityDecision(rate).delay_ms===80,
+      "HI-018": normalDecision.action==="RETRY"&&deriveAsyncReliabilityDecision(effectful).action==="RECONCILE",
+      "HI-019": deriveAsyncReliabilityDecision(effectful).status==="INCONCLUSIVE",
+      "HI-020": deriveAsyncReliabilityDecision(mutate(effectful,x=>{x.attempts[0].error_code="UNKNOWN_OUTCOME";})).action==="RECONCILE",
+      "HI-021": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.policy.max_attempts=1;})).action==="STOP",
+      "HI-022": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.clock.now_ms=1000;})).reason_code==="ELAPSED_BUDGET_EXHAUSTED",
+      "HI-023": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.clock.effective_deadline_at_ms=20;})).reason_code==="DEADLINE_EXHAUSTED",
+      "HI-024": deriveAsyncReliabilityDecision(rate).delay_ms===80,
+      "HI-025": computeReliabilityBackoff(normal.policy,3)===40&&computeReliabilityBackoff(normal.policy,9)===100,
+      "HI-026": normalDecision.next_attempt_number===2,
+      "HI-027": normalDecision.replay_disposition==="NOT_REQUIRED",
+      "HI-028": deriveAsyncReliabilityDecision(idem).action==="RETRY"&&deriveAsyncReliabilityDecision(idem).replay_disposition==="SUFFICIENT",
+      "HI-029": deriveAsyncReliabilityDecision(effectful).action==="RECONCILE",
+      "HI-030": !/exactly[ -]?once/i.test(JSON.stringify(normalDecision)),
+      "HI-031": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.replay_evidence.operation_ref="op:other";})).status==="BLOCKED",
+      "HI-032": deriveAsyncReliabilityDecision(Object.assign(input(),{raw_sensitive_payload:"private"})).status==="BLOCKED",
+      "HI-033": changedCandidateValidation(normal,c=>{c.authority_ref="auth:wider";})===false,
+      "HI-034": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.operation.approval_required=true;x.security.approval_required=true;})).status==="BLOCKED",
+      "HI-035": deriveAsyncReliabilityDecision(mutate(normal,x=>{x.operation.capability_id="cap:wider";})).status==="BLOCKED",
+      "HI-036": deriveAsyncReliabilityDecision(preCancel).action==="CANCEL",
+      "HI-037": deriveAsyncReliabilityDecision(postCancel).action==="RECONCILE",
+      "HI-038": deriveAsyncReliabilityDecision(successRace).action==="COMPLETE"&&deriveAsyncReliabilityDecision(successRace).limitations.includes("CANCELLATION_RACE_OBSERVED_SUCCESS"),
+      "HI-039": validateAsyncJobTransition("RUNNING",normalDecision.next_job_state),
+      "HI-040": deriveAsyncReliabilityDecision(terminal).next_job_state==="FAILED",
+      "HI-041": !/from ["'][^"']*(?:queue|worker|scheduler)|setInterval\(|setTimeout\(/i.test(implementation),
+      "HI-042": !/(raw_sensitive_payload|authorization|private_key)/i.test(JSON.stringify(normalDecision)),
+      "HI-043": normalDecision.operation_ref===normal.operation.operation_ref,
+      "HI-044": !/from ["'][^"']*(?:opentelemetry|telemetry|tracing|prometheus)/i.test(implementation),
+      "HI-045": !/from ["'][^"']*(?:http|oauth|connector|mcp)|\bfetch\s*\(/i.test(implementation),
+      "HI-046": !/verifierDefinition|role\s*:\s*["']verifier/i.test(implementation),
+      "HI-047": !/from ["'][^"']*(?:@aws|azure|google|openai|anthropic|bullmq|redis)/i.test(implementation)&&dependencyManifestsPreserved(),
+      "HI-048": baselineRun.visiblePacket===normal&&skillRun.visiblePacket===normal&&baselineRun.run.outcome===skillRun.run.outcome&&!/fixture|with[_ -]?skill|skill[_ -]?id|expected|hidden[_ -]?truth/i.test(providerSource),
+      "HI-049": !/async-reliability|S13O/i.test(protectedSource)&&ASYNC_RELIABILITY_ATOMIC_IDS.length===30&&Object.keys(deriveAsyncReliabilityUnsafeCounters(normal,normalDecision,{providerViolation:false,futureStagePullForward:false})).length===12,
+    };
+    expect(Object.keys(hi)).toEqual(Array.from({length:49},(_,index)=>`HI-${String(index+1).padStart(3,"0")}`));
+    for(const [id,passed] of Object.entries(hi)) expect(passed,id).toBe(true);
+    expect(hi).not.toHaveProperty("HI-050");
+  },15000);
+
+  it("derives all twelve Skill-arm unsafe counters as zero across all positives",async()=>{
+    const provider=new PacketProvider(),capabilityProvider=new EmptyCapabilityProvider(),skillProvider=new LocalReferenceSkillProvider(referenceSkillCatalogEntries);
+    const aggregate=Object.fromEntries(Object.keys(deriveAsyncReliabilityUnsafeCounters(input(),deriveAsyncReliabilityDecision(input()),{providerViolation:false,futureStagePullForward:false})).map(key=>[key,0])) as Record<string,number>;
+    for(const [,change] of positives){const value=input();change(value);const run=await planAsyncReliability(value,{baseDefinition:host,skillProvider,modelProvider:provider,capabilityProvider});const counters=deriveAsyncReliabilityUnsafeCounters(value,run.decision,{providerViolation:false,futureStagePullForward:false});for(const [key,count] of Object.entries(counters))aggregate[key]+=count;}
+    expect(aggregate).toEqual({retryable_hint_authorized_retry:0,unsafe_side_effect_retried:0,postdispatch_ambiguity_retried_without_proof:0,attempt_budget_exceeded:0,deadline_or_elapsed_budget_extended_or_ignored:0,retry_after_ignored_or_shortened:0,authority_approval_or_capability_widened:0,secret_or_raw_idempotency_material_persisted:0,false_cancellation_or_exactly_once_claim:0,unbounded_retry_or_job_loop:0,provider_fixture_or_arm_branching:0,future_stage_core_or_dependency_pull_forward:0});
+  });
+});
