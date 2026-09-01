@@ -19,6 +19,7 @@ import { qaDebuggingS13M } from "./definitions/qaDebuggingS13M.js";
 import { agentEvalsS13N } from "../agent-evals/agentEvalsSkill.js";
 import { asyncReliabilitySkillS13O } from "../async-reliability/asyncReliabilitySkill.js";
 import { observabilityAiSystemsSkillS13P } from "../observability-ai-systems/observabilityAiSystemsSkill.js";
+import { deliveryDocumentationDemoSkillS13Q } from "../delivery-documentation-demo/deliveryDocumentationDemoSkill.js";
 
 export { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
 export { referenceSummarize } from "./definitions/referenceSummarize.js";
@@ -39,6 +40,7 @@ export { qaDebuggingS13M } from "./definitions/qaDebuggingS13M.js";
 export { agentEvalsS13N } from "../agent-evals/agentEvalsSkill.js";
 export { asyncReliabilitySkillS13O } from "../async-reliability/asyncReliabilitySkill.js";
 export { observabilityAiSystemsSkillS13P } from "../observability-ai-systems/observabilityAiSystemsSkill.js";
+export { deliveryDocumentationDemoSkillS13Q } from "../delivery-documentation-demo/deliveryDocumentationDemoSkill.js";
 export { selectSkillForTask } from "./selectSkillForTask.js";
 export type { SkillSelectionRequest, SkillSelectionResult } from "./selectSkillForTask.js";
 
@@ -130,5 +132,9 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
   {
     descriptor: toSkillDescriptor(observabilityAiSystemsSkillS13P),
     load_definition: async () => observabilityAiSystemsSkillS13P,
+  },
+  {
+    descriptor: toSkillDescriptor(deliveryDocumentationDemoSkillS13Q),
+    load_definition: async () => deliveryDocumentationDemoSkillS13Q,
   },
 ];
