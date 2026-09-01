@@ -6,31 +6,31 @@
 
 ## Current Objective
 
-S00–S13N are `VERIFIED PASS`. The S13O post-gate A/B evidence FAIL from issue #1 comment `5487221173` is repaired at `a6e035a58923d561f88fae741746de6c9b9603ad` with all builder gates passing, but S13O is not closed: HI-050 requires a different fresh non-authoring, non-fork, read-only verifier. S13P and all later implementation remain forbidden.
+S00–S13O are `VERIFIED PASS`. S13O is factually closed after accepted fresh independent verification and award of HI-050. S13P is the next step and remains `NOT_STARTED`; only its preflight/ChatGPT Authoring-Gate preparation in a new conversation is eligible.
 
 ## Current Repository State
 
 **Branch:** `main`
 
-**Open verification target:** `a6e035a58923d561f88fae741746de6c9b9603ad` (S13O post-gate A/B evidence repair)
+**Closed implementation target:** `a6e035a58923d561f88fae741746de6c9b9603ad` (S13O post-gate A/B evidence repair)
 
-**Worktree status:** S13O repair implementation committed; continuity-only report/state/handoff changes follow in a separate commit; five unrelated pre-existing untracked Markdown scaffolds remain untouched.
+**Worktree status:** S13O implementation and accepted evidence are committed; this factual closure is continuity-only. Five unrelated pre-existing untracked Markdown scaffolds remain untouched.
 
-**Last independently verified stage:** S13N at `2026-08-31T01:52:23Z`. No independent S13O verification has occurred.
+**Last independently verified stage:** S13O at `2026-09-01T14:35:56Z` by a fresh non-authoring, non-fork, read-only verifier; accepted by the control plane.
 
 ## Current Handoff
 
-**Handoff file:** `brain/context/handoffs/2026-09-01T013756Z-s13o-post-gate-ab-independent-verification-required.md`
+**Handoff file:** `brain/context/handoffs/2026-09-01T143556Z-s13o-verified-pass-closure.md`
 
-**Handoff status:** `INDEPENDENT_VERIFICATION_REQUIRED`
+**Handoff status:** `VERIFIED PASS / CLOSED`
 
 ## Current Status
 
-S13O builder evidence passes at repair target `a6e035a58923d561f88fae741746de6c9b9603ad`: Node 24.19.0 typecheck; focused 103/103; full 1152/1152 before and after a genuine dist-absent clean build; 12 positives; all exact 46 negatives; exact-QC 30/30 raw-observation atomic isolation; terminal-state consistency and canonical secret-value regressions; genuine same-path post-gate A/B `280/360 → 360/360` (+80), seven qualified dimensions, and zero regressions; both arms score `run.decision` while candidate gate validity remains separate; HI-001..HI-049 individually true; all 12 unsafe counters zero; canonical Part A Git blobs and protected boundaries unchanged. HI-050 is pending independent verification and was not self-awarded.
+GitHub Issue #1 comment `5495623132` records the fresh independent `PASS` for S13O and awards HI-050; comment `5495715732` accepts that evidence and authorizes factual closure. Accepted evidence includes Node 24.19.0 typecheck; focused 103/103; positives 12/12; exact negatives 46/46; exact-QC isolation 30/30; same-path post-gate A/B `280/360 → 360/360` (+80) with seven qualified dimensions and zero regressions; all 12 unsafe counters zero; full 1152/1152 before and after a genuine dist-absent clean build emitting 711 files; diff hygiene and architecture boundaries PASS.
 
 ## Next Exact Action
 
-Run a different fresh non-authoring, non-fork, read-only executable verification of S13O repair target `a6e035a58923d561f88fae741746de6c9b9603ad`. Do not begin S13P.
+In a new conversation, prepare only the S13P factual preflight and ChatGPT Authoring Gate. S13P remains `NOT_STARTED`; do not implement it or begin any later step.
 
 ### Operating Rule
 

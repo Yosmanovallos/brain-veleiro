@@ -1,6 +1,6 @@
 # S13O Async Reliability — Builder Verification
 
-Status: `BUILDER_PASS / INDEPENDENT_VERIFICATION_REQUIRED`
+Status: `VERIFIED PASS / CLOSED`
 
 Implementation target: `a6e035a58923d561f88fae741746de6c9b9603ad`
 
@@ -8,7 +8,7 @@ Canonical Part A target: `5b7a68980f0bb86103a417740518782c3d0dae0d`
 
 ## Outcome
 
-S13O Part B implements deterministic async reliability planning and validation on the existing S09/S10/S12 path. The builder repaired only the Part-B/evidence defects identified by the independent mechanical FAILs in issue #1 comments `5486936658` and `5487221173`. All builder gates now pass. S13O is not declared closed because HI-050 requires a different fresh non-authoring, non-fork, read-only verifier.
+S13O Part B implements deterministic async reliability planning and validation on the existing S09/S10/S12 path. The builder repaired only the Part-B/evidence defects identified by the independent mechanical FAILs in issue #1 comments `5486936658` and `5487221173`. A fresh non-authoring, non-fork, read-only verifier independently reproduced the final target and awarded HI-050 in issue #1 comment `5495623132`; ChatGPT control-plane accepted the result in comment `5495715732`. S13O is `VERIFIED PASS` and closed.
 
 ## Mechanical FAIL repair
 
@@ -37,7 +37,7 @@ No Part A file was edited by Part B.
 - Full post-build suite: 22 files, 1152/1152 PASS.
 - `git diff --check`: PASS.
 
-The focused suite includes all 12 canonical positives, all exact 46 named negatives, provider counterfactuals, timing boundaries, total fail-closed validation, candidate recomputation, 30/30 detached source-fact atomic isolation, HI-001 through HI-049 individually derived, and all 12 Skill-arm unsafe counters aggregated to zero.
+The focused suite includes all 12 canonical positives, all exact 46 named negatives, provider counterfactuals, timing boundaries, total fail-closed validation, candidate recomputation, 30/30 detached source-fact atomic isolation, HI-001 through HI-050 accepted as PASS, and all 12 Skill-arm unsafe counters aggregated to zero.
 
 ## Guidance-consumption repair
 
@@ -68,6 +68,9 @@ The arms share inputs, host, provider implementation, capability provider, S09/S
 
 Serial repository audits found no diff in `src/core`, `src/intelligence/agent-definitions`, `package.json`, `package-lock.json`, or the three canonical Part A files. Source scans found no vendor binding, network/provider integration, queue/worker/scheduler, telemetry dependency, or persistent retry loop. S13P was not implemented.
 
-## Required next gate
+## Closure evidence and next gate
 
-HI-050 remains pending. A different fresh non-authoring, non-fork, read-only verifier must independently reproduce the target and publish PASS or FAIL. Until then, S13O remains `INDEPENDENT_VERIFICATION_REQUIRED` and S13P remains `NOT_STARTED`.
+- Fresh independent verifier: Issue #1 comment `5495623132`, `PASS`, HI-050 awarded.
+- Control-plane acceptance and closure authorization: Issue #1 comment `5495715732`.
+- Accepted results: focused 103/103; positives 12/12; exact negatives 46/46; atomic isolation 30/30; A/B `280/360 → 360/360` (+80), seven qualified dimensions, zero regressions; all 12 unsafe counters zero; full 1152/1152 pre/post clean build; 711 build files; diff hygiene and architecture boundaries PASS.
+- S13O is closed. S13P remains `NOT_STARTED`; only its factual preflight and ChatGPT Authoring Gate may begin in a new conversation.

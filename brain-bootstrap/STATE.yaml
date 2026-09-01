@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
 current_step: S13O
-status: INDEPENDENT_VERIFICATION_REQUIRED
+status: PASS
 primary_builder: codex
-independent_verifier: pending-fresh-non-authoring-non-fork-read-only
+independent_verifier: codex-fresh-non-authoring-non-fork-read-only
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-08-31T01:52:23Z"
+last_verified_at: "2026-09-01T14:35:56Z"
 steps:
   S00: PASS
   S01: PASS
@@ -35,7 +35,7 @@ steps:
   S13L: PASS
   S13M: PASS
   S13N: PASS
-  S13O: IN_PROGRESS
+  S13O: PASS
   S13P: NOT_STARTED
   S13Q: NOT_STARTED
   S13R: NOT_STARTED
@@ -617,7 +617,7 @@ repository:
     note: "VERIFIED PASS. Implementation target a36f387fcb829b10fbea07255cd2b683cee74915 was independently verified at documentation HEAD 5559065353535fd333898afe7fe35b9ba9c7ef32 and accepted by ChatGPT control plane in issue comment 5472786135 after fresh-verifier relay 5472784727. Node 24 typecheck, focused 50/50, full 1049/1049 pre/post genuine dist-absent build, eight provider counterfactuals, exact negatives 32/32, detached isolation 24/24, post-gate A/B 0/192 to 133/192 (+133), six qualified dimensions, zero regressions, HI-001..050 PASS, eight unsafe counters zero, architecture boundaries PASS, and unchanged tracked verifier worktree are accepted facts. S13O implementation remains NOT_STARTED; only its preflight/authoring gate is eligible."
 
   async_reliability:
-    status: INDEPENDENT_VERIFICATION_REQUIRED
+    status: PASS
     part_a_commit: "5b7a68980f0bb86103a417740518782c3d0dae0d"
     part_a_blobs:
       skill: "f4e151a79f1768465c711c5a433bd43df325430d"
@@ -630,11 +630,15 @@ repository:
     post_gate_ab_repair_commit: "a6e035a58923d561f88fae741746de6c9b9603ad"
     builder_report: "brain-bootstrap/reports/S13O-async-reliability-verification.md"
     independent_verification_handoff: "brain/context/handoffs/2026-09-01T013756Z-s13o-post-gate-ab-independent-verification-required.md"
-    contract_tests: "Focused S13O 103/103 PASS: exact 12 positives, exact 46 negatives, A-F prose/guidance-consumption evidence, provider counterfactuals, exact-QC 30/30 raw-observation atomic isolation, four-state terminal consistency regressions, HI-001..HI-049 individually true, and all 12 Skill-arm unsafe counters zero. HI-050 was not self-awarded."
+    independent_verification_comment_id: 5495623132
+    control_plane_acceptance_comment_id: 5495715732
+    independently_verified_at: "2026-09-01T14:35:56Z"
+    closure_handoff: "brain/context/handoffs/2026-09-01T143556Z-s13o-verified-pass-closure.md"
+    contract_tests: "Focused S13O 103/103 PASS: exact 12 positives, exact 46 negatives, A-F prose/guidance-consumption evidence, provider counterfactuals, exact-QC 30/30 raw-observation atomic isolation, four-state terminal consistency regressions, HI-001..HI-050 PASS, and all 12 Skill-arm unsafe counters zero."
     quality_checks: "WSL Node 24.19.0 typecheck PASS; full 1152/1152 pre-build; exact repo-local dist proved absent; clean build PASS with 711 files; full 1152/1152 post-build; diff-check PASS; protected Core/AgentDefinition/package/Part A diff empty; canonical Part A filtered Git blobs exactly match expected hashes."
     skill_vs_no_skill: "Same frozen raw source observations, visible packets, PacketProvider implementation, S09/S10/S12 path, parser, candidate gate, evaluator, and provider-blind truth. Candidate gate validity remains a separate audit observation; both arms score only post-gate run.decision. Baseline 280/360; Skill 360/360; delta +80; seven qualified dimensions; zero atomic regressions."
     boundaries: "No Core special branch, AgentDefinition change, package dependency, vendor binding, queue/worker/scheduler, network/provider integration, persistent handle, S13P implementation, or semantic edit to canonical Part A."
-    note: "The issue #1 comment 5486936658 mechanical FAIL was repaired only in Part B/evidence: real raw-fact isolation, exact QC atomic ownership/scoring, recursive canonical secret-value rejection/sanitization, and terminal-state consistency. The subsequent issue #1 comment 5487221173 post-gate evidence FAIL was repaired by scoring both A/B arms from run.decision after candidate validation/gate while retaining candidate_gate_valid separately. Builder evidence is PASS at repair target a6e035a58923d561f88fae741746de6c9b9603ad, but S13O remains open until HI-050 is reproduced by a different fresh non-authoring non-fork read-only verifier. S13P remains NOT_STARTED and forbidden."
+    note: "VERIFIED PASS. A fresh non-authoring, non-fork, read-only verifier independently reproduced target a6e035a58923d561f88fae741746de6c9b9603ad and awarded HI-050 in issue #1 comment 5495623132; ChatGPT control-plane accepted the result in comment 5495715732. Focused 103/103, positives 12/12, exact negatives 46/46, atomic isolation 30/30, post-gate A/B 280/360 to 360/360 (+80) with seven qualified dimensions and zero regressions, all 12 unsafe counters zero, full 1152/1152 pre/post clean build, 711 build files, diff hygiene and architecture boundaries PASS. S13P remains NOT_STARTED; only its fresh preflight/ChatGPT Authoring Gate is eligible."
 
 build_day:
   date: "2026-08-29"
