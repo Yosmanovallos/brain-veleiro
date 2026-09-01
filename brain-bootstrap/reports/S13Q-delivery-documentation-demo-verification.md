@@ -416,3 +416,185 @@ above against the exact new candidate SHA recorded in the issue #1 `CODEX_HANDOF
 comment and the complete integrated S13Q DEEP Quality Contract. `HI-052` is not
 awarded by this builder; `steps.S13Q` remains `NOT_STARTED`; S13R remains
 `NOT_STARTED`.
+
+---
+
+## Source-fact isolation repair #3 (shared raw source, 2026-09-01)
+
+Third bounded repair of the atomic-isolation mechanism. Control-plane
+rejection #2 (`5500744002`) required replacing the per-atomic derived-decision
+projection isolation with **one shared detached RAW source model upstream of
+`buildDeliveryPackage`**, mutating one real input/evidence/audit field, rerunning
+the real producer + gate, and recomputing all 30 observations from that one
+rebuilt decision. Scope: `quality.ts` and the S13Q test file only. Canonical
+Part A untouched; no waiver/dependency map invented.
+
+### Rejected mechanisms (both retained only as anti-tautology regressions)
+
+| candidate | mechanism | why rejected |
+|---|---|---|
+| `cf49b45` | `mutateDeliverySourceFact` overwrites the already-derived `expected_observation` cell | proves comparison-cell independence, not source-fact ownership |
+| `1782a16` | per-atomic detached **derived-decision** projections (`buildDeliveryAtomicProjection`); `DELIVERY_ATOMIC_OWNED_SOURCE.mutate` edits `package.*` / `coverage.*` / `blockers` / `warnings` of that clone | mutates a **producer output**, not an underlying `DeliveryDocumentationDemoInput` / evidence fact; cross-assertion non-change is guaranteed by per-atomic clone separation, not demonstrated by rerunning the real producer |
+
+Both are reconstructed as probe-shaped records by
+`legacyExpectedObservationMutationEvidence` and
+`legacyDerivedDecisionMutationEvidence`; `isValidSourceFactIsolationEvidence`
+returns **`false`** for both and `classifyDeliveryAtomicIsolation` returns
+**`FAIL`** for both (diff paths carry `expected_observation` /
+`decision.*` segments — outside `input.` / `audit.`). A real STRICT probe
+returns `true`. `mutateDeliverySourceFact` is retained and exported **only** for
+regression (a).
+
+### The accepted mechanism (shared raw `{ input, audit }` source model)
+
+- **`observeAtomic(id, input, decision, audit)`** — the ONE real predicate. The
+  30 `case` bodies are unchanged; the projection indirection layer
+  (`buildDeliveryAtomicProjection`, `observeAtomicFromSourceFact`) is **deleted**.
+  Output byte-identical to `1782a16` — verified by a 840-line snapshot of all 30
+  observations across `baseInput`, `minimalInput` and the 12 A/B scenarios, for
+  both the canonical decision and a `package: null` decision (`diff` empty). So
+  `buildDeliveryPackage`, `evaluateDeliveryCandidateGate`,
+  `deriveDeliverySourceFacts`, `evaluateDeliveryAtomicObservations` (the A/B
+  scorer), `deriveDeliveryUnsafeCounters` and `planDeliveryDocumentationDemo` are
+  unaffected — confirmed by the frozen A/B table passing **unchanged**.
+- **`DeliveryAtomicRawSource = { input: DeliveryDocumentationDemoInput; audit: DeliveryEvaluationAudit }`**
+  and **`deliveryAtomicRawSource(input, audit?) = structuredClone({ input, audit })`** —
+  the single shared detached raw model. It carries **no**
+  `DeliveryDocumentationDemoResult` / `package` / `coverage` / `blockers` /
+  `warnings`.
+- **`DELIVERY_ATOMIC_OWNED_SOURCE[id] = { owned_fact, source_family, mutate }`** —
+  30 entries. Each `owned_fact` names one real `DeliveryDocumentationDemoInput`
+  field (`delivery_identity`, `repository_facts`, `verification_evidence`,
+  `architecture_facts`, `demo_surface`, `limitations`, `next_step_candidates`,
+  `policy`) or explicit detached `audit` evidence; the 30 names are **pairwise
+  distinct** and none contains a `decision` / `package` / `coverage` / `blockers`
+  / `warnings` / `expected_observation` / `correct` segment (asserted). Each
+  `mutate(src)` changes exactly one real field of the cloned raw source and
+  throws `ISOLATION_TARGET_ABSENT:<path>` if the target is absent.
+- **`probeDeliveryAtomicSourceFactIsolation(id, input, audit?)`** — freezes
+  `origSrc = deliveryAtomicRawSource(...)`, `origDecision = buildDeliveryPackage(origSrc.input)`,
+  and `origObs[k] = observeAtomic(k, origSrc.input, origDecision, origSrc.audit)`
+  for all 30. Then `mut = structuredClone(origSrc)`,
+  `DELIVERY_ATOMIC_OWNED_SOURCE[id].mutate(mut)`,
+  `mutDecision = buildDeliveryPackage(mut.input)`,
+  `mutObs[k] = observeAtomic(k, mut.input, mutDecision, mut.audit)` for all 30.
+  Returns `governing_changed`, `changed`, `cross`,
+  `mutated_field_paths = jsonDiffPaths(origSrc, mut)`, `producer_reran`
+  (JSON inequality of the two canonical decisions), `original_source_unchanged`,
+  `original_decision_unchanged`, `blocked`.
+- **`classifyDeliveryAtomicIsolation(probe)`** → `STRICT` | `STRUCTURAL_DEPENDENCY`
+  | `GATE_CLASS` | `FAIL`. `FAIL` if the shared raw source or frozen canonical
+  decision was disturbed, or any diff path is outside `input.` / `audit.` or
+  touches a derived segment, or (`producer_reran` is false and `source_family`
+  is not `audit`). Then `GATE_CLASS` for A25 (forced `BLOCKED`) / A27 (governing
+  never moves + forced `BLOCKED`); `STRICT` if the governing observation moved
+  with zero cross; `STRUCTURAL_DEPENDENCY` if the governing observation moved and
+  `cross ⊆ DELIVERY_ATOMIC_STRUCTURAL_DEPENDENCIES[id].also_changes`.
+
+### The 19 / 9 / 2 split (empirically measured, not assumed)
+
+Running the real mechanism against `baseInput()`:
+
+- **19 / 30 STRICT** — governing observation moves, **zero** cross-assertion
+  change: `A02 A03 A07 A08 A10 A11 A12 A14 A15 A17 A18 A19 A20 A21 A22 A24 A28 A29 A30`.
+- **9 / 30 STRUCTURAL_DEPENDENCY** — governing observation moves; the canonical
+  `buildDeliveryPackage` necessarily co-moves a small declared sibling set
+  (`DELIVERY_ATOMIC_STRUCTURAL_DEPENDENCIES`, each with a verbatim `forcing`
+  string traceable to a `deliveryModel.ts` line). Measured `cross` ⊆ declared
+  `also_changes` for every one:
+
+  | id | owned source mutation | measured cross | forcing (deliveryModel.ts) |
+  |---|---|---|---|
+  | A01 | `delivery_identity.revision_ref` | `[A24]` | `buildProvenance` :505 threads `revision_ref` into `pkg.provenance.revision_ref` which A24 reads |
+  | A04 | `verification_evidence[ev-test-parser].subject_ref` | `[A03]` | `buildClaims`/`deriveClaimStatus` :360-383 — A03 observes the whole `delivered` [subject,status] table; `claims_total`/`claims_with_evidence` are claim-status functions |
+  | A05 | `repository_facts[rf-feat-reporter].subject_ref` | `[A03]` | same shared claim table; A05's UNKNOWN-count / AVAILABLE_NOT_VERIFIED-subjects are claim-status functions |
+  | A06 | `repository_facts[rf-feat-builder].source_ref` | `[A03]` | same shared claim table; A06's DEFERRED-subjects is a claim-status function |
+  | A09 | remove all `architecture_facts[kind=BOUNDARY]` | `[A08]` | `architecture_summary.partial = components.length===0 || boundaries.length===0` :396; A08 observes boundaries (declared also_changes `[A07,A08]` — A07 unmoved, subset holds) |
+  | A13 | `demo_surface.steps` last removed | `[A14,A15]` | `buildDemo` :422-450 — A13's `demo_script.length` element needs a step add/remove, which moves the per-step tuples A14/A15 observe |
+  | A16 | `policy.suppress_limitation_ids = ["lim-crlf"]` | `[A18]` | `buildLimitations` :452-466 — A16 and A18 both `.map` the same `pkg.limitations` array and read `limitation_id` |
+  | A23 | append `ev-probe-fail` FAIL (subject `repo`) | `[A22]` | `detectEvidenceConflicts` :513-527 — inducing a same-subject PASS+FAIL conflict requires growing the evidence set A22's evidence-index observation reads |
+  | A26 | add `SAFE_ENV` fact + `rf-cmd-build.value` uses `${PROBE_VAR}` | `[A12]` | A26 reads env-var tokens inside `pkg.setup_and_run` command text that A12 also observes; :285 `INVENTED_ENV_VARIABLE` |
+
+- **2 / 30 GATE_CLASS** — package-level safety-gate invariants no source
+  mutation can move in isolation:
+  - **A25** — `repository_facts[rf-cmd-build].value = "TOKEN=sk-deadbeefdeadbeef01 npm run build"`.
+    `validateDeliveryInput` short-circuits on `SECRET_MATERIAL` (:147, :194) →
+    `package: null`. A25's blocker-count element exists only on a blocked
+    package. Verified by `N33` / `N34` / `N35` + `UC06`.
+  - **A27** — `repository_facts[rf-feat-builder].value = "this module is production-ready"`
+    (byte-identical to the `overclaim` fixture in `S13Q-HI-022`, test line ~690).
+    `validateDeliveryInput` catches raw-log/raw-env (:148-149) and overclaim
+    (:254) before the material reaches `collectStrings(decision)`. Measured
+    `governing_changed === false` and `blocked === true`. Verified by `N07` /
+    `N35` / `N36` + `UC05` / `UC06`.
+
+`FAIL = 0` across all 30.
+
+### Anti-tautology regressions (both mechanical)
+
+- `isValidSourceFactIsolationEvidence(legacyExpectedObservationMutationEvidence(baseInput(), id))` → **`false`** for A01/A14/A29; `classify` → `FAIL`.
+- `isValidSourceFactIsolationEvidence(legacyDerivedDecisionMutationEvidence(baseInput(), id))` → **`false`** for A01/A14/A29; `classify` → `FAIL`.
+- `isValidSourceFactIsolationEvidence(probeDeliveryAtomicSourceFactIsolation(id, baseInput()))` → **`true`** for real STRICT probes A02/A14/A29.
+
+### Fresh QA numbers (Node `v24.19.0`, npm `11.17.0`) — all recomputed
+
+| gate | result |
+|---|---|
+| `tsc --noEmit` | PASS (0 errors) |
+| focused `tests/delivery-documentation-demo/` | **81/81** |
+| canonical positives `P01..P10` | 10/10 |
+| canonical negatives `N01..N40` | 40/40 |
+| owned-source-fact isolation `A01..A30` | **30/30** — `classify` never `FAIL`; 19 STRICT / 9 STRUCTURAL_DEPENDENCY / 2 GATE_CLASS; every diff path under `input.` / `audit.`; shared raw source + canonical decision byte-stable |
+| 30 owned fields pairwise-distinct, no derived segment | PASS |
+| anti-tautology — `expected_observation` mutation | REJECTED (`isValid` false, `classify` FAIL) |
+| anti-tautology — derived `decision.*` mutation | REJECTED (`isValid` false, `classify` FAIL) |
+| `observeAtomic` byte-identity vs `1782a16` | PASS — 840-line snapshot `diff` empty |
+| per-feature ablation | 7/7 |
+| hard invariants `S13Q-HI-001..030` | 30/30 |
+| unsafe counters `UC01..UC12` | 12/12 zero on positives and Skill-arm; each independently fireable |
+| actual-candidate gate / real S12→S10→S09 path | PASS |
+| **A/B baseline total correct** | **126** (fresh recomputation) |
+| **A/B Skill total correct** | **360** (fresh) |
+| **A/B delta** | **+234** (fresh) |
+| **A/B qualified dimensions** | **8** (`D01..D08`; threshold ≥ 7) |
+| A/B per-dimension contributions | `D01..D08 = {9,9,9}` each; `D09 = {A25:0, A26:9, A27:0}`; `D10 = {A28:0, A29:9, A30:0}` |
+| A/B atomic regressions | **0** |
+| A/B per-scenario flips | `[0,0,0,26,26,26,26,26,26,26,26,26]` |
+| A/B baseline gate-valid scenarios | **3** (the minimal scenarios) |
+| A/B max single-assertion share per qualified dim | 9/27 = 0.333 (≤ 0.50); global 9/234 ≈ 0.038 |
+| A/B Skill-arm unsafe counters | 12/12 zero |
+| full suite before clean build | **1321/1321** across 24 files |
+| genuine `rm -rf dist` (absent) → `tsc -p tsconfig.json` | clean — **786** files (`262 .js` + 262 `.d.ts` + 262 maps) |
+| full suite after build | **1321/1321** across 24 files — equal pre/post |
+| `git diff --check` on `quality.ts` + S13Q test | clean |
+| allowed-path audit (`git diff --stat` vs `cf49b45`) | only `quality.ts`, the S13Q test, this report, and the handoff file(s) |
+| canonical Part A blobs at HEAD | skill `1198834124dc32c34721130566efdc5fda78465f`, quality `5f931e5372ff0319eee6e86fe0a1879c0300153f`, spec `6d7078633c1d0a90e8204a277de6100ed517a112` — all three match |
+
+The frozen A/B table in the test was recomputed and matches the prior values
+(`126 / 360 / +234 / 8 dims / flips [0,0,0,26×9]`); no frozen expectation
+required updating.
+
+### Part A §21 ruling requested
+
+Strict single-source isolation holds for **19 / 30** atomics. **9 / 30** carry a
+producer-forced structural dependency: Part A §21 defines multiple atomics over
+one `pkg` array (claims / limitations / demo steps / evidence) or the revision
+spine, so one honest source mutation necessarily co-moves the declared sibling
+set. **2 / 30** (A25, A27) are package-level safety-gate invariants that no
+source mutation can move in isolation because `validateDeliveryInput`
+fail-closes before the material reaches the producer. The QC
+`source_fact_isolation.rule` says "governing assertion **FAMILY**" (undefined —
+the QC has only dimensions + atomics) while the Skill says "single-observation
+isolation". Control-plane ruling requested: (a) declare these 9 + 2 dependencies
+in semantic contract §21 (the QC rule already anticipates "unless the semantic
+contract explicitly declares a dependency"), OR (b) re-decompose the coupled
+observations to be source-disjoint, OR (c) define "family" as the 3-assertion
+`semantic_dimension`.
+
+### Still required
+
+A DIFFERENT fresh non-authoring, non-fork, read-only verifier must reproduce the
+above against the exact new candidate SHA recorded in the issue #1
+`CODEX_HANDOFF` comment (`INDEPENDENT_VERIFICATION_REQUIRED`) and the complete
+integrated S13Q DEEP Quality Contract. `HI-052` is not awarded by this builder;
+`steps.S13Q` remains `NOT_STARTED`; S13R remains `NOT_STARTED`.

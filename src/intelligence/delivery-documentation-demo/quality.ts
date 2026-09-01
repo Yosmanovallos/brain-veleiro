@@ -115,18 +115,15 @@ function defaultAudit(input: DeliveryDocumentationDemoInput): DeliveryEvaluation
 }
 
 // ---------------------------------------------------------------------------
-// Owned raw source-fact projection layer
-// (QC `source_fact_isolation`; semantic contract §21)
+// The ONE real atomic predicate.
 //
-// Each A01..A30 owns a detached, deep-cloned RAW projection of exactly the
-// input / decision-section / audit fields its predicate reads. The real
-// predicate body lives ONCE, in `observeAtomicFromSourceFact`, and is
-// recomputed from that projection. `observeAtomic` is a thin wrapper that
-// builds the projection from `(input, decision, audit)` and delegates — its
-// output is byte-identical to the pre-refactor single switch, so
+// `observeAtomic(id, input, decision, audit)` is the single observer body for
+// all 30 atomics. Its output is byte-identical to the pre-refactor switch, so
 // `buildDeliveryPackage`, the candidate gate, `evaluateDeliveryAtomicObservations`
 // A/B scoring, the unsafe counters and `planDeliveryDocumentationDemo` are
-// unaffected.
+// unaffected. The owned-source-fact isolation machinery below feeds this exact
+// function a mutated shared raw `{ input, audit }` model plus the real rebuilt
+// canonical decision — it never re-implements the predicate.
 // ---------------------------------------------------------------------------
 
 type DeepMutable<T> = T extends readonly (infer U)[]
@@ -135,25 +132,12 @@ type DeepMutable<T> = T extends readonly (infer U)[]
     ? { -readonly [K in keyof T]: DeepMutable<T[K]> }
     : T;
 
-export interface DeliveryAtomicProjection {
-  input: DeepMutable<Partial<DeliveryDocumentationDemoInput>>;
-  decision: DeepMutable<Partial<DeliveryDocumentationDemoResult>>;
-  audit: DeepMutable<Partial<DeliveryEvaluationAudit>>;
-}
-
-/** A detached raw slice owned by exactly one atomic. Note: no `expected_observation`. */
-export interface DeliveryAtomicSourceFact {
-  field_family: string;
-  owned_fact: string;
-  projection: DeliveryAtomicProjection;
-}
-export type DeliveryAtomicSourceFacts = Record<DeliveryAtomicId, DeliveryAtomicSourceFact>;
-
-/** The real predicate for one atomic, reading ONLY its own detached raw projection. */
-export function observeAtomicFromSourceFact(id: DeliveryAtomicId, fact: DeliveryAtomicSourceFact): unknown {
-  const input = fact.projection.input as unknown as DeliveryDocumentationDemoInput;
-  const decision = fact.projection.decision as unknown as DeliveryDocumentationDemoResult;
-  const audit = fact.projection.audit as unknown as DeliveryEvaluationAudit;
+function observeAtomic(
+  id: DeliveryAtomicId,
+  input: DeliveryDocumentationDemoInput,
+  decision: DeliveryDocumentationDemoResult,
+  audit: DeliveryEvaluationAudit,
+): unknown {
   const pkg = decision.package ?? null;
   const serialized = JSON.stringify(decision);
   const text = collectStrings(decision);
@@ -273,130 +257,124 @@ export function observeAtomicFromSourceFact(id: DeliveryAtomicId, fact: Delivery
   }
 }
 
-/** Builds atomic `id`'s owned raw projection from the live evaluation inputs (deep-cloned, detached). */
-export function buildDeliveryAtomicProjection(
-  id: DeliveryAtomicId,
-  input: DeliveryDocumentationDemoInput,
-  decision: DeliveryDocumentationDemoResult,
-  audit: DeliveryEvaluationAudit,
-): DeliveryAtomicProjection {
-  const pkg = decision.package;
-  type PartialDecision = Partial<DeliveryDocumentationDemoResult>;
-  const inp = (keys: (keyof DeliveryDocumentationDemoInput)[]): Partial<DeliveryDocumentationDemoInput> =>
-    Object.fromEntries(keys.map((k) => [k, input[k]])) as Partial<DeliveryDocumentationDemoInput>;
-  const aud = (keys: (keyof DeliveryEvaluationAudit)[]): Partial<DeliveryEvaluationAudit> =>
-    Object.fromEntries(keys.map((k) => [k, audit[k]])) as Partial<DeliveryEvaluationAudit>;
-  const pk = (keys: string[]): PartialDecision => ({
-    package: pkg
-      ? (Object.fromEntries(keys.map((k) => [k, (pkg as unknown as Record<string, unknown>)[k]])) as unknown as DeliveryDocumentationDemoResult["package"])
-      : null,
-  });
-  const withTop = (base: PartialDecision, keys: (keyof DeliveryDocumentationDemoResult)[]): PartialDecision => {
-    const out: Record<string, unknown> = { ...base };
-    for (const k of keys) out[k] = decision[k];
-    return out as PartialDecision;
-  };
-  let raw: { input: Partial<DeliveryDocumentationDemoInput>; decision: PartialDecision; audit: Partial<DeliveryEvaluationAudit> };
-  switch (id) {
-    case "A01": raw = { input: inp(["delivery_identity"]), decision: pk(["identity", "provenance"]), audit: {} }; break;
-    case "A02": raw = { input: {}, decision: pk(["identity", "executive_summary"]), audit: {} }; break;
-    case "A03": raw = { input: {}, decision: pk(["executive_summary"]), audit: {} }; break;
-    case "A04": raw = { input: {}, decision: withTop(pk(["executive_summary"]), ["coverage"]), audit: {} }; break;
-    case "A05": raw = { input: {}, decision: pk(["executive_summary"]), audit: {} }; break;
-    case "A06": raw = { input: {}, decision: pk(["executive_summary"]), audit: {} }; break;
-    case "A07": raw = { input: {}, decision: pk(["architecture_summary"]), audit: {} }; break;
-    case "A08": raw = { input: {}, decision: pk(["architecture_summary"]), audit: {} }; break;
-    case "A09": raw = { input: {}, decision: withTop(pk(["architecture_summary"]), ["blockers"]), audit: {} }; break;
-    case "A10": raw = { input: {}, decision: pk(["setup_and_run"]), audit: {} }; break;
-    case "A11": raw = { input: {}, decision: withTop(pk(["setup_and_run"]), ["coverage"]), audit: {} }; break;
-    case "A12": raw = { input: {}, decision: withTop(pk(["setup_and_run"]), ["blockers"]), audit: {} }; break;
-    case "A13": raw = { input: inp(["demo_surface"]), decision: withTop(pk(["demo_script"]), ["blockers"]), audit: {} }; break;
-    case "A14": raw = { input: {}, decision: pk(["demo_script"]), audit: {} }; break;
-    case "A15": raw = { input: {}, decision: withTop(pk(["demo_script"]), ["coverage"]), audit: {} }; break;
-    case "A16": raw = { input: {}, decision: pk(["limitations"]), audit: {} }; break;
-    case "A17": raw = { input: {}, decision: pk(["limitations", "executive_summary"]), audit: {} }; break;
-    case "A18": raw = { input: {}, decision: pk(["limitations"]), audit: {} }; break;
-    case "A19": raw = { input: {}, decision: pk(["next_steps"]), audit: {} }; break;
-    case "A20": raw = { input: {}, decision: withTop(pk(["next_steps"]), ["blockers"]), audit: {} }; break;
-    case "A21": raw = { input: {}, decision: withTop(pk(["next_steps"]), ["blockers"]), audit: {} }; break;
-    case "A22": raw = { input: {}, decision: withTop(pk(["evidence_index"]), ["coverage"]), audit: {} }; break;
-    case "A23": raw = { input: {}, decision: withTop(pk(["provenance"]), ["coverage", "warnings"]), audit: {} }; break;
-    case "A24": raw = { input: {}, decision: pk(["provenance"]), audit: {} }; break;
-    case "A25": raw = { input: {}, decision: { ...decision }, audit: {} }; break;
-    case "A26": raw = { input: inp(["repository_facts"]), decision: pk(["setup_and_run"]), audit: {} }; break;
-    case "A27": raw = { input: {}, decision: { ...decision }, audit: {} }; break;
-    case "A28": raw = { input: { ...input }, decision: {}, audit: aud(["input_snapshot_before", "input_snapshot_after"]) }; break;
-    case "A29": raw = { input: {}, decision: { ...decision }, audit: aud(["candidate_gate_valid", "self_certified"]) }; break;
-    case "A30": raw = { input: {}, decision: {}, audit: aud(["core_or_contract_changed", "provider_fixture_or_arm_branching", "hidden_io_or_clock"]) }; break;
-    default: raw = { input: {}, decision: {}, audit: {} };
-  }
-  return structuredClone(raw) as DeliveryAtomicProjection;
+// ---------------------------------------------------------------------------
+// Owned-source-fact isolation — ONE shared detached RAW `{ input, audit }`
+// model upstream of `buildDeliveryPackage` (QC `source_fact_isolation`,
+// semantic contract §21). Repair #3 (2026-09-01): rejected mechanisms were
+//   - cf49b45: direct `expected_observation` overwrite
+//   - 1782a16: per-atomic detached DERIVED-decision projections
+// Neither mutated an underlying input/evidence fact and reran the real
+// producer. This layer clones the shared raw source, mutates exactly one real
+// `DeliveryDocumentationDemoInput` / explicit audit-evidence field, reruns the
+// real `buildDeliveryPackage`, and recomputes ALL 30 observations via the one
+// real `observeAtomic` predicate — never a per-atomic result clone.
+// ---------------------------------------------------------------------------
+
+export interface DeliveryAtomicRawSource {
+  input: DeliveryDocumentationDemoInput;
+  audit: DeliveryEvaluationAudit;
 }
 
-/** Thin wrapper: build the atomic's owned projection, then delegate to the one real predicate. */
-function observeAtomic(
-  id: DeliveryAtomicId,
+/** The single shared detached raw source model. No `DeliveryDocumentationDemoResult`. */
+export function deliveryAtomicRawSource(
   input: DeliveryDocumentationDemoInput,
-  decision: DeliveryDocumentationDemoResult,
-  audit: DeliveryEvaluationAudit,
-): unknown {
-  return observeAtomicFromSourceFact(id, {
-    field_family: DELIVERY_ATOMIC_FIELD_FAMILIES[id],
-    owned_fact: DELIVERY_ATOMIC_OWNED_SOURCE[id].owned_fact,
-    projection: buildDeliveryAtomicProjection(id, input, decision, audit),
-  });
+  audit: DeliveryEvaluationAudit = defaultAudit(input),
+): DeliveryAtomicRawSource {
+  return structuredClone({ input, audit });
 }
 
-// ---------------------------------------------------------------------------
-// Per-atomic owned raw field: its name + a mutation of exactly that one field.
-// The 30 owned fields are pairwise distinct; each `mutate` throws if its target
-// is absent, and is written to always move the value.
-// ---------------------------------------------------------------------------
-type MutProj = {
-  input: DeepMutable<DeliveryDocumentationDemoInput>;
-  decision: DeepMutable<DeliveryDocumentationDemoResult>;
-  audit: DeepMutable<DeliveryEvaluationAudit>;
-};
-const reqTarget = <T>(v: T, what: string): NonNullable<T> => {
-  if (v === undefined || v === null) throw new Error(`ISOLATION_TARGET_ABSENT:${what}`);
+type MutableRawInput = DeepMutable<DeliveryDocumentationDemoInput>;
+const mi = (s: DeliveryAtomicRawSource): MutableRawInput => s.input as unknown as MutableRawInput;
+const reqTarget = <T>(v: T, path: string): NonNullable<T> => {
+  if (v === undefined || v === null) throw new Error(`ISOLATION_TARGET_ABSENT:${path}`);
   return v as NonNullable<T>;
 };
-const PROBE = "::ISOLATION_PROBE";
+const rfBy = (s: DeliveryAtomicRawSource, id: string) =>
+  reqTarget(mi(s).repository_facts.find((f) => f.fact_id === id), `input.repository_facts[fact_id=${id}]`);
+const veBy = (s: DeliveryAtomicRawSource, id: string) =>
+  reqTarget(mi(s).verification_evidence.find((e) => e.evidence_id === id), `input.verification_evidence[evidence_id=${id}]`);
+const afBy = (s: DeliveryAtomicRawSource, id: string) =>
+  reqTarget((mi(s).architecture_facts ?? []).find((a) => a.fact_id === id), `input.architecture_facts[fact_id=${id}]`);
+const lfBy = (s: DeliveryAtomicRawSource, id: string) =>
+  reqTarget((mi(s).limitations ?? []).find((l) => l.limitation_id === id), `input.limitations[limitation_id=${id}]`);
+const nfBy = (s: DeliveryAtomicRawSource, id: string) =>
+  reqTarget((mi(s).next_step_candidates ?? []).find((n) => n.next_step_id === id), `input.next_step_candidates[next_step_id=${id}]`);
+const dsBy = (s: DeliveryAtomicRawSource, ref: string) =>
+  reqTarget((mi(s).demo_surface.steps ?? []).find((x) => x.step_ref === ref), `input.demo_surface.steps[step_ref=${ref}]`);
 
+/**
+ * Per-atomic owned underlying fact + a mutation of exactly that one real field.
+ * The 30 `owned_fact` labels are pairwise distinct; each `mutate` throws
+ * `ISOLATION_TARGET_ABSENT:<path>` if its target is missing.
+ */
 export const DELIVERY_ATOMIC_OWNED_SOURCE: Record<
   DeliveryAtomicId,
-  { owned_fact: string; mutate: (fact: DeliveryAtomicSourceFact) => void }
+  { owned_fact: string; source_family: "input" | "audit"; mutate: (src: DeliveryAtomicRawSource) => void }
 > = {
-  A01: { owned_fact: "input.delivery_identity.revision_ref", mutate: (f) => { const p = f.projection as unknown as MutProj; const di = reqTarget(p.input.delivery_identity, "A01 delivery_identity"); di.revision_ref = `${reqTarget(di.revision_ref, "A01 revision_ref")}${PROBE}`; } },
-  A02: { owned_fact: "package.identity.audience", mutate: (f) => { const p = f.projection as unknown as MutProj; const id = reqTarget(reqTarget(p.decision.package, "A02 package").identity, "A02 identity"); id.audience = `${reqTarget(id.audience, "A02 audience")}${PROBE}`; } },
-  A03: { owned_fact: "package.executive_summary.delivered[0].claim_status", mutate: (f) => { const p = f.projection as unknown as MutProj; const c = reqTarget(reqTarget(p.decision.package, "A03 package").executive_summary.delivered[0], "A03 delivered[0]"); c.claim_status = c.claim_status === "UNKNOWN" ? "DEFERRED" : "UNKNOWN"; } },
-  A04: { owned_fact: "decision.coverage.claims_with_evidence", mutate: (f) => { const p = f.projection as unknown as MutProj; const cov = reqTarget(p.decision.coverage, "A04 coverage"); cov.claims_with_evidence = reqTarget(cov.claims_with_evidence, "A04 claims_with_evidence") + 1; } },
-  A05: { owned_fact: "package.executive_summary.delivered[2].subject_ref", mutate: (f) => { const p = f.projection as unknown as MutProj; const c = reqTarget(reqTarget(p.decision.package, "A05 package").executive_summary.delivered[2], "A05 delivered[2]"); c.subject_ref = `${reqTarget(c.subject_ref, "A05 subject_ref")}${PROBE}`; } },
-  A06: { owned_fact: "package.executive_summary.delivered[3].claim_status", mutate: (f) => { const p = f.projection as unknown as MutProj; const c = reqTarget(reqTarget(p.decision.package, "A06 package").executive_summary.delivered[3], "A06 delivered[3]"); c.claim_status = c.claim_status === "DEFERRED" ? "IMPLEMENTED" : "DEFERRED"; } },
-  A07: { owned_fact: "package.architecture_summary.components[0].source_ref", mutate: (f) => { const p = f.projection as unknown as MutProj; const comp = reqTarget(reqTarget(p.decision.package, "A07 package").architecture_summary.components[0], "A07 components[0]"); comp.source_ref = `${reqTarget(comp.source_ref, "A07 source_ref")}${PROBE}`; } },
-  A08: { owned_fact: "package.architecture_summary.boundaries[0]", mutate: (f) => { const p = f.projection as unknown as MutProj; const b = reqTarget(p.decision.package, "A08 package").architecture_summary.boundaries; reqTarget(b[0], "A08 boundaries[0]"); b[0] = `${b[0]}${PROBE}`; } },
-  A09: { owned_fact: "package.architecture_summary.present", mutate: (f) => { const p = f.projection as unknown as MutProj; const a = reqTarget(p.decision.package, "A09 package").architecture_summary; a.present = !a.present; } },
-  A10: { owned_fact: "package.setup_and_run[0].evidence_refs", mutate: (f) => { const p = f.projection as unknown as MutProj; const s = reqTarget(reqTarget(p.decision.package, "A10 package").setup_and_run[0], "A10 setup_and_run[0]"); reqTarget(s.evidence_refs, "A10 evidence_refs").push(`ev${PROBE}`); } },
-  A11: { owned_fact: "decision.coverage.setup_required_steps", mutate: (f) => { const p = f.projection as unknown as MutProj; const cov = reqTarget(p.decision.coverage, "A11 coverage"); cov.setup_required_steps = reqTarget(cov.setup_required_steps, "A11 setup_required_steps") + 1; } },
-  A12: { owned_fact: "package.setup_and_run[0].command_or_action", mutate: (f) => { const p = f.projection as unknown as MutProj; const s = reqTarget(reqTarget(p.decision.package, "A12 package").setup_and_run[0], "A12 setup_and_run[0]"); s.command_or_action = `${reqTarget(s.command_or_action, "A12 command_or_action")} ${PROBE}`; } },
-  A13: { owned_fact: "input.demo_surface.exists", mutate: (f) => { const p = f.projection as unknown as MutProj; const ds = reqTarget(p.input.demo_surface, "A13 demo_surface"); ds.exists = !ds.exists; } },
-  A14: { owned_fact: "package.demo_script[0].action", mutate: (f) => { const p = f.projection as unknown as MutProj; const d = reqTarget(reqTarget(p.decision.package, "A14 package").demo_script[0], "A14 demo_script[0]"); d.action = d.action && d.action.length > 0 ? "" : `x${PROBE}`; } },
-  A15: { owned_fact: "decision.coverage.demo_steps_with_fallback", mutate: (f) => { const p = f.projection as unknown as MutProj; const cov = reqTarget(p.decision.coverage, "A15 coverage"); cov.demo_steps_with_fallback = reqTarget(cov.demo_steps_with_fallback, "A15 demo_steps_with_fallback") + 1; } },
-  A16: { owned_fact: "package.limitations[0].limitation_id", mutate: (f) => { const p = f.projection as unknown as MutProj; const l = reqTarget(reqTarget(p.decision.package, "A16 package").limitations[0], "A16 limitations[0]"); l.limitation_id = `${reqTarget(l.limitation_id, "A16 limitation_id")}${PROBE}`; } },
-  A17: { owned_fact: "package.limitations[0].status", mutate: (f) => { const p = f.projection as unknown as MutProj; const l = reqTarget(reqTarget(p.decision.package, "A17 package").limitations[0], "A17 limitations[0]"); l.status = l.status === "KNOWN" ? "UNVERIFIED" : "KNOWN"; } },
-  A18: { owned_fact: "package.limitations[0].severity", mutate: (f) => { const p = f.projection as unknown as MutProj; const l = reqTarget(reqTarget(p.decision.package, "A18 package").limitations[0], "A18 limitations[0]"); l.severity = l.severity === "HIGH" ? "LOW" : "HIGH"; } },
-  A19: { owned_fact: "package.next_steps[0].priority", mutate: (f) => { const p = f.projection as unknown as MutProj; const n = reqTarget(reqTarget(p.decision.package, "A19 package").next_steps[0], "A19 next_steps[0]"); n.priority = n.priority === "P3" ? "P0" : "P3"; } },
-  A20: { owned_fact: "package.next_steps[0].status", mutate: (f) => { const p = f.projection as unknown as MutProj; const n = reqTarget(reqTarget(p.decision.package, "A20 package").next_steps[0], "A20 next_steps[0]"); n.status = n.status === "DEFERRED" ? "PROPOSED" : "DEFERRED"; } },
-  A21: { owned_fact: "package.next_steps[1].summary", mutate: (f) => { const p = f.projection as unknown as MutProj; const n = reqTarget(reqTarget(p.decision.package, "A21 package").next_steps[1], "A21 next_steps[1]"); n.summary = `${reqTarget(n.summary, "A21 summary")} S14`; } },
-  A22: { owned_fact: "package.evidence_index[0].evidence_id", mutate: (f) => { const p = f.projection as unknown as MutProj; const e = reqTarget(reqTarget(p.decision.package, "A22 package").evidence_index[0], "A22 evidence_index[0]"); e.evidence_id = `${reqTarget(e.evidence_id, "A22 evidence_id")}${PROBE}`; } },
-  A23: { owned_fact: "package.provenance.conflict_notes", mutate: (f) => { const p = f.projection as unknown as MutProj; const prov = reqTarget(p.decision.package, "A23 package").provenance; reqTarget(prov.conflict_notes, "A23 conflict_notes").push(`note${PROBE}`); } },
-  A24: { owned_fact: "package.provenance.baseline_revision_ref", mutate: (f) => { const p = f.projection as unknown as MutProj; const prov = reqTarget(p.decision.package, "A24 package").provenance; prov.baseline_revision_ref = `${prov.baseline_revision_ref ?? ""}${PROBE}`; } },
-  A25: { owned_fact: "decision.blockers", mutate: (f) => { const p = f.projection as unknown as MutProj; reqTarget(p.decision.blockers, "A25 blockers").push({ code: "SECRET_MATERIAL", detail: "isolation probe" }); } },
-  A26: { owned_fact: "input.repository_facts[kind=SAFE_ENV_VARIABLE_NAME].kind", mutate: (f) => { const p = f.projection as unknown as MutProj; const rf = reqTarget(p.input.repository_facts, "A26 repository_facts").find((x) => x.kind === "SAFE_ENV_VARIABLE_NAME"); reqTarget(rf, "A26 SAFE_ENV_VARIABLE_NAME fact").kind = "URL"; } },
-  A27: { owned_fact: "decision.warnings", mutate: (f) => { const p = f.projection as unknown as MutProj; reqTarget(p.decision.warnings, "A27 warnings").push({ code: "ISOLATION_PROBE", detail: "deployed to production" }); } },
-  A28: { owned_fact: "audit.input_snapshot_after", mutate: (f) => { const p = f.projection as unknown as MutProj; p.audit.input_snapshot_after = `${reqTarget(p.audit.input_snapshot_after, "A28 input_snapshot_after")}${PROBE}`; } },
-  A29: { owned_fact: "audit.candidate_gate_valid", mutate: (f) => { const p = f.projection as unknown as MutProj; p.audit.candidate_gate_valid = !p.audit.candidate_gate_valid; } },
-  A30: { owned_fact: "audit.core_or_contract_changed", mutate: (f) => { const p = f.projection as unknown as MutProj; p.audit.core_or_contract_changed = !p.audit.core_or_contract_changed; } },
+  A01: { owned_fact: "delivery_identity.revision_ref", source_family: "input", mutate: (s) => { reqTarget(mi(s).delivery_identity, "input.delivery_identity"); mi(s).delivery_identity.revision_ref = "rev:probe-a01aaaaaa"; } },
+  A02: { owned_fact: "delivery_identity.audience", source_family: "input", mutate: (s) => { reqTarget(mi(s).delivery_identity, "input.delivery_identity"); mi(s).delivery_identity.audience = "audience:probe-a02"; } },
+  A03: { owned_fact: "repository_facts[rf-nonfeat-deploy].subject_ref", source_family: "input", mutate: (s) => { rfBy(s, "rf-nonfeat-deploy").subject_ref = "feat:deploy-probe"; } },
+  A04: { owned_fact: "verification_evidence[ev-test-parser].subject_ref", source_family: "input", mutate: (s) => { veBy(s, "ev-test-parser").subject_ref = "feat:parser-detached"; } },
+  A05: { owned_fact: "repository_facts[rf-feat-reporter].subject_ref", source_family: "input", mutate: (s) => { rfBy(s, "rf-feat-reporter").subject_ref = "feat:reporter-probe"; } },
+  A06: { owned_fact: "repository_facts[rf-feat-builder].source_ref", source_family: "input", mutate: (s) => { rfBy(s, "rf-feat-builder").source_ref = "src:roadmap/builder-plan"; } },
+  A07: { owned_fact: "architecture_facts[af-model].source_ref", source_family: "input", mutate: (s) => { afBy(s, "af-model").source_ref = "src:module/deliveryModel-probe.ts"; } },
+  A08: { owned_fact: "architecture_facts[af-bound-core].value", source_family: "input", mutate: (s) => { afBy(s, "af-bound-core").value = "the module changes no Core surface (probe)"; } },
+  A09: { owned_fact: "architecture_facts[kind=BOUNDARY] (removed)", source_family: "input", mutate: (s) => { const facts = reqTarget(mi(s).architecture_facts, "input.architecture_facts"); mi(s).architecture_facts = facts.filter((a) => a.kind !== "BOUNDARY"); } },
+  A10: { owned_fact: "verification_evidence[ev-build].subject_ref", source_family: "input", mutate: (s) => { veBy(s, "ev-build").subject_ref = "script:build-probe"; } },
+  A11: { owned_fact: "repository_facts[rf-cmd-build].precondition_refs", source_family: "input", mutate: (s) => { const f = rfBy(s, "rf-cmd-build"); f.precondition_refs = [...(f.precondition_refs ?? []), "pre:probe-a11"]; } },
+  A12: { owned_fact: "repository_facts[rf-cmd-test].value", source_family: "input", mutate: (s) => { const f = rfBy(s, "rf-cmd-test"); f.value = `${f.value} # probe`; } },
+  A13: { owned_fact: "demo_surface.steps (last removed)", source_family: "input", mutate: (s) => { const steps = reqTarget(mi(s).demo_surface.steps, "input.demo_surface.steps"); if (steps.length === 0) throw new Error("ISOLATION_TARGET_ABSENT:input.demo_surface.steps[last]"); mi(s).demo_surface.steps = steps.slice(0, -1); } },
+  A14: { owned_fact: "demo_surface.steps[ds-happy].action_ref", source_family: "input", mutate: (s) => { dsBy(s, "ds-happy").action_ref = ""; } },
+  A15: { owned_fact: "demo_surface.steps[ds-happy].fallback_ref", source_family: "input", mutate: (s) => { dsBy(s, "ds-happy").fallback_ref = ""; } },
+  A16: { owned_fact: "policy.suppress_limitation_ids", source_family: "input", mutate: (s) => { reqTarget(mi(s).policy, "input.policy").suppress_limitation_ids = ["lim-crlf"]; } },
+  A17: { owned_fact: "limitations[lim-stdin].status", source_family: "input", mutate: (s) => { lfBy(s, "lim-stdin").status = "KNOWN"; } },
+  A18: { owned_fact: "limitations[lim-crlf].severity", source_family: "input", mutate: (s) => { lfBy(s, "lim-crlf").severity = "MEDIUM"; } },
+  A19: { owned_fact: "next_step_candidates[ns-fixtures].priority", source_family: "input", mutate: (s) => { nfBy(s, "ns-fixtures").priority = "P0"; } },
+  A20: { owned_fact: "next_step_candidates[ns-fixtures].summary", source_family: "input", mutate: (s) => { const n = nfBy(s, "ns-fixtures"); n.summary = `${n.summary} deploy step`; } },
+  A21: { owned_fact: "next_step_candidates[ns-deploy].summary", source_family: "input", mutate: (s) => { const n = nfBy(s, "ns-deploy"); n.summary = `${n.summary} S14`; } },
+  A22: { owned_fact: "verification_evidence[ev-typecheck].evidence_id", source_family: "input", mutate: (s) => { veBy(s, "ev-typecheck").evidence_id = "ev-typecheck-probe"; } },
+  A23: { owned_fact: "verification_evidence (append ev-probe-fail FAIL for subject repo)", source_family: "input", mutate: (s) => { reqTarget(mi(s).verification_evidence, "input.verification_evidence").push({ evidence_id: "ev-probe-fail", kind: "TEST", subject_ref: "repo", revision_ref: "rev:abc123def456", status: "FAIL", summary_ref: "sum:probe", source_ref: "src:ci" }); } },
+  A24: { owned_fact: "delivery_identity.baseline_revision_ref", source_family: "input", mutate: (s) => { reqTarget(mi(s).delivery_identity, "input.delivery_identity"); mi(s).delivery_identity.baseline_revision_ref = "rev:probe-a24bbbbb"; } },
+  A25: { owned_fact: "repository_facts[rf-cmd-build].value (secret material)", source_family: "input", mutate: (s) => { rfBy(s, "rf-cmd-build").value = "TOKEN=sk-deadbeefdeadbeef01 npm run build"; } },
+  A26: { owned_fact: "repository_facts[rf-env-probe] added + repository_facts[rf-cmd-build].value", source_family: "input", mutate: (s) => { reqTarget(mi(s).repository_facts, "input.repository_facts").push({ fact_id: "rf-env-probe", kind: "SAFE_ENV_VARIABLE_NAME", subject_ref: "PROBE_VAR", value: "PROBE_VAR", source_ref: "src:README.md", revision_ref: "rev:abc123def456", confidence: "ACCEPTED" }); rfBy(s, "rf-cmd-build").value = "npm run build # ${PROBE_VAR}"; } },
+  A27: { owned_fact: "repository_facts[rf-feat-builder].value (overclaim demonstration)", source_family: "input", mutate: (s) => { rfBy(s, "rf-feat-builder").value = "this module is production-ready"; } },
+  A28: { owned_fact: "audit.input_snapshot_after", source_family: "audit", mutate: (s) => { s.audit.input_snapshot_after = `${reqTarget(s.audit.input_snapshot_after, "audit.input_snapshot_after")}::probe`; } },
+  A29: { owned_fact: "audit.candidate_gate_valid", source_family: "audit", mutate: (s) => { s.audit.candidate_gate_valid = false; } },
+  A30: { owned_fact: "audit.core_or_contract_changed", source_family: "audit", mutate: (s) => { s.audit.core_or_contract_changed = true; } },
+};
+
+/**
+ * Producer-forced structural dependencies (semantic contract §21). Each of
+ * these 9 atomics governs its own observation but the canonical
+ * `buildDeliveryPackage` necessarily co-moves a small, specific set of sibling
+ * observations from the SAME source mutation — Part A §21 defines multiple
+ * atomics over one package array / the revision spine. These are consequences,
+ * not waivers; `also_changes` is the exact permitted cross set.
+ */
+export const DELIVERY_ATOMIC_STRUCTURAL_DEPENDENCIES: Partial<
+  Record<DeliveryAtomicId, { also_changes: DeliveryAtomicId[]; forcing: string }>
+> = {
+  A01: { also_changes: ["A24"], forcing: "buildProvenance (deliveryModel.ts:505 `revision_ref: id.revision_ref`) threads delivery_identity.revision_ref into pkg.provenance.revision_ref, which A24 also reads." },
+  A04: { also_changes: ["A03"], forcing: "A03 observes the entire executive_summary.delivered [subject_ref,claim_status] table; claims_total/claims_with_evidence are pure functions of claim status (buildClaims/deriveClaimStatus deliveryModel.ts:360-383)." },
+  A05: { also_changes: ["A03"], forcing: "same shared claim table; A05's UNKNOWN-count / AVAILABLE_NOT_VERIFIED-subjects are claim-status functions." },
+  A06: { also_changes: ["A03"], forcing: "same shared claim table; A06's DEFERRED-subjects is a claim-status function." },
+  A09: { also_changes: ["A07", "A08"], forcing: "architecture_summary.partial = components.length===0 || boundaries.length===0 (deliveryModel.ts:396); A07 observes components, A08 observes boundaries." },
+  A13: { also_changes: ["A14", "A15"], forcing: "A13's demo_script.length element requires a demo-step add/remove, which moves the per-step tuples A14 and A15 observe (buildDemo deliveryModel.ts:422-450)." },
+  A16: { also_changes: ["A18"], forcing: "A16 and A18 both .map the same pkg.limitations array and both read limitation_id (buildLimitations deliveryModel.ts:452-466)." },
+  A23: { also_changes: ["A22"], forcing: "inducing a same-subject PASS+FAIL conflict (detectEvidenceConflicts deliveryModel.ts:513-527) requires growing the verification_evidence set, which A22's evidence-index observation reads." },
+  A26: { also_changes: ["A12"], forcing: "A26 reads env-var tokens INSIDE pkg.setup_and_run command text that A12 also observes; A26's allApproved/noInlineSecretValue elements cannot flip without a validation block (INVENTED_ENV_VARIABLE deliveryModel.ts:285 / SECRET_MATERIAL)." },
+};
+
+/**
+ * Package-level safety-gate invariants (A25, A27). No source mutation can move
+ * these observations in isolation: `validateDeliveryInput` fail-closes on the
+ * prohibited material BEFORE it reaches the producer, so the governing element
+ * only exists on a blocked package (A25) or provably never moves (A27).
+ * Verified by named negative fixtures + unsafe counters, not by isolation.
+ */
+export const DELIVERY_ATOMIC_GATE_CLASS: Partial<Record<DeliveryAtomicId, { forcing: string }>> = {
+  A25: { forcing: "validateDeliveryInput short-circuits on SECRET_MATERIAL (deliveryModel.ts:147,194) -> package:null; A25's blocker-count element exists ONLY on a blocked package. Verified by negative fixtures N33/N34/N35 + UC06, not by source-fact isolation." },
+  A27: { forcing: "forbidden material in input is caught by validateDeliveryInput (deliveryModel.ts:148-149 raw-log/raw-env, :254 overclaim) BEFORE it can reach collectStrings(decision); A27's observation provably never moves under any source mutation. Verified by N07/N35/N36 + UC05/UC06." },
 };
 
 /** Freezes raw expected observations from the canonical build before either A/B arm runs. */
@@ -473,142 +451,191 @@ export function jsonDiffPaths(a: unknown, b: unknown, prefix = ""): string[] {
   return out.length ? out : [prefix || "<root>"];
 }
 
-/** Freezes the 30 owned raw projections from the canonical build. Each is disjoint per owned field. */
-export function deriveDeliveryAtomicSourceFacts(
-  input: DeliveryDocumentationDemoInput,
-  audit: DeliveryEvaluationAudit = defaultAudit(input),
-): DeliveryAtomicSourceFacts {
-  const truth = buildDeliveryPackage(input);
-  return Object.fromEntries(
-    DELIVERY_ATOMIC_IDS.map((id) => [
-      id,
-      {
-        field_family: DELIVERY_ATOMIC_FIELD_FAMILIES[id],
-        owned_fact: DELIVERY_ATOMIC_OWNED_SOURCE[id].owned_fact,
-        projection: buildDeliveryAtomicProjection(id, input, truth, audit),
-      },
-    ]),
-  ) as DeliveryAtomicSourceFacts;
+const FORBIDDEN_SOURCE_PATH_SEGMENTS = [
+  "decision", "package", "coverage", "blockers", "warnings",
+  "expected_observation", "correct", "actual_observation", "field_family", "evidence",
+] as const;
+
+/** True only when every diff path is a real raw-source field (under `input.`/`audit.`, no derived segment). */
+function pathsAreRawSourceOnly(paths: readonly string[]): boolean {
+  if (paths.length === 0) return false;
+  const forbidden: readonly string[] = FORBIDDEN_SOURCE_PATH_SEGMENTS;
+  return paths.every((p: string) => {
+    const segs = p.split(".");
+    if (segs[0] !== "input" && segs[0] !== "audit") return false;
+    return !segs.some((seg: string) => forbidden.includes(seg));
+  });
 }
 
 export interface DeliveryAtomicIsolationProbe {
   id: DeliveryAtomicId;
   owned_fact: string;
+  source_family: "input" | "audit";
+  /** the governing atomic's observation moved */
   governing_changed: boolean;
-  cross_assertion_changes: DeliveryAtomicId[];
-  changed_source_paths: string[];
-  observation_recomputed: boolean;
-  original_input_unchanged: boolean;
-  original_facts_unchanged: boolean;
-  mutated_raw_projection_field: boolean;
-  recomputed_via_real_observer: boolean;
-  mutated_expected_observation: boolean;
-  mutated_correct_flag: boolean;
-  mutated_decision: boolean;
+  /** every atomic whose observation moved (governing + siblings) */
+  changed: DeliveryAtomicId[];
+  /** siblings that moved (changed minus id) */
+  cross: DeliveryAtomicId[];
+  /** dot-paths that differ between the frozen shared raw source and the mutated clone */
+  mutated_field_paths: string[];
+  /** the real `buildDeliveryPackage` produced a different canonical decision (JSON) */
+  producer_reran: boolean;
+  original_source_unchanged: boolean;
+  original_decision_unchanged: boolean;
+  blocked: boolean;
 }
 
 /**
- * Isolation proof for one atomic: freeze the 30 canonical owned projections and
- * their real observations; deep-clone `facts[id]`; mutate exactly one owned raw
- * field of that clone; recompute the REAL observer for all 30 atomics feeding
- * the mutated clone only for `id` (every other atomic reads its own untouched
- * projection). Only `id`'s observation moves — by construction of disjoint
- * ownership. Nothing real (input, canonical facts) is mutated.
+ * Owned-source-fact isolation for one atomic. Freeze ONE shared detached raw
+ * `{ input, audit }` model; run the real `buildDeliveryPackage` and compute all
+ * 30 observations via the one real `observeAtomic`. Clone the shared raw source,
+ * mutate exactly one real input/audit field (`DELIVERY_ATOMIC_OWNED_SOURCE[id]`),
+ * rerun the real producer, recompute all 30 observations from that one rebuilt
+ * decision, and diff. No per-atomic result clone; no `expected_observation` or
+ * derived-`decision` mutation.
  */
 export function probeDeliveryAtomicSourceFactIsolation(
   id: DeliveryAtomicId,
   input: DeliveryDocumentationDemoInput,
   audit: DeliveryEvaluationAudit = defaultAudit(input),
 ): DeliveryAtomicIsolationProbe {
-  const inputBefore = JSON.stringify(input);
-  const facts = deriveDeliveryAtomicSourceFacts(input, audit);
-  const factsBefore = JSON.stringify(facts);
+  const origSrc = deliveryAtomicRawSource(input, audit);
+  const origSrcJSON = JSON.stringify(origSrc);
+  const origDecision = buildDeliveryPackage(origSrc.input);
+  const origDecisionJSON = JSON.stringify(origDecision);
+  const origObs: Record<string, string> = {};
+  for (const k of DELIVERY_ATOMIC_IDS)
+    origObs[k] = JSON.stringify(observeAtomic(k, origSrc.input, origDecision, origSrc.audit));
 
-  const canonical: Record<string, string> = {};
-  for (const k of DELIVERY_ATOMIC_IDS) canonical[k] = JSON.stringify(observeAtomicFromSourceFact(k, facts[k]));
+  const mut = structuredClone(origSrc);
+  DELIVERY_ATOMIC_OWNED_SOURCE[id].mutate(mut);
+  const mutDecision = buildDeliveryPackage(mut.input);
+  const mutObs: Record<string, string> = {};
+  for (const k of DELIVERY_ATOMIC_IDS)
+    mutObs[k] = JSON.stringify(observeAtomic(k, mut.input, mutDecision, mut.audit));
 
-  const factBefore = structuredClone(facts[id]);
-  const mutatedFact = structuredClone(facts[id]);
-  DELIVERY_ATOMIC_OWNED_SOURCE[id].mutate(mutatedFact);
-  const changed_source_paths = jsonDiffPaths(factBefore, mutatedFact);
-
-  const recomputedFacts: DeliveryAtomicSourceFacts = { ...facts, [id]: mutatedFact };
-  const after: Record<string, string> = {};
-  for (const k of DELIVERY_ATOMIC_IDS) after[k] = JSON.stringify(observeAtomicFromSourceFact(k, recomputedFacts[k]));
-
-  const reRun = JSON.stringify(observeAtomicFromSourceFact(id, mutatedFact));
-  const governing_changed = after[id] !== canonical[id];
-  const changed = DELIVERY_ATOMIC_IDS.filter((k) => canonical[k] !== after[k]);
-  const insideProjection =
-    changed_source_paths.length > 0 && changed_source_paths.every((p) => p === "projection" || p.startsWith("projection."));
-  const touches = (seg: string) => changed_source_paths.some((p) => p.split(".").includes(seg));
+  const changed = DELIVERY_ATOMIC_IDS.filter((k) => origObs[k] !== mutObs[k]);
+  const governing_changed = changed.includes(id);
+  const cross = changed.filter((k) => k !== id);
+  const mutated_field_paths = jsonDiffPaths(origSrc, mut);
+  // §3 text says `mutDecision !== origDecision`; those are always distinct object refs,
+  // so the meaningful reading (and the one the classifier's audit-only exemption needs) is
+  // JSON inequality — audit-only mutations do not rerun the producer to a new result.
+  const producer_reran = JSON.stringify(mutDecision) !== origDecisionJSON;
 
   return {
     id,
     owned_fact: DELIVERY_ATOMIC_OWNED_SOURCE[id].owned_fact,
+    source_family: DELIVERY_ATOMIC_OWNED_SOURCE[id].source_family,
     governing_changed,
-    cross_assertion_changes: changed.filter((k) => k !== id),
-    changed_source_paths,
-    observation_recomputed: governing_changed && after[id] === reRun,
-    original_input_unchanged: JSON.stringify(input) === inputBefore,
-    original_facts_unchanged: JSON.stringify(facts) === factsBefore,
-    mutated_raw_projection_field: insideProjection && !touches("expected_observation") && !touches("correct"),
-    recomputed_via_real_observer: after[id] === reRun,
-    mutated_expected_observation: touches("expected_observation"),
-    mutated_correct_flag: touches("correct"),
-    mutated_decision: !insideProjection,
+    changed: [...changed],
+    cross,
+    mutated_field_paths,
+    producer_reran,
+    original_source_unchanged: JSON.stringify(origSrc) === origSrcJSON,
+    original_decision_unchanged: JSON.stringify(origDecision) === origDecisionJSON,
+    blocked: mutDecision.status === "BLOCKED",
   };
 }
 
 /**
- * Mechanical anti-tautology predicate. Returns `true` ONLY when the isolation
- * action changed a raw field strictly inside `projection.*` (never
- * `expected_observation` / `correct` / `actual_observation`), the real observer
- * was recomputed from it, the governing assertion moved, and no sibling moved.
- * Returns `false` for the rejected direct-`expected_observation` mutation.
+ * STRICT           — governing moved, zero cross.
+ * STRUCTURAL_DEPENDENCY — governing moved; cross ⊆ the producer-forced `also_changes` set (§21).
+ * GATE_CLASS        — A25 forced BLOCKED, or A27 provably un-movable.
+ * FAIL             — anything else, or the shared raw source / canonical decision was disturbed,
+ *                    or a diff path touched a derived / non-source segment.
  */
-export function isValidSourceFactIsolationEvidence(r: {
-  changed_source_paths: string[];
-  observation_recomputed: boolean;
-  governing_changed: boolean;
-  cross_assertion_changes: readonly string[];
-}): boolean {
-  if (!Array.isArray(r.changed_source_paths) || r.changed_source_paths.length === 0) return false;
-  const forbidden = ["expected_observation", "correct", "actual_observation", "field_family", "evidence"];
-  for (const p of r.changed_source_paths) {
-    if (p !== "projection" && !p.startsWith("projection.")) return false;
-    if (p.split(".").some((seg) => forbidden.includes(seg))) return false;
+export function classifyDeliveryAtomicIsolation(
+  p: DeliveryAtomicIsolationProbe,
+): "STRICT" | "STRUCTURAL_DEPENDENCY" | "GATE_CLASS" | "FAIL" {
+  if (!p.original_source_unchanged) return "FAIL";
+  if (!p.original_decision_unchanged) return "FAIL";
+  if (!pathsAreRawSourceOnly(p.mutated_field_paths)) return "FAIL";
+  if (!p.producer_reran && p.source_family !== "audit") return "FAIL";
+
+  if (DELIVERY_ATOMIC_GATE_CLASS[p.id]) {
+    if (p.id === "A25" && p.blocked) return "GATE_CLASS";
+    if (p.id === "A27" && !p.governing_changed && p.blocked) return "GATE_CLASS";
+    return "FAIL";
   }
-  if (!r.observation_recomputed) return false;
-  if (!r.governing_changed) return false;
-  if (!Array.isArray(r.cross_assertion_changes) || r.cross_assertion_changes.length !== 0) return false;
-  return true;
+
+  if (p.governing_changed && p.cross.length === 0) return "STRICT";
+
+  const dep = DELIVERY_ATOMIC_STRUCTURAL_DEPENDENCIES[p.id];
+  if (p.governing_changed && dep && p.cross.every((k) => dep.also_changes.includes(k)))
+    return "STRUCTURAL_DEPENDENCY";
+
+  return "FAIL";
 }
 
 /**
- * Reconstructs the REJECTED cf49b45 isolation action (direct `expected_observation`
- * overwrite via `mutateDeliverySourceFact`) as a probe-shaped record, so the
- * regression can prove `isValidSourceFactIsolationEvidence` mechanically rejects it.
+ * Mechanical anti-tautology predicate. Accepts a probe (or probe-shaped record)
+ * only when its classification is not FAIL AND every mutated field path is a
+ * real raw-source field — never `decision` / `package` / `coverage` / `blockers`
+ * / `warnings` / `expected_observation` / `correct` / `actual_observation`.
  */
-export function legacyMutationEvidence(
+export function isValidSourceFactIsolationEvidence(p: DeliveryAtomicIsolationProbe): boolean {
+  if (!pathsAreRawSourceOnly(p.mutated_field_paths)) return false;
+  return classifyDeliveryAtomicIsolation(p) !== "FAIL";
+}
+
+/**
+ * Reconstructs the REJECTED cf49b45 isolation action — a direct
+ * `expected_observation` overwrite via `mutateDeliverySourceFact` — as a
+ * probe-shaped record whose diff path carries the `expected_observation`
+ * segment, so `isValidSourceFactIsolationEvidence` mechanically rejects it.
+ */
+export function legacyExpectedObservationMutationEvidence(
   input: DeliveryDocumentationDemoInput,
   id: DeliveryAtomicId,
-): {
-  id: DeliveryAtomicId;
-  changed_source_paths: string[];
-  observation_recomputed: boolean;
-  governing_changed: boolean;
-  cross_assertion_changes: DeliveryAtomicId[];
-} {
+): DeliveryAtomicIsolationProbe {
   const facts = deriveDeliverySourceFacts(input);
   const before = structuredClone(facts[id]);
   mutateDeliverySourceFact(facts, id);
   return {
     id,
-    changed_source_paths: jsonDiffPaths(before, facts[id]),
-    observation_recomputed: false,
+    owned_fact: DELIVERY_ATOMIC_OWNED_SOURCE[id].owned_fact,
+    source_family: DELIVERY_ATOMIC_OWNED_SOURCE[id].source_family,
     governing_changed: true,
-    cross_assertion_changes: [],
+    changed: [id],
+    cross: [],
+    mutated_field_paths: jsonDiffPaths(before, facts[id]),
+    producer_reran: false,
+    original_source_unchanged: true,
+    original_decision_unchanged: true,
+    blocked: false,
+  };
+}
+
+/**
+ * Reconstructs the REJECTED 1782a16 isolation action — a direct overwrite of an
+ * already-derived `decision.package` / `coverage` / `blockers` field — as a
+ * probe-shaped record whose diff paths carry `decision` / `package` / `coverage`
+ * / `blockers` segments, so `isValidSourceFactIsolationEvidence` rejects it.
+ */
+export function legacyDerivedDecisionMutationEvidence(
+  input: DeliveryDocumentationDemoInput,
+  id: DeliveryAtomicId,
+): DeliveryAtomicIsolationProbe {
+  const before = { input, decision: buildDeliveryPackage(input) };
+  const after = structuredClone(before);
+  if (after.decision.package)
+    after.decision.package.executive_summary.audience = `${after.decision.package.executive_summary.audience}::LEGACY_DERIVED_PROBE`;
+  after.decision.coverage = { ...after.decision.coverage, claims_with_evidence: after.decision.coverage.claims_with_evidence + 1 };
+  after.decision.blockers = [...after.decision.blockers, { code: "LEGACY_DERIVED_PROBE", detail: "direct derived-decision overwrite" }];
+  return {
+    id,
+    owned_fact: DELIVERY_ATOMIC_OWNED_SOURCE[id].owned_fact,
+    source_family: DELIVERY_ATOMIC_OWNED_SOURCE[id].source_family,
+    governing_changed: true,
+    changed: [id],
+    cross: [],
+    mutated_field_paths: jsonDiffPaths(before, after),
+    producer_reran: false,
+    original_source_unchanged: true,
+    original_decision_unchanged: true,
+    blocked: false,
   };
 }
 
