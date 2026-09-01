@@ -1,0 +1,559 @@
+schema_version: "1.0"
+id: S13P_OBSERVABILITY_AI_SYSTEMS_DEEP
+step: S13P
+name: observability-ai-systems
+version: "1.0.0"
+status: AUTHORING_READY
+depth: DEEP
+classification: SKILL_ONLY
+honor_invariant_candidate: HI-051
+
+canonical_artifacts:
+  skill: brain-bootstrap/skills/OBSERVABILITY_AI_SYSTEMS_SKILL_S13P.md
+  quality_contract: brain-bootstrap/quality-contracts/S13P_OBSERVABILITY_AI_SYSTEMS_DEEP.yaml
+  semantic_contract: brain-bootstrap/specs/OBSERVABILITY_AI_SYSTEMS_CONTRACT_S13P.md
+
+purpose: >-
+  Prove that S13P produces a bounded, deterministic, provider-neutral and
+  privacy-safe per-run observability bundle for run identity, traces,
+  prompt/version identity, model identity, tool activity, tokens, cost,
+  latency and errors, while preserving unknown values, prior contracts and
+  future-stage boundaries.
+
+depth_selection:
+  result: DEEP
+  floors:
+    sensitive_data: true
+    infrastructure_decision: true
+  ratings:
+    risk:
+      level: HIGH
+      reason: >-
+        Runtime event details can contain prompts, tool payloads, errors,
+        state patches and secret-bearing metadata; unsafe collection can create
+        durable disclosure and false audit claims.
+    ambiguity:
+      level: HIGH
+      reason: >-
+        The roadmap defines required observability subjects but not their safe
+        schema, missingness, aggregation, retention, sampling or S13P/S20 boundary.
+    novelty:
+      level: MEDIUM
+      reason: >-
+        Existing S09, S13I, S13N and S13O projections are reusable, but no
+        S13P safe bundle, planner or validator exists.
+    irreversibility:
+      level: HIGH
+      reason: >-
+        Persisted sensitive telemetry, unbounded cardinality and misleading
+        cost/trace records are expensive or impossible to retract completely.
+    downstream_impact:
+      level: HIGH
+      reason: >-
+        S13P evidence will be consumed by evals and later S20 decisions; false
+        or unsafe evidence can corrupt optimization and governance.
+
+repository_decisions:
+  - id: DEC-01
+    decision: S13P is DEEP plus SKILL_ONLY.
+  - id: DEC-02
+    decision: >-
+      Part B is a pure deterministic Intelligence reference module with no
+      durable store, exporter, network call, provider SDK or new dependency.
+  - id: DEC-03
+    decision: >-
+      Core, AgentDefinition and all prior canonical Part A remain unchanged.
+  - id: DEC-04
+    decision: >-
+      S13P owns safe per-run projection and bounded aggregation; S20 owns
+      durable cross-run products, alerts, dashboards, optimization and
+      improvement orchestration.
+  - id: DEC-05
+    decision: >-
+      Raw prompt, message, context, tool payload, HTTP material, secret value,
+      provider error and arbitrary provider metadata are prohibited.
+  - id: DEC-06
+    decision: >-
+      Missing tokens, cost or latency remain unknown; cost is observed-only,
+      exact-decimal and grouped by currency without lookup or conversion.
+  - id: DEC-07
+    decision: >-
+      Sampling is deterministic and never removes lifecycle, terminal, error,
+      safety, failed/cancelled or dropped-summary evidence.
+  - id: DEC-08
+    decision: >-
+      Retention is a bounded directive only: EPHEMERAL by default,
+      OPERATIONAL at most 7 days, AUDIT_REF_ONLY at most 30 days.
+
+uncertainty_and_limitations:
+  - id: LIM-01
+    statement: >-
+      Safe-ref grammar cannot prove that a caller did not encode personal or
+      secret data in an identifier; upstream authorization and structural
+      projection remain required.
+  - id: LIM-02
+    statement: >-
+      Digesting data is not anonymization and cannot make prohibited content safe.
+  - id: LIM-03
+    statement: >-
+      S13P cannot guarantee lossless distributed tracing when source evidence is
+      missing, late or contradictory; it reports PARTIAL instead.
+  - id: LIM-04
+    statement: >-
+      S13P validates three-letter currency shape but does not maintain a legal
+      tender registry, price table or FX service.
+  - id: LIM-05
+    statement: >-
+      The reference module does not prove storage deletion, retention execution,
+      exporter behavior or cross-run analytics.
+  - id: LIM-06
+    statement: >-
+      Defensive pattern scans cannot claim complete secret or personal-data detection.
+
+hard_invariants:
+  - id: S13P-HI-001
+    rule: Every accepted observation binds the bundle run_id and trace_id.
+    failure: BLOCK
+  - id: S13P-HI-002
+    rule: Empty, conflicting or cross-run bundle identity is rejected.
+    failure: BLOCK
+  - id: S13P-HI-003
+    rule: Unknown top-level or nested observation keys are rejected, never copied.
+    failure: BLOCK
+  - id: S13P-HI-004
+    rule: >-
+      Raw prompt/message/context/tool/HTTP/provider-error/arbitrary-metadata
+      content never enters an accepted observation, diagnostic, aggregate or bundle.
+    failure: BLOCK
+  - id: S13P-HI-005
+    rule: Digests use only approved canonical non-secret material and are never treated as anonymization.
+    failure: BLOCK
+  - id: S13P-HI-006
+    rule: No credential, cookie, authorization value, private key or secret value is accepted or echoed.
+    failure: BLOCK
+  - id: S13P-HI-007
+    rule: Observation IDs and sequences are unique; sorted sequences strictly increase.
+    failure: BLOCK
+  - id: S13P-HI-008
+    rule: The accepted span-parent graph is acyclic and missing parents are explicit.
+    failure: BLOCK
+  - id: S13P-HI-009
+    rule: COMPLETE requires one start and one terminal observation with explicit outcome and reason.
+    failure: BLOCK
+  - id: S13P-HI-010
+    rule: Missing optional metrics remain unknown and are never converted to zero, success or failure.
+    failure: BLOCK
+  - id: S13P-HI-011
+    rule: Token values are safe integers and component, total and cache-subset consistency is enforced.
+    failure: BLOCK
+  - id: S13P-HI-012
+    rule: Cost is accepted only as an observed non-negative canonical decimal with explicit currency and provenance.
+    failure: BLOCK
+  - id: S13P-HI-013
+    rule: Different currencies are never combined into a cross-currency total.
+    failure: BLOCK
+  - id: S13P-HI-014
+    rule: Latency is observed from an approved clock source and never synthesized from unavailable evidence.
+    failure: BLOCK
+  - id: S13P-HI-015
+    rule: Errors contain only normalized safe source/category/code/retryability and an approved optional fingerprint.
+    failure: BLOCK
+  - id: S13P-HI-016
+    rule: Required lifecycle, terminal, error, safety, failed/cancelled and drop-summary evidence is never sampled out.
+    failure: BLOCK
+  - id: S13P-HI-017
+    rule: All per-run cardinality, duration, reference and serialized-byte ceilings are enforced.
+    failure: BLOCK
+  - id: S13P-HI-018
+    rule: Retention cannot exceed EPHEMERAL, 7-day OPERATIONAL or 30-day AUDIT_REF_ONLY semantics.
+    failure: BLOCK
+  - id: S13P-HI-019
+    rule: Inputs are not mutated and equal normalized inputs/policy produce equal output.
+    failure: BLOCK
+  - id: S13P-HI-020
+    rule: Part B performs no network, storage, export, provider binding, hidden clock or unseeded randomness.
+    failure: BLOCK
+  - id: S13P-HI-021
+    rule: S09, S10, S12, S13I, S13L, S13N and S13O semantics remain unchanged.
+    failure: BLOCK
+  - id: S13P-HI-022
+    rule: The candidate cannot award PASS, HI-051 or independent verification to itself.
+    failure: BLOCK
+  - id: S13P-HI-023
+    rule: All gates execute against the actual runtime candidate; no faithful substitute is accepted.
+    failure: BLOCK
+  - id: S13P-HI-024
+    rule: The three canonical Part A artifacts remain byte-identical through Part B and closure.
+    failure: BLOCK
+
+semantic_dimensions:
+  - id: D01_IDENTITY_CORRELATION
+    name: Identity and correlation
+    assertions:
+      - id: A01
+        statement: Stable bundle run and trace identities are explicit and valid.
+      - id: A02
+        statement: Every accepted observation matches the bundle run and trace.
+      - id: A03
+        statement: Applicable call, operation, job and attempt refs correlate without collision.
+      - id: A04
+        statement: Cross-run or conflicting identity is rejected deterministically.
+  - id: D02_TRACE_RECONSTRUCTION
+    name: Trace reconstruction
+    assertions:
+      - id: A05
+        statement: Observation IDs/sequences are unique and ordered deterministically.
+      - id: A06
+        statement: Span parents resolve or are marked missing, and cycles are rejected.
+      - id: A07
+        statement: Lifecycle, phase and terminal completeness are truthful.
+  - id: D03_PROMPT_MODEL_IDENTITY
+    name: Prompt and model identity
+    assertions:
+      - id: A08
+        statement: Prompt/template identity uses safe refs and explicit versions without content.
+      - id: A09
+        statement: Digests obey the approved sha256 form and safe-material rule.
+      - id: A10
+        statement: Model/provider/version identity is useful and provider-neutral.
+  - id: D04_TOOL_ASYNC_ACTIVITY
+    name: Tool and async activity
+    assertions:
+      - id: A11
+        statement: Tool calls expose capability, phase, outcome and side-effect class without payloads.
+      - id: A12
+        statement: Model/tool start-completion pairs and durations are structurally valid.
+      - id: A13
+        statement: S13O operation/job/attempt facts correlate without reimplementing retry policy.
+  - id: D05_USAGE_COST_TRUTH
+    name: Token and cost truth
+    assertions:
+      - id: A14
+        statement: Token counts are observed, bounded and internally consistent.
+      - id: A15
+        statement: Missing usage remains unknown with explicit coverage.
+      - id: A16
+        statement: Cost uses exact observed decimals with explicit provenance.
+      - id: A17
+        statement: Costs aggregate only within a currency and never use pricing/FX inference.
+  - id: D06_LATENCY_ERROR_TRUTH
+    name: Latency and error truth
+    assertions:
+      - id: A18
+        statement: Latency uses approved clock evidence and bounded integer milliseconds.
+      - id: A19
+        statement: Clock skew, late evidence and metric conflicts remain explicit.
+      - id: A20
+        statement: Errors use normalized safe fields without raw messages or stacks.
+  - id: D07_PRIVACY_REDACTION
+    name: Privacy and redaction
+    assertions:
+      - id: A21
+        statement: Structural allowlists exclude raw prompt/message/context data.
+      - id: A22
+        statement: Tool, HTTP, secret and credential values are excluded.
+      - id: A23
+        statement: Arbitrary provider metadata and raw errors are excluded.
+      - id: A24
+        statement: Diagnostics and dropped summaries never echo rejected values.
+  - id: D08_BOUNDS_LIFECYCLE
+    name: Cardinality, sampling and retention
+    assertions:
+      - id: A25
+        statement: Cardinality, reference, duration and serialized-byte ceilings are enforced.
+      - id: A26
+        statement: Sampling is deterministic and required evidence is never dropped.
+      - id: A27
+        statement: Retention directives are bounded and do not claim storage execution.
+  - id: D09_ARCHITECTURE_BOUNDARIES
+    name: Architecture and provider neutrality
+    assertions:
+      - id: A28
+        statement: S13P remains a pure Intelligence reference module with no provider/store/dependency.
+      - id: A29
+        statement: Core, AgentDefinition and prior step contracts remain unchanged.
+      - id: A30
+        statement: S13P/S20 and connector/deploy boundaries are explicit and preserved.
+  - id: D10_EVIDENCE_DETERMINISM
+    name: Evidence and determinism
+    assertions:
+      - id: A31
+        statement: Output provenance, coverage, diagnostics and status are reproducible and immutable.
+      - id: A32
+        statement: External gates use the actual candidate and recompute every claim.
+
+fixture_inventory:
+  positive:
+    exact_count: 14
+    ids:
+      - P01_MINIMAL_COMPLETE_RUN
+      - P02_SAFE_PROMPT_VERSION
+      - P03_MODEL_CALL_LATENCY
+      - P04_SAFE_TOOL_CALL
+      - P05_PARTIAL_USAGE_UNKNOWN
+      - P06_CONSISTENT_TOKEN_COMPONENTS
+      - P07_SINGLE_CURRENCY_COST
+      - P08_MULTI_CURRENCY_NO_TOTAL
+      - P09_NORMALIZED_ERROR
+      - P10_ASYNC_JOB_ATTEMPT_CORRELATION
+      - P11_EXPLICIT_MISSING_PARENT_PARTIAL
+      - P12_DETERMINISTIC_SAMPLING
+      - P13_BOUNDED_DETAIL_OVERFLOW
+      - P14_AUDIT_REF_ONLY_NO_PERSISTENCE
+  negative:
+    exact_count: 52
+    ranges:
+      - range: N01-N06
+        category: run_trace_identity
+      - range: N07-N12
+        category: observation_sequence_span_terminal
+      - range: N13-N20
+        category: prohibited_raw_sensitive_fields
+      - range: N21-N25
+        category: prompt_model_identity_and_digest
+      - range: N26-N31
+        category: token_truth
+      - range: N32-N37
+        category: cost_currency_truth
+      - range: N38-N42
+        category: time_latency_ordering
+      - range: N43-N46
+        category: normalized_error_safety
+      - range: N47-N49
+        category: sampling_cardinality_size
+      - range: N50-N52
+        category: retention_boundary_self_certification
+  atomic_isolation:
+    exact_count: 32
+    assertion_ids:
+      - A01
+      - A02
+      - A03
+      - A04
+      - A05
+      - A06
+      - A07
+      - A08
+      - A09
+      - A10
+      - A11
+      - A12
+      - A13
+      - A14
+      - A15
+      - A16
+      - A17
+      - A18
+      - A19
+      - A20
+      - A21
+      - A22
+      - A23
+      - A24
+      - A25
+      - A26
+      - A27
+      - A28
+      - A29
+      - A30
+      - A31
+      - A32
+  ab_scenarios:
+    exact_count: 12
+    ids:
+      - AB01_COMPLETE_RUN
+      - AB02_PARTIAL_USAGE
+      - AB03_MULTI_MODEL_TOOL
+      - AB04_PROMPT_MODEL_VERSIONING
+      - AB05_ASYNC_ATTEMPTS
+      - AB06_MULTI_CURRENCY
+      - AB07_LATE_PARTIAL_TRACE
+      - AB08_PRIVACY_ATTACK
+      - AB09_CARDINALITY_PRESSURE
+      - AB10_RETENTION_SAMPLING
+      - AB11_BOUNDARY_PRESSURE
+      - AB12_CONFLICTING_EVIDENCE
+
+unsafe_counters:
+  required_value: 0
+  counters:
+    - id: UC01_RAW_PROMPT_OR_CONTEXT_ACCEPTED
+    - id: UC02_RAW_TOOL_INPUT_ACCEPTED
+    - id: UC03_RAW_TOOL_OUTPUT_ACCEPTED
+    - id: UC04_SECRET_OR_CREDENTIAL_ACCEPTED
+    - id: UC05_RAW_PROVIDER_ERROR_ACCEPTED
+    - id: UC06_ARBITRARY_PROVIDER_METADATA_ACCEPTED
+    - id: UC07_MISSING_METRIC_COERCED_TO_ZERO
+    - id: UC08_TOKEN_OR_COST_INFERRED
+    - id: UC09_MIXED_CURRENCY_TOTAL_CREATED
+    - id: UC10_INVALID_OR_CROSS_RUN_IDENTITY_ACCEPTED
+    - id: UC11_UNBOUNDED_CARDINALITY_OR_SIZE_ACCEPTED
+    - id: UC12_REQUIRED_EVIDENCE_SAMPLED_OUT
+    - id: UC13_RETENTION_CEILING_EXCEEDED
+    - id: UC14_PROVIDER_STORE_OR_DEPENDENCY_INTRODUCED
+    - id: UC15_CORE_AGENT_OR_PRIOR_CONTRACT_CHANGED
+    - id: UC16_CANDIDATE_SELF_CERTIFIED_PASS
+
+deterministic_gates:
+  part_a:
+    - id: G-A01
+      command_or_check: Parse Quality Contract YAML.
+      expected: PASS
+    - id: G-A02
+      command_or_check: Verify exact cross-references among all three Part A paths.
+      expected: PASS
+    - id: G-A03
+      command_or_check: Validate Skill semantic fields and required contract sections.
+      expected: PASS
+    - id: G-A04
+      command_or_check: Record SHA-256 for all three Part A artifacts before Part B.
+      expected: PASS
+  focused:
+    - id: G-F01
+      command_or_check: Positive fixture inventory.
+      expected: 14/14
+    - id: G-F02
+      command_or_check: Negative fixture inventory.
+      expected: 52/52
+    - id: G-F03
+      command_or_check: Atomic-isolation inventory.
+      expected: 32/32
+    - id: G-F04
+      command_or_check: All 24 hard invariants recomputed outside candidate.
+      expected: 24/24
+    - id: G-F05
+      command_or_check: All 16 unsafe counters.
+      expected: all_zero
+  actual_path:
+    - id: G-R01
+      command_or_check: Execute actual S12 discovery and exact lazy Skill load.
+      expected: PASS
+    - id: G-R02
+      command_or_check: Execute actual S10/S09 path using the real S13P candidate.
+      expected: PASS
+    - id: G-R03
+      command_or_check: Gate the actual returned candidate, not a synthesized substitute.
+      expected: PASS
+  repository:
+    - id: G-REP01
+      command_or_check: Typecheck.
+      expected: PASS
+    - id: G-REP02
+      command_or_check: Full suite before clean build.
+      expected: PASS
+    - id: G-REP03
+      command_or_check: Clean build.
+      expected: PASS
+    - id: G-REP04
+      command_or_check: Full suite after build.
+      expected: PASS
+    - id: G-REP05
+      command_or_check: Architecture, dependency and protected-boundary audit.
+      expected: PASS
+    - id: G-REP06
+      command_or_check: git diff --check and tracked-file hygiene.
+      expected: PASS
+    - id: G-REP07
+      command_or_check: Part A hashes equal the pre-Part-B hashes.
+      expected: PASS
+
+ab_impact_gate:
+  baseline_arm: no S13P Skill
+  candidate_arm: actual S13P Skill and runtime candidate
+  frozen_scenarios: 12
+  atomic_assertions: 32
+  max_points_per_arm: 384
+  hidden_truth_access:
+    baseline: forbidden
+    candidate: forbidden
+    provider: forbidden
+  pass_conditions:
+    candidate_total_strictly_greater_than_baseline: true
+    minimum_improved_dimensions: 7
+    total_dimensions: 10
+    minimum_distinct_improved_assertions_per_qualified_dimension: 2
+    maximum_assertion_scenario_regressions: 0
+    maximum_single_assertion_share_of_positive_delta: 0.50
+    atomic_isolation: 32/32
+    unsafe_counters: all_zero
+  failure_conditions:
+    - Candidate is replaced by a faithful or synthesized substitute.
+    - Baseline and candidate receive different scenario inputs or hidden truth.
+    - Any assertion/scenario regresses.
+    - Improvement is concentrated beyond the allowed share.
+    - Fewer than seven dimensions qualify.
+    - Any unsafe counter is nonzero.
+
+status_derivation:
+  PASS:
+    all:
+      - All Part A, focused, actual-path and repository gates pass.
+      - A/B impact gate passes.
+      - All hard invariants pass.
+      - All unsafe counters are zero.
+      - Fresh independent non-authoring verification reproduces the evidence.
+  FAIL:
+    any:
+      - A deterministic gate fails with reproducible evidence.
+      - A hard invariant fails.
+      - An unsafe counter is nonzero.
+      - A/B impact gate fails.
+      - Part A bytes change.
+  BLOCKED:
+    any:
+      - Required repository/runtime evidence cannot be obtained without new authorization.
+      - Canonical sources contain a genuine unresolved contradiction.
+      - A protected change, provider, dependency or secret-bearing input is required.
+
+independent_verification:
+  required: true
+  verifier_must_be_non_authoring: true
+  fresh_session: true
+  may_trust_builder_summary_without_reproduction: false
+  required_reproduction:
+    - runtime versions and repository SHA
+    - Part A hashes
+    - focused positives, negatives and atomic isolation
+    - actual-candidate gates
+    - A/B totals, dimension qualification, regression count and concentration
+    - hard invariants and unsafe counters
+    - full suite before and after clean build
+    - architecture/dependency/diff hygiene
+  award_rule: >-
+    HI-051 may be awarded only after fresh independent verification PASS and
+    factual control-plane acceptance. The builder and candidate cannot award it.
+
+protected_boundaries:
+  must_remain_unchanged:
+    - S09 runtime semantics
+    - S10 AgentDefinition
+    - S12 discovery and lazy-load semantics
+    - S13I API observability declarations
+    - S13L security and minimization rules
+    - S13N eval semantics
+    - S13O async-reliability semantics
+    - Core generic types unless separately re-authored and approved
+  forbidden_in_s13p:
+    - durable telemetry store
+    - exporter or collector
+    - dashboard or alerting system
+    - provider SDK or vendor-specific type
+    - connector, MCP, OAuth or HTTP binding
+    - pricing lookup or FX conversion
+    - raw event.details export
+    - new dependency without a separately approved authoring revision
+    - S13Q, S13R, S14, S15 or S20 implementation
+
+part_a_integrity:
+  integration_mode: byte_identical
+  silent_normalization: forbidden
+  semantic_edit_by_integrator: forbidden
+  on_semantic_conflict: STOP_AND_RETURN_TO_CHATGPT
+
+closure:
+  authoring_result: AUTHORING_READY
+  authoring_allows_part_b: false
+  next_required_action: >-
+    Integrate the three Part A artifacts byte-identically in a separately
+    authorized session, validate and record hashes, then stop at the repository's
+    next explicit gate.
