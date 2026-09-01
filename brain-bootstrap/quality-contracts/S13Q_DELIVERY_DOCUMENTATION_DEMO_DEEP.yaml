@@ -1,0 +1,493 @@
+schema_version: "1.0"
+id: S13Q_DELIVERY_DOCUMENTATION_DEMO_DEEP
+step: S13Q
+name: delivery-documentation-demo
+version: "1.0.0"
+status: AUTHORING_READY
+depth: DEEP
+classification: SKILL_ONLY
+honor_invariant_candidate: HI-052
+
+canonical_artifacts:
+  skill: brain-bootstrap/skills/DELIVERY_DOCUMENTATION_DEMO_SKILL_S13Q.md
+  quality_contract: brain-bootstrap/quality-contracts/S13Q_DELIVERY_DOCUMENTATION_DEMO_DEEP.yaml
+  semantic_contract: brain-bootstrap/specs/DELIVERY_DOCUMENTATION_DEMO_CONTRACT_S13Q.md
+
+purpose: >-
+  Prove that S13Q converts verified repository/build evidence into a truthful,
+  reproducible and handoff-ready delivery package containing a README-grade
+  summary, existing architecture summary, setup/run procedure, evidence-bound
+  demo script, explicit limitations, next steps and provenance without inventing
+  product behavior or pulling deployment/capabilities/verifier/runtime work forward.
+
+depth_selection:
+  result: DEEP
+  floors:
+    delivery_claim_integrity: true
+    security_and_secret_handling: true
+  ratings:
+    risk:
+      level: HIGH
+      reason: >-
+        Delivery documentation is the final human-facing representation of what
+        Brain built; unsupported claims, hidden limitations or leaked secrets can
+        invalidate review and handoff even when code is correct.
+    ambiguity:
+      level: HIGH
+      reason: >-
+        README/setup/demo language can easily blur implemented, verified,
+        available, deferred and production-ready states.
+    novelty:
+      level: MEDIUM
+      reason: >-
+        Upstream evidence/report/handoff surfaces exist, but no canonical
+        delivery-package compiler or evidence-bound demo contract exists.
+    irreversibility:
+      level: MEDIUM
+      reason: >-
+        Documentation is editable, but false delivery claims can propagate to
+        customers, judges, operators and future sessions before correction.
+    downstream_impact:
+      level: HIGH
+      reason: >-
+        S13Q is the handoff boundary immediately before deployment and later
+        capability/runtime stages.
+
+repository_decisions:
+  - id: DEC-01
+    decision: S13Q is DEEP plus SKILL_ONLY.
+  - id: DEC-02
+    decision: >-
+      S13Q demo means a reproducible evidence-bound walkthrough over an existing
+      runnable or inspectable surface, not a new server/browser/deploy runtime.
+  - id: DEC-03
+    decision: >-
+      Part B is a pure deterministic Intelligence reference module; zero Core,
+      AgentDefinition, dependency, provider, network or persistence changes.
+  - id: DEC-04
+    decision: >-
+      The structured delivery package is authoritative; README/demo Markdown is
+      a derivative deterministic projection and may not add claims.
+  - id: DEC-05
+    decision: >-
+      Setup/run commands, environment-variable names, URLs, ports, paths and demo
+      results must come from accepted repository/evidence facts; none are guessed.
+  - id: DEC-06
+    decision: >-
+      S13Q owns documentation/demo/handoff readiness. S13R owns Docker,
+      environment/secrets provisioning, health checks, deployment and deployed
+      verification.
+  - id: DEC-07
+    decision: >-
+      S14/S15+ capability, MCP, connector, verifier-agent, workflow and
+      orchestration work is forbidden pull-forward.
+  - id: DEC-08
+    decision: >-
+      HI-052 may be awarded only after a fresh non-authoring, non-fork, read-only
+      verifier independently reproduces all required evidence and the control
+      plane factually accepts the result.
+
+limits:
+  max_repository_facts: 256
+  max_verification_evidence: 256
+  max_architecture_facts: 128
+  max_setup_steps: 32
+  max_demo_steps: 32
+  max_limitations: 64
+  max_next_steps: 64
+  max_evidence_refs_per_claim: 8
+  max_total_evidence_refs: 512
+  max_safe_ref_chars: 160
+  max_text_chars_per_field: 2000
+  max_rendered_markdown_bytes: 262144
+
+status_derivation:
+  READY:
+    requires:
+      - exact delivery revision identity valid
+      - all required package sections present
+      - every material setup/demo claim has accepted evidence
+      - no unsupported implemented/verified/production-ready claim
+      - no prohibited secret or raw sensitive material
+      - known material limitations represented
+      - S13R/S14/S15+ boundaries preserved
+      - deterministic canonical result
+      - all hard invariants PASS
+      - all unsafe counters zero
+      - fresh independent verification accepted before step closure
+  PARTIAL:
+    allowed_when:
+      - optional non-critical architecture/detail/evidence missing
+      - missingness is explicit and no unsupported replacement claim exists
+  BLOCKED:
+    when_any:
+      - exact revision identity missing or conflicting
+      - required setup/run evidence absent
+      - declared demo surface absent or unsupported
+      - secret/raw credential material present
+      - material limitation hidden or contradicted
+      - production/deployment claim unsupported
+      - future-stage implementation pulled forward
+
+hard_invariants:
+  - id: S13Q-HI-001
+    rule: Exact delivered revision is present, non-empty and unambiguous.
+  - id: S13Q-HI-002
+    rule: Package claims bind to the delivered revision or explicit accepted ancestry/range evidence.
+  - id: S13Q-HI-003
+    rule: Structured package is authoritative over rendered prose.
+  - id: S13Q-HI-004
+    rule: Every material claim is traceable to accepted evidence or marked unknown/limitation.
+  - id: S13Q-HI-005
+    rule: Implemented and verified are distinct states and never conflated.
+  - id: S13Q-HI-006
+    rule: Roadmap/spec/TODO/mock/test-name presence alone never proves implementation.
+  - id: S13Q-HI-007
+    rule: Architecture summary describes existing architecture and introduces no new design decision.
+  - id: S13Q-HI-008
+    rule: Required setup/run steps use only evidence-backed commands/actions.
+  - id: S13Q-HI-009
+    rule: Required setup/run steps declare preconditions and expected observable signals.
+  - id: S13Q-HI-010
+    rule: Environment variable names, ports, URLs, paths and service names are never invented.
+  - id: S13Q-HI-011
+    rule: Secret values, credentials, cookies, auth headers and private keys never enter output.
+  - id: S13Q-HI-012
+    rule: Demo surface is existing and explicitly identified.
+  - id: S13Q-HI-013
+    rule: Every demo step declares action, expected observable result and evidence refs.
+  - id: S13Q-HI-014
+    rule: Environment-sensitive demo steps declare fallback or stop condition.
+  - id: S13Q-HI-015
+    rule: Demo never creates or implies a new runtime, browser automation, screenshot recorder or deployment.
+  - id: S13Q-HI-016
+    rule: Demo claims do not exceed accepted acceptance/eval/test evidence.
+  - id: S13Q-HI-017
+    rule: Material known limitations are represented and not euphemized away.
+  - id: S13Q-HI-018
+    rule: Unverified areas are labeled unverified rather than passed.
+  - id: S13Q-HI-019
+    rule: Next steps are labeled PROPOSED, DEFERRED or REQUIRED_BEFORE_PRODUCTION.
+  - id: S13Q-HI-020
+    rule: Next steps do not mutate current implementation status.
+  - id: S13Q-HI-021
+    rule: Evidence index is deduplicated and deterministically ordered.
+  - id: S13Q-HI-022
+    rule: Evidence conflicts follow canonical precedence and remain visible when material.
+  - id: S13Q-HI-023
+    rule: Missing evidence remains missing; prose citation is not substituted for evidence identity.
+  - id: S13Q-HI-024
+    rule: READY never implies production/deployment readiness without separate evidence.
+  - id: S13Q-HI-025
+    rule: S13R deployment responsibilities are not implemented or claimed complete.
+  - id: S13Q-HI-026
+    rule: S14/S15+ capability/verifier/workflow/orchestration responsibilities are not pulled forward.
+  - id: S13Q-HI-027
+    rule: Candidate does not self-award S13Q PASS, HI-052 or independent verification.
+  - id: S13Q-HI-028
+    rule: No hidden filesystem, git, environment, network, browser, clock or randomness access affects canonical output.
+  - id: S13Q-HI-029
+    rule: Byte-equivalent normalized inputs produce byte-equivalent canonical output.
+  - id: S13Q-HI-030
+    rule: Core, AgentDefinition, package manifests and prior canonical Part A remain semantically unchanged.
+
+semantic_dimensions:
+  - id: D01
+    name: delivery_identity_and_scope_honesty
+    assertions: [A01, A02, A03]
+  - id: D02
+    name: evidence_grounded_claims
+    assertions: [A04, A05, A06]
+  - id: D03
+    name: architecture_summary_fidelity
+    assertions: [A07, A08, A09]
+  - id: D04
+    name: setup_and_run_reproducibility
+    assertions: [A10, A11, A12]
+  - id: D05
+    name: demo_reproducibility
+    assertions: [A13, A14, A15]
+  - id: D06
+    name: limitation_and_uncertainty_honesty
+    assertions: [A16, A17, A18]
+  - id: D07
+    name: next_steps_and_stage_boundaries
+    assertions: [A19, A20, A21]
+  - id: D08
+    name: evidence_index_and_provenance
+    assertions: [A22, A23, A24]
+  - id: D09
+    name: security_privacy_and_safe_delivery
+    assertions: [A25, A26, A27]
+  - id: D10
+    name: deterministic_architecture_and_non_self_certification
+    assertions: [A28, A29, A30]
+
+atomic_assertions:
+  A01: delivered_revision_matches_input
+  A02: delivery_scope_and_audience_preserved
+  A03: implemented_verified_available_deferred_states_not_conflated
+  A04: material_claims_have_accepted_evidence
+  A05: unsupported_claims_omitted_or_marked_unknown
+  A06: roadmap_spec_todo_not_used_as_implementation_proof
+  A07: architecture_components_derived_from_existing_facts
+  A08: architecture_boundaries_preserved
+  A09: no_new_architecture_decision_in_summary
+  A10: setup_steps_evidence_backed
+  A11: setup_preconditions_and_expected_signals_present
+  A12: no_invented_command_env_port_url_or_path
+  A13: demo_surface_exists
+  A14: demo_steps_action_result_evidence_complete
+  A15: demo_fallback_or_stop_conditions_truthful
+  A16: material_limitations_present
+  A17: unverified_unknown_states_explicit
+  A18: limitation_severity_impact_provenance_preserved
+  A19: next_steps_status_labeled
+  A20: S13R_deployment_boundary_preserved
+  A21: S14_S15_plus_boundaries_preserved
+  A22: evidence_refs_resolve_and_are_deduplicated
+  A23: evidence_conflicts_use_precedence_without_erasure
+  A24: provenance_revision_and_source_kind_complete
+  A25: no_secret_or_raw_sensitive_material
+  A26: secret_variable_names_only_when_approved_and_value_absent
+  A27: delivery_output_contains_no_raw_log_prompt_tool_or_private_payload
+  A28: deterministic_output_and_ordering
+  A29: actual_candidate_gate_and_no_self_certification
+  A30: Core_AgentDefinition_dependencies_prior_contracts_unchanged
+
+positive_fixtures:
+  - P01_MINIMAL_VERIFIED_CLI_DELIVERY
+  - P02_LIBRARY_SETUP_AND_USAGE
+  - P03_EXISTING_UI_DEMO_WITH_FALLBACK
+  - P04_API_CONTRACT_DOC_WITHOUT_LIVE_SERVER_CLAIM
+  - P05_PARTIAL_OPTIONAL_ARCHITECTURE_DETAIL
+  - P06_KNOWN_LIMITATIONS_EXPLICIT
+  - P07_MULTIPLE_EVIDENCE_SOURCES_WITH_PRECEDENCE
+  - P08_NEXT_STEPS_INCLUDE_S13R_AS_PROPOSED_ONLY
+  - P09_SAFE_ENV_VARIABLE_NAMES_WITHOUT_VALUES
+  - P10_DETERMINISTIC_MARKDOWN_PROJECTION
+
+negative_fixtures:
+  - N01_MISSING_DELIVERY_REVISION
+  - N02_CONFLICTING_DELIVERY_REVISION
+  - N03_CLAIM_BOUND_TO_WRONG_REVISION
+  - N04_ROADMAP_FEATURE_CLAIMED_IMPLEMENTED
+  - N05_TEST_NAME_USED_AS_IMPLEMENTATION_PROOF
+  - N06_UNSUPPORTED_VERIFIED_CLAIM
+  - N07_PRODUCTION_READY_WITHOUT_EVIDENCE
+  - N08_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_PROVIDER
+  - N09_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_DATABASE
+  - N10_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_AGENT
+  - N11_SETUP_COMMAND_NOT_IN_EVIDENCE
+  - N12_INVENTED_ENV_VARIABLE
+  - N13_INVENTED_PORT
+  - N14_INVENTED_URL
+  - N15_INVENTED_PATH
+  - N16_REQUIRED_SETUP_EXPECTED_SIGNAL_MISSING
+  - N17_DEMO_SURFACE_DOES_NOT_EXIST
+  - N18_DEMO_STEP_EXPECTED_RESULT_UNSUPPORTED
+  - N19_ENV_SENSITIVE_DEMO_WITHOUT_FALLBACK
+  - N20_DEMO_CREATES_NEW_SERVER_RUNTIME
+  - N21_DEMO_CREATES_BROWSER_AUTOMATION
+  - N22_DEMO_PROMISES_SKIPPED_OR_FAILED_BEHAVIOR
+  - N23_KNOWN_MATERIAL_LIMITATION_OMITTED
+  - N24_LIMITATION_CONTRADICTED_BY_SUMMARY
+  - N25_UNVERIFIED_AREA_PRESENTED_AS_PASS
+  - N26_NEXT_STEP_PRESENTED_AS_IMPLEMENTED
+  - N27_S13R_DEPLOYMENT_PULLED_FORWARD
+  - N28_S14_CAPABILITY_MCP_PULLED_FORWARD
+  - N29_S15_VERIFIER_AGENT_PULLED_FORWARD
+  - N30_BROKEN_EVIDENCE_REF
+  - N31_PROSE_CITATION_SUBSTITUTES_MISSING_EVIDENCE
+  - N32_LOWER_PRECEDENCE_FACT_OVERWRITES_TEST_FAILURE
+  - N33_SECRET_VALUE_IN_SETUP
+  - N34_AUTH_HEADER_VALUE_IN_DEMO
+  - N35_RAW_ENV_FILE_CONTENT
+  - N36_RAW_LOG_OR_PROVIDER_ERROR_COPIED
+  - N37_NONDETERMINISTIC_TIMESTAMP_INSERTED
+  - N38_RANDOM_ORDERING
+  - N39_CANDIDATE_SELF_AWARDS_HI052
+  - N40_HIDDEN_FILESYSTEM_NETWORK_OR_ENV_LOOKUP
+
+ab_scenarios:
+  - AB01_REVISION_SCOPE
+  - AB02_CLAIM_EVIDENCE
+  - AB03_ARCHITECTURE_FIDELITY
+  - AB04_SETUP_REPRODUCIBILITY
+  - AB05_DEMO_EXISTENCE
+  - AB06_DEMO_FALLBACK
+  - AB07_LIMITATION_HONESTY
+  - AB08_NEXT_STEP_BOUNDARY
+  - AB09_EVIDENCE_PRECEDENCE
+  - AB10_SECRET_SAFETY
+  - AB11_DETERMINISM
+  - AB12_PRODUCTION_READINESS_HONESTY
+
+unsafe_counters:
+  - id: UC01
+    name: unsupported_implemented_or_verified_claim
+  - id: UC02
+    name: invented_setup_command_or_environment_detail
+  - id: UC03
+    name: nonexistent_demo_surface_or_result
+  - id: UC04
+    name: hidden_material_limitation
+  - id: UC05
+    name: deployment_or_production_readiness_overclaim
+  - id: UC06
+    name: secret_or_raw_sensitive_material_emitted
+  - id: UC07
+    name: evidence_ref_missing_or_fabricated
+  - id: UC08
+    name: source_precedence_overwritten
+  - id: UC09
+    name: future_stage_pull_forward
+  - id: UC10
+    name: hidden_IO_environment_clock_or_randomness
+  - id: UC11
+    name: candidate_self_certification
+  - id: UC12
+    name: Core_AgentDefinition_dependency_or_prior_contract_mutation
+
+source_fact_isolation:
+  required: true
+  count: 30
+  rule: >-
+    Each A01..A30 must be recomputed from an owned underlying input/evidence fact.
+    Mutating that source fact must change only the governing assertion family
+    unless the semantic contract explicitly declares a dependency. Flipping an
+    already-derived boolean does not count as isolation.
+
+same_path_skill_vs_no_skill:
+  required: true
+  scenarios: 12
+  assertions_per_arm_per_scenario: 30
+  runtime_path:
+    - S12 metadata discovery and exact lazy selected-Skill load
+    - S10 compileAgentDefinition
+    - S09 runAgent
+    - parse actual candidate
+    - deterministic actual-candidate validation/gate
+    - deterministic evaluator over post-gate decision
+  frozen_truth:
+    provider_visible: false
+    fixture_id_visible: false
+    scenario_id_visible: false
+    arm_id_visible: false
+    expected_answer_visible: false
+  baseline_arm:
+    skill_present: false
+    deliberately_bad_synthesizer_forbidden: true
+  skill_arm:
+    skill_present: true
+    must_consume_real_skill_content: true
+  pass_threshold:
+    candidate_total_correct_greater_than_baseline: true
+    qualified_dimensions_min: 7
+    distinct_improved_assertion_ids_per_qualified_dimension_min: 2
+    max_single_assertion_share_per_qualified_dimension: 0.50
+    atomic_regressions_max: 0
+    all_skill_arm_unsafe_counters_zero: true
+  anti_gaming:
+    - no fixture/scenario/arm id branches
+    - no expected map or grader truth in provider
+    - no import of deterministic evaluator/gate/bundle builder into provider
+    - irrelevant prose must not improve correctness
+    - visible packet changes must still change outcomes
+    - score post-gate decision, never raw rejected candidate
+
+part_b_allowed_scope:
+  - src/intelligence/delivery-documentation-demo/**
+  - one append-only S12 reference Skill catalog entry
+  - focused S13Q tests and deterministic fixtures
+  - factual S13Q verification report and handoff
+  - mechanical adjacent boundary-test updates only when required by the new canonical directory/catalog entry
+
+part_b_forbidden_scope:
+  - src/core semantic changes
+  - new AgentDefinition
+  - package.json or package-lock dependency changes
+  - provider SDK or vendor binding
+  - filesystem/network/browser/shell execution inside canonical S13Q module
+  - README mutation as a runtime side effect
+  - Docker/container/deployment/hosting/health-check implementation
+  - secret provisioning
+  - Capability Registry/MCP/connector/OAuth implementation
+  - verifier Agent or workflow/orchestration implementation
+  - semantic edits to S09..S13P canonical Part A
+  - S13R or later-step implementation
+
+required_builder_evidence:
+  - Part A byte/blob integrity
+  - standalone YAML parse and canonical cross-reference validation
+  - Node 24 canonical runtime
+  - typecheck PASS
+  - exact 10 positive fixtures
+  - exact 40 negative fixtures
+  - 30/30 underlying-source-fact atomic isolation
+  - 30/30 hard assertion observations per positive fixture where applicable
+  - S13Q-HI-001..030 all true
+  - UC01..UC12 all zero on positive fixtures and Skill A/B arm
+  - each UC01..UC12 independently shown able to fire
+  - real same-path 12-scenario Skill-vs-no-Skill evidence
+  - raw per-assertion contribution counts by dimension
+  - anti-gaming/source audit
+  - actual candidate non-substitution proof
+  - deterministic repeated-run equality proof
+  - secret/privacy adversarial proof
+  - architecture/dependency/protected-surface audit
+  - full suite pre-build
+  - genuine dist-absent clean build
+  - full suite post-build
+  - git diff --check and allowed-path audit
+
+independent_verification:
+  required: true
+  verifier_must_be_non_authoring: true
+  verifier_must_be_non_fork: true
+  read_only: true
+  fresh_session: true
+  must_reproduce:
+    - exact candidate SHA and ancestry
+    - Part A hashes/blobs
+    - 10 positives
+    - 40 negatives
+    - 30/30 source-fact isolation
+    - all S13Q-HI-001..030
+    - all 12 unsafe counters zero and independently fireable
+    - 12-scenario A/B totals, raw contributions, qualification, regressions and concentration
+    - actual-candidate gate
+    - anti-gaming
+    - determinism and secret/privacy safety
+    - architecture/dependency/boundary audit
+    - typecheck/full-pre-build/clean-build/full-post-build
+    - verifier worktree immutability
+  honor_invariant_award:
+    id: HI-052
+    builder_may_award: false
+    verifier_may_recommend: true
+    requires_control_plane_acceptance: true
+
+pass_criteria:
+  - canonical Part A integrated byte-identically
+  - classification remains SKILL_ONLY
+  - depth remains DEEP
+  - exact delivered revision and scope honesty hold
+  - structured package sections are evidence-grounded
+  - setup/run procedure is reproducible and contains no invented repository facts
+  - demo is a reproducible walkthrough over an existing surface
+  - limitations and unknowns are explicit
+  - next steps are status-labeled and do not pull future work forward
+  - secret/privacy safety holds
+  - 30 hard invariants pass
+  - 10/10 semantic dimensions are evaluated
+  - 10/10 positives pass
+  - 40/40 negatives trigger their named governing failure
+  - 30/30 source-fact isolation passes
+  - A/B impact threshold passes without gaming
+  - all 12 unsafe counters are zero where required and each is fireable
+  - typecheck/full/build/post-build gates pass
+  - protected architecture/dependency surfaces remain unchanged
+  - fresh independent verification PASS is factually accepted
+  - HI-052 is awarded only after independent/control-plane gate
+  - S13R remains NOT_STARTED until S13Q factual closure
