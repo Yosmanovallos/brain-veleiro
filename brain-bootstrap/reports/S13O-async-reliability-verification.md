@@ -2,13 +2,13 @@
 
 Status: `BUILDER_PASS / INDEPENDENT_VERIFICATION_REQUIRED`
 
-Implementation target: `1673d1eb4a520e1b5f71188adc5f21bb833de837`
+Implementation target: `a6e035a58923d561f88fae741746de6c9b9603ad`
 
 Canonical Part A target: `5b7a68980f0bb86103a417740518782c3d0dae0d`
 
 ## Outcome
 
-S13O Part B implements deterministic async reliability planning and validation on the existing S09/S10/S12 path. After the independent mechanical FAIL in issue #1 comment `5486936658`, the builder repaired only the four identified Part-B/evidence defects. All builder gates now pass. S13O is not declared closed because HI-050 requires a different fresh non-authoring, non-fork, read-only verifier.
+S13O Part B implements deterministic async reliability planning and validation on the existing S09/S10/S12 path. The builder repaired only the Part-B/evidence defects identified by the independent mechanical FAILs in issue #1 comments `5486936658` and `5487221173`. All builder gates now pass. S13O is not declared closed because HI-050 requires a different fresh non-authoring, non-fork, read-only verifier.
 
 ## Mechanical FAIL repair
 
@@ -16,6 +16,7 @@ S13O Part B implements deterministic async reliability planning and validation o
 2. All 30 atomic observations are mapped to the exact Quality Contract `field_family` semantics. Contributions, qualification, and totals are recomputed from those observations.
 3. Secret safety recursively rejects secret-bearing canonical keys and values, including arbitrary strings in canonical arrays, and sanitizes blocker references. FX-NEG-024, FX-NEG-036, and the unsafe counter exercise actual forbidden values.
 4. Terminal jobs are stable only when their state is consistent with the recomputed projection of observed facts. Inconsistent terminal observations fail closed; all four terminal states have consistency regressions in the model and content-derived provider.
+5. Both A/B arms now score the post-gate `run.decision`, never the raw `run.candidate`. Candidate gate validity remains a separate audit observation, so invalid baseline candidates are blocked before atomic credit is evaluated.
 
 ## Canonical Part A integrity
 
@@ -53,15 +54,15 @@ The A-F evidence proves:
 
 ## Genuine same-path A/B
 
-- Baseline: `302/360`
+- Baseline: `280/360`
 - Skill: `360/360`
-- Delta: `+58`
+- Delta: `+80`
 - Qualified dimensions: `7/10`
 - Atomic regressions: `0`
 
-Exact baseline-to-Skill contribution deltas by Quality Contract atomic family are: SD1 `{A:0,B:5,C:0}`, SD2 `{A:0,B:0,C:3}`, SD3 `{A:3,B:3,C:3}`, SD4 `{A:3,B:4,C:4}`, SD5 `{A:4,B:1,C:4}`, SD6 `{A:1,B:3,C:3}`, SD7 `{A:1,B:0,C:1}`, SD8 `{A:3,B:3,C:0}`, SD9 `{A:0,B:0,C:0}`, and SD10 `{A:3,B:3,C:0}`. The qualifying dimensions are SD3, SD4, SD5, SD6, SD7, SD8, and SD10.
+Exact baseline-to-Skill contribution deltas by Quality Contract atomic family are: SD1 `{A:0,B:5,C:0}`, SD2 `{A:5,B:0,C:5}`, SD3 `{A:4,B:4,C:1}`, SD4 `{A:4,B:5,C:5}`, SD5 `{A:1,B:0,C:5}`, SD6 `{A:4,B:5,C:5}`, SD7 `{A:1,B:0,C:1}`, SD8 `{A:5,B:5,C:0}`, SD9 `{A:0,B:0,C:0}`, and SD10 `{A:5,B:5,C:0}`. The qualifying dimensions are SD2, SD3, SD4, SD6, SD7, SD8, and SD10.
 
-The arms share inputs, host, provider implementation, capability provider, S09/S10/S12 execution path, parser, candidate gate, evaluator, and provider-blind truth. Only Skill prose/availability differs.
+The arms share inputs, host, provider implementation, capability provider, S09/S10/S12 execution path, parser, candidate gate, evaluator, and provider-blind truth. Only Skill prose/availability differs. Frozen facts exist before either arm; `candidate_gate_valid` records raw candidate validity separately; every scored atomic receives the resulting post-gate `run.decision`.
 
 ## Boundaries
 

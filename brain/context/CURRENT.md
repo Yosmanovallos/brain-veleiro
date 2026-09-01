@@ -6,13 +6,13 @@
 
 ## Current Objective
 
-S00–S13N are `VERIFIED PASS`. The mechanical S13O Part-B/evidence FAIL from issue #1 comment `5486936658` is repaired at `1673d1eb4a520e1b5f71188adc5f21bb833de837` with all builder gates passing, but S13O is not closed: HI-050 requires a different fresh non-authoring, non-fork, read-only verifier. S13P and all later implementation remain forbidden.
+S00–S13N are `VERIFIED PASS`. The S13O post-gate A/B evidence FAIL from issue #1 comment `5487221173` is repaired at `a6e035a58923d561f88fae741746de6c9b9603ad` with all builder gates passing, but S13O is not closed: HI-050 requires a different fresh non-authoring, non-fork, read-only verifier. S13P and all later implementation remain forbidden.
 
 ## Current Repository State
 
 **Branch:** `main`
 
-**Open verification target:** `1673d1eb4a520e1b5f71188adc5f21bb833de837` (S13O mechanical Part-B/evidence repair)
+**Open verification target:** `a6e035a58923d561f88fae741746de6c9b9603ad` (S13O post-gate A/B evidence repair)
 
 **Worktree status:** S13O repair implementation committed; continuity-only report/state/handoff changes follow in a separate commit; five unrelated pre-existing untracked Markdown scaffolds remain untouched.
 
@@ -20,17 +20,17 @@ S00–S13N are `VERIFIED PASS`. The mechanical S13O Part-B/evidence FAIL from is
 
 ## Current Handoff
 
-**Handoff file:** `brain/context/handoffs/2026-09-01T011651Z-s13o-mechanical-repair-independent-verification-required.md`
+**Handoff file:** `brain/context/handoffs/2026-09-01T013756Z-s13o-post-gate-ab-independent-verification-required.md`
 
 **Handoff status:** `INDEPENDENT_VERIFICATION_REQUIRED`
 
 ## Current Status
 
-S13O builder evidence passes at repair target `1673d1eb4a520e1b5f71188adc5f21bb833de837`: Node 24.19.0 typecheck; focused 103/103; full 1152/1152 before and after a genuine dist-absent clean build; 12 positives; all exact 46 negatives; exact-QC 30/30 raw-observation atomic isolation; terminal-state consistency and canonical secret-value regressions; genuine same-path A/B `302/360 → 360/360` (+58), seven qualified dimensions, and zero regressions; HI-001..HI-049 individually true; all 12 unsafe counters zero; canonical Part A Git blobs and protected boundaries unchanged. HI-050 is pending independent verification and was not self-awarded.
+S13O builder evidence passes at repair target `a6e035a58923d561f88fae741746de6c9b9603ad`: Node 24.19.0 typecheck; focused 103/103; full 1152/1152 before and after a genuine dist-absent clean build; 12 positives; all exact 46 negatives; exact-QC 30/30 raw-observation atomic isolation; terminal-state consistency and canonical secret-value regressions; genuine same-path post-gate A/B `280/360 → 360/360` (+80), seven qualified dimensions, and zero regressions; both arms score `run.decision` while candidate gate validity remains separate; HI-001..HI-049 individually true; all 12 unsafe counters zero; canonical Part A Git blobs and protected boundaries unchanged. HI-050 is pending independent verification and was not self-awarded.
 
 ## Next Exact Action
 
-Run a different fresh non-authoring, non-fork, read-only executable verification of S13O repair target `1673d1eb4a520e1b5f71188adc5f21bb833de837`. Do not begin S13P.
+Run a different fresh non-authoring, non-fork, read-only executable verification of S13O repair target `a6e035a58923d561f88fae741746de6c9b9603ad`. Do not begin S13P.
 
 ### Operating Rule
 

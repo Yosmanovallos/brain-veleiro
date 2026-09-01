@@ -58,9 +58,9 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 114
-  head_sha: "1673d1eb4a520e1b5f71188adc5f21bb833de837"
-  head_sha_note: "S13O mechanical Part-B/evidence repair target after issue #1 comment 5486936658; continuity-only handoff commit follows. HI-050 remains pending."
+  commits: 116
+  head_sha: "a6e035a58923d561f88fae741746de6c9b9603ad"
+  head_sha_note: "S13O post-gate A/B evidence repair target after issue #1 comment 5487221173; continuity-only handoff commit follows. HI-050 remains pending."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -626,13 +626,15 @@ repository:
     part_b_commit: "11624869e6ab6b95127200ec5870090e52750e73"
     mechanical_fail_comment_id: 5486936658
     repair_commit: "1673d1eb4a520e1b5f71188adc5f21bb833de837"
+    post_gate_ab_fail_comment_id: 5487221173
+    post_gate_ab_repair_commit: "a6e035a58923d561f88fae741746de6c9b9603ad"
     builder_report: "brain-bootstrap/reports/S13O-async-reliability-verification.md"
-    independent_verification_handoff: "brain/context/handoffs/2026-09-01T011651Z-s13o-mechanical-repair-independent-verification-required.md"
+    independent_verification_handoff: "brain/context/handoffs/2026-09-01T013756Z-s13o-post-gate-ab-independent-verification-required.md"
     contract_tests: "Focused S13O 103/103 PASS: exact 12 positives, exact 46 negatives, A-F prose/guidance-consumption evidence, provider counterfactuals, exact-QC 30/30 raw-observation atomic isolation, four-state terminal consistency regressions, HI-001..HI-049 individually true, and all 12 Skill-arm unsafe counters zero. HI-050 was not self-awarded."
     quality_checks: "WSL Node 24.19.0 typecheck PASS; full 1152/1152 pre-build; exact repo-local dist proved absent; clean build PASS with 711 files; full 1152/1152 post-build; diff-check PASS; protected Core/AgentDefinition/package/Part A diff empty; canonical Part A filtered Git blobs exactly match expected hashes."
-    skill_vs_no_skill: "Same frozen raw source observations, visible packets, PacketProvider implementation, S09/S10/S12 path, parser, candidate gate, evaluator, and provider-blind truth. Baseline 302/360; Skill 360/360; delta +58; seven qualified dimensions; zero atomic regressions."
+    skill_vs_no_skill: "Same frozen raw source observations, visible packets, PacketProvider implementation, S09/S10/S12 path, parser, candidate gate, evaluator, and provider-blind truth. Candidate gate validity remains a separate audit observation; both arms score only post-gate run.decision. Baseline 280/360; Skill 360/360; delta +80; seven qualified dimensions; zero atomic regressions."
     boundaries: "No Core special branch, AgentDefinition change, package dependency, vendor binding, queue/worker/scheduler, network/provider integration, persistent handle, S13P implementation, or semantic edit to canonical Part A."
-    note: "The issue #1 comment 5486936658 mechanical FAIL was repaired only in Part B/evidence: real raw-fact isolation, exact QC atomic ownership/scoring, recursive canonical secret-value rejection/sanitization, and terminal-state consistency. Builder evidence is PASS at repair target 1673d1eb4a520e1b5f71188adc5f21bb833de837, but S13O remains open until HI-050 is reproduced by a different fresh non-authoring non-fork read-only verifier. S13P remains NOT_STARTED and forbidden."
+    note: "The issue #1 comment 5486936658 mechanical FAIL was repaired only in Part B/evidence: real raw-fact isolation, exact QC atomic ownership/scoring, recursive canonical secret-value rejection/sanitization, and terminal-state consistency. The subsequent issue #1 comment 5487221173 post-gate evidence FAIL was repaired by scoring both A/B arms from run.decision after candidate validation/gate while retaining candidate_gate_valid separately. Builder evidence is PASS at repair target a6e035a58923d561f88fae741746de6c9b9603ad, but S13O remains open until HI-050 is reproduced by a different fresh non-authoring non-fork read-only verifier. S13P remains NOT_STARTED and forbidden."
 
 build_day:
   date: "2026-08-29"
