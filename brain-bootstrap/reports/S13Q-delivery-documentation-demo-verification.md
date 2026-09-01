@@ -1,6 +1,16 @@
 # S13Q Delivery Documentation & Demo — Builder Verification
 
-Status: `BUILDER PASS / INDEPENDENT VERIFICATION REQUIRED`
+Status: `BUILDER REPAIR (source-fact isolation) / INDEPENDENT VERIFICATION REQUIRED`
+
+> **2026-09-01 repair.** The first Part B candidate `cf49b45` was rejected by
+> committed-source review (issue #1 comment `5500185778`,
+> `decision: BUILDER_REPAIR_REQUIRED`) for one blocking mechanical defect: the
+> `30/30 atomic isolation` proved *comparison-cell* isolation, not
+> *owned-source-fact* isolation. The redesigned mechanism, the anti-tautology
+> regression and every fresh QA number are in **§ Source-fact isolation repair
+> (2026-09-01)** at the end of this report. Everything above that section is the
+> prior builder evidence and is unchanged except where that section supersedes a
+> count.
 
 Documentation HEAD before Part B: `021885611467d96eb0c450a4b4d64068e4dacca0` (`docs: integrate canonical S13Q Part A`).
 
@@ -232,3 +242,177 @@ immutability.
 `HI-052` may be awarded only after that fresh verification is accepted by the
 ChatGPT control plane. The builder did not award it. `steps.S13Q` remains
 `NOT_STARTED` and S13R remains `NOT_STARTED`.
+
+---
+
+## Source-fact isolation repair (2026-09-01)
+
+Bounded repair of the single blocking defect in the rejected candidate
+`cf49b45519c45b6ce3e930b813df97f6e983c151`. Scope: `quality.ts` and the S13Q
+test file only. Canonical Part A untouched; no dependency/waiver map invented;
+positives, negatives, ablation, hard invariants, unsafe counters, the candidate
+gate, the post-gate A/B scorer, and the truth/fixture/arm-blind provider are all
+preserved byte-for-byte in behaviour.
+
+### The rejected mechanism (`cf49b45`)
+
+In `src/intelligence/delivery-documentation-demo/quality.ts` as committed at
+`cf49b45`:
+
+1. `deriveDeliverySourceFacts()` computed each atomic's `expected_observation`
+   from the canonical `buildDeliveryPackage` result and froze it in a
+   `DeliverySourceFact { field_family, expected_observation, evidence }`.
+2. `mutateDeliverySourceFact(facts, id)` overwrote **only that already-derived
+   `expected_observation`** with the sentinel `{ isolation_probe_for: id }`.
+3. `evaluateDeliveryAtomicObservations()` recomputed the *unchanged* actual
+   observation and compared it to the now-corrupted expected cell, so exactly one
+   `correct` flag flipped.
+
+That proves the comparison cell for each atomic is independent. It does **not**
+prove that each atomic is recomputed from an owned underlying input/evidence
+fact, nor that mutating that underlying fact changes only the governing
+assertion. It is the same tautological class the QC `source_fact_isolation`
+rule and semantic contract §21 forbid ("Flipping an already-derived boolean does
+not count as isolation").
+
+### The redesigned mechanism (owned raw source-fact projection)
+
+Mirrors the accepted S13N pattern (`deriveAgentEvalSourceFacts` +
+`deriveAgentEvalDecisionFromSourceFacts` + `mutateAgentEvalSourceFact`) and goes
+one level more raw:
+
+- **`buildDeliveryAtomicProjection(id, input, decision, audit)`** — builds, for
+  one atomic, a detached deep clone (`structuredClone`) of exactly the raw
+  input / decision-section / audit fields that atomic's predicate reads. Not a
+  derived tuple, not a pre-baked boolean — the actual `delivery_identity`,
+  `repository_facts`, `demo_surface`, package sections (`executive_summary`,
+  `architecture_summary`, `setup_and_run`, `demo_script`, `limitations`,
+  `next_steps`, `evidence_index`, `provenance`), `coverage`, `blockers`,
+  `warnings`, and audit flags.
+- **`observeAtomicFromSourceFact(id, fact)`** — the one real predicate body.
+  The 30 `case` bodies from the pre-refactor `observeAtomic` switch were **moved
+  here verbatim**; it reads only `fact.projection`.
+- **`observeAtomic(id, input, decision, audit)`** is now a thin wrapper:
+  `observeAtomicFromSourceFact(id, { …, projection: buildDeliveryAtomicProjection(…) })`.
+  Its output is **byte-identical** to the pre-refactor single switch — verified
+  by a direct snapshot of all 30 observations across `baseInput`, `minimalInput`
+  and the 12 A/B scenarios, for both the canonical decision and a
+  `package: null` decision, before and after the refactor (deep-equal). So
+  `buildDeliveryPackage`, `evaluateDeliveryCandidateGate`,
+  `deriveDeliverySourceFacts`, `evaluateDeliveryAtomicObservations` (the A/B
+  scorer), `deriveDeliveryUnsafeCounters` and `planDeliveryDocumentationDemo` are
+  unaffected.
+- **`DELIVERY_ATOMIC_OWNED_SOURCE[id] = { owned_fact, mutate }`** — 30 entries.
+  Each `owned_fact` names one raw field; the 30 names are **pairwise distinct**
+  (asserted in the test). Each `mutate` changes exactly that one field of a
+  cloned projection and throws (`ISOLATION_TARGET_ABSENT:*`) if the target is
+  absent, so no `mutate` can silently no-op.
+- **`probeDeliveryAtomicSourceFactIsolation(id, input, audit?)`** — freezes the
+  30 canonical owned projections and their real observations; deep-clones
+  `facts[id]`; calls `DELIVERY_ATOMIC_OWNED_SOURCE[id].mutate` on the clone;
+  recomputes the REAL observer for **all 30** atomics from
+  `{ …canonical, [id]: mutatedClone }`; diffs against the frozen canonical
+  observations. Returns a structured result including
+  `changed_source_paths` (a real deep-JSON diff of the fact before/after),
+  `governing_changed`, `cross_assertion_changes`, `observation_recomputed`,
+  `original_input_unchanged`, `original_facts_unchanged`, and the derived
+  `mutated_raw_projection_field` / `mutated_expected_observation` /
+  `mutated_correct_flag` / `mutated_decision` flags.
+
+**Why this clears the S13N bar in S13N's own terms.** S13N's
+`mutateAgentEvalSourceFact` flips an already-derived `result` string and bypasses
+all predicate logic; the aggregator then re-runs. S13Q now mutates a raw field
+*upstream* of the predicate and re-runs the real predicate on it. That is
+strictly stronger than the accepted sibling.
+
+### Ownership is field-level, not whole-slice-disjoint (stated honestly)
+
+- Ownership is **field-level**: 30 pairwise-distinct mutated fields, each atomic
+  recomputed from its own detached deep clone.
+- Projections **overlap in content** where predicates read the same derived
+  section: `executive_summary` is carried by A02/A03/A04/A05/A06/A17;
+  `architecture_summary` by A07/A08/A09; `setup_and_run` by A10/A11/A12/A26;
+  `demo_script` by A13/A14/A15; `limitations` by A16/A17/A18; `next_steps` by
+  A19/A20/A21; `provenance` by A01/A24. This overlap is expected and harmless.
+- **A25, A27, A29 carry a whole-decision projection slice** — their predicates
+  are whole-graph scans (`containsForbiddenSensitiveMaterial(decision)`,
+  `collectStrings(decision)`, `JSON.stringify(decision)`); **A28 carries the
+  whole input** — its predicate rebuilds via `buildDeliveryPackage(input)`.
+  These are inherent to those predicates, not oversights.
+- **Cross-assertion non-change is guaranteed by construction**: the probe
+  recomputes all 30 from `{ …canonical, [id]: mutated }` and every `j ≠ id`
+  reads its own untouched clone, so `cross_assertion_changes` is empty for all
+  30 (measured, not assumed).
+- **Residual**: `mutated_decision` is *derived* as `!insideProjection` rather
+  than measured against a real decision object. The load-bearing guarantees that
+  nothing real was mutated are `original_input_unchanged` and
+  `original_facts_unchanged`, both computed by `JSON.stringify` byte comparison
+  before/after every probe.
+
+### Anti-tautology regression (mechanical, not narrative)
+
+- **`isValidSourceFactIsolationEvidence(r)`** returns `true` **only** when every
+  entry of `r.changed_source_paths` is strictly inside `projection.*` (never
+  `expected_observation`, `correct`, `actual_observation`, `field_family`,
+  `evidence`), the observation was recomputed from it, the governing assertion
+  moved, and `cross_assertion_changes` is empty.
+- **`legacyMutationEvidence(input, id)`** runs the rejected
+  `mutateDeliverySourceFact` path and computes its `changed_source_paths` with
+  the *same* deep-diff the real probe uses. The diff lands on
+  `expected_observation` — outside `projection` — so
+  `isValidSourceFactIsolationEvidence` returns **`false`** for A01, A14 and A29.
+  The new probe returns **`true`** for the same atomics.
+- `mutateDeliverySourceFact` is retained and exported **only** so this
+  regression can prove it invalid; its doc comment says so.
+- **Wrong-field negative control**: mutating a projection field the predicate
+  does *not* read (`A01.projection.input.delivery_identity.project_ref`,
+  `A13.projection.decision.package.demo_script[0].title`) leaves the governing
+  observation byte-identical — the 30/30 result is a measurement, not an
+  assertion that cannot fail.
+
+### Fresh QA numbers (Node `v24.19.0`, npm `11.17.0`)
+
+| gate | result |
+|---|---|
+| `tsc --noEmit` | PASS (0 errors) |
+| focused `tests/delivery-documentation-demo/` | **82/82** (was 79 at `cf49b45`; +3 isolation tests) |
+| canonical positives `P01..P10` | 10/10 |
+| canonical negatives `N01..N40` | 40/40 (each triggers its named blocker) |
+| owned-source-fact isolation `A01..A30` | **30/30** — one raw field mutated, real observer recomputed, exactly the governing assertion moves, 0 cross-assertion changes, input + canonical facts byte-stable |
+| 30 owned fields pairwise-distinct | PASS |
+| anti-tautology regression (`isValidSourceFactIsolationEvidence`) | PASS — legacy `expected_observation` path REJECTED, new probe ACCEPTED |
+| wrong-field negative control | PASS |
+| per-feature ablation | 7/7 |
+| hard invariants `S13Q-HI-001..030` | 30/30 |
+| unsafe counters `UC01..UC12` | 12/12 zero on positives and Skill-arm; each independently fireable |
+| actual-candidate gate / real S12→S10→S09 path | PASS |
+| A/B baseline total correct | **126** (held, not recomputed) |
+| A/B Skill total correct | **360** (held) |
+| A/B delta | **+234** (held) |
+| A/B qualified dimensions | **8** (`D01..D08`, threshold ≥ 7) (held) |
+| A/B atomic regressions | 0 |
+| A/B contributions table | unchanged: `D01..D08 = {9,9,9}`, `D09 = {A25:0,A26:9,A27:0}`, `D10 = {A28:0,A29:9,A30:0}` |
+| A/B per-scenario flips | unchanged: `[0,0,0,26,26,26,26,26,26,26,26,26]` |
+| A/B baseline gate-valid scenarios | 3 (the minimal scenarios) |
+| A/B max single-assertion share per qualified dim | 9/27 = 0.333 (≤ 0.50) |
+| full suite before clean build | **1322/1322** across 24 files |
+| genuine `rm -rf dist` (absent) → `tsc -p tsconfig.json` | clean — **786** files (`262 .js` + `262 .d.ts` + 262 maps) |
+| full suite after build | **1322/1322** across 24 files — equal pre/post |
+| `git diff --check` on `quality.ts` + S13Q test | clean |
+| boundary / dependency / protected-surface audit | `package.json` / `package-lock.json` unchanged; no `node:fs`/`node:net`/`node:http`/`child_process`/`fetch(`/`process.env`/`Date.now()`/`new Date()`/`Math.random` in the module; Core, AgentDefinition, `selectSkillForTask`, S09/S10/S12 and every stage's Part A untouched |
+| allowed-path audit (`git diff --stat` vs `cf49b45`) | only `src/intelligence/delivery-documentation-demo/quality.ts`, `tests/delivery-documentation-demo/deliveryDocumentationDemo.test.ts`, this report, and the new handoff file |
+| canonical Part A blobs at HEAD | skill `1198834124dc32c34721130566efdc5fda78465f`, quality `5f931e5372ff0319eee6e86fe0a1879c0300153f`, spec `6d7078633c1d0a90e8204a277de6100ed517a112` — all three match |
+| Part A semantic gap found | none |
+
+Pre-existing working-tree noise on arrival (NOT this repair's scope): six
+`M brain-bootstrap/**` S13N/S13O `.yaml`/`.md` files and eight `??` root
+`*.md`/`.yaml` files were already dirty/untracked before this session and are
+left untouched and unstaged.
+
+### Still required
+
+A DIFFERENT fresh non-authoring, non-fork, read-only verifier must reproduce the
+above against the exact new candidate SHA recorded in the issue #1 `CODEX_HANDOFF`
+comment and the complete integrated S13Q DEEP Quality Contract. `HI-052` is not
+awarded by this builder; `steps.S13Q` remains `NOT_STARTED`; S13R remains
+`NOT_STARTED`.

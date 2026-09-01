@@ -5,15 +5,21 @@ import { LocalReferenceSkillProvider } from "../../src/providers/skill/localRefe
 import { referenceSkillCatalogEntries } from "../../src/intelligence/skills/index.js";
 import {
   DELIVERY_ATOMIC_IDS,
+  DELIVERY_ATOMIC_OWNED_SOURCE,
   DELIVERY_DIMENSIONS,
   DELIVERY_DOCUMENTATION_DEMO_SKILL_ID,
   buildDeliveryPackage,
   deliveryDocumentationDemoSkillS13Q,
+  deriveDeliveryAtomicSourceFacts,
   deriveDeliverySourceFacts,
   deriveDeliveryUnsafeCounters,
   evaluateDeliveryAtomicObservations,
   evaluateDeliveryCandidateGate,
+  isValidSourceFactIsolationEvidence,
+  legacyMutationEvidence,
   mutateDeliverySourceFact,
+  observeAtomicFromSourceFact,
+  probeDeliveryAtomicSourceFactIsolation,
   planDeliveryDocumentationDemo,
   renderDeliveryPackageMarkdown,
   validateDeliveryCandidate,
@@ -364,42 +370,98 @@ describe("S13Q atomic isolation — 30/30", () => {
     for (const id of DELIVERY_ATOMIC_IDS) expect(qc).toContain(`${id}:`);
   });
 
-  it("proves 30/30 source-fact isolation through real evaluator recomputation", () => {
-    const inp = baseInput();
-    const before = S(inp);
-    const facts = deriveDeliverySourceFacts(inp);
-    const factsBefore = S(facts);
-    const base = evaluateDeliveryAtomicObservations(inp, facts);
-    expect(DELIVERY_ATOMIC_IDS.every((id) => base[id].correct)).toBe(true);
-
-    let passes = 0;
-    for (const id of DELIVERY_ATOMIC_IDS) {
-      const detached = structuredClone(facts) as DeliverySourceFacts;
-      mutateDeliverySourceFact(detached, id);
-      const after = evaluateDeliveryAtomicObservations(inp, detached);
-      const changed = DELIVERY_ATOMIC_IDS.filter((k) => base[k].correct !== after[k].correct);
-      expect(changed, id).toEqual([id]);
-      expect(after[id].actual_observation).toEqual(base[id].actual_observation);
-      expect(detached).not.toBe(facts);
-      passes++;
-    }
-    expect(passes).toBe(30);
-    expect(S(facts)).toBe(factsBefore);
-    expect(S(inp)).toBe(before);
+  it("declares 30 pairwise-distinct owned raw source fields, one per atomic", () => {
+    const owned = DELIVERY_ATOMIC_IDS.map((id) => DELIVERY_ATOMIC_OWNED_SOURCE[id].owned_fact);
+    expect(owned).toHaveLength(30);
+    expect(new Set(owned).size).toBe(30);
   });
 
-  it("mutating the produced decision flips more than one assertion — only a source-fact mutation is isolated", () => {
+  it("pins the fixture cells that index-addressed owned fields depend on", () => {
+    const delivered = deriveDeliveryAtomicSourceFacts(baseInput()).A05.projection.decision.package!.executive_summary.delivered;
+    // A03 owns delivered[0].claim_status; A05 owns delivered[2].subject_ref (the AVAILABLE_NOT_VERIFIED
+    // claim its predicate maps); A06 owns delivered[3].claim_status (the cell its DEFERRED filter newly
+    // captures). These positions are load-bearing for those probes — assert them, don't assume them.
+    expect(delivered.map((c) => c.claim_status)).toEqual(["IMPLEMENTED", "VERIFIED", "AVAILABLE_NOT_VERIFIED", "NOT_IMPLEMENTED"]);
+    expect(delivered[2].subject_ref).toBe("feat:reporter");
+  });
+
+  it("proves 30/30 owned-source-fact isolation: mutate one raw field, recompute the REAL observer", () => {
     const inp = baseInput();
-    const facts = deriveDeliverySourceFacts(inp);
-    const base = evaluateDeliveryAtomicObservations(inp, facts);
-    const wrongDecision = structuredClone(buildDeliveryPackage(inp)) as DeliveryDocumentationDemoResult;
-    wrongDecision.status = "BLOCKED";
-    wrongDecision.package = null;
-    const decisionMut = evaluateDeliveryAtomicObservations(inp, facts, wrongDecision);
-    expect(DELIVERY_ATOMIC_IDS.filter((id) => base[id].correct !== decisionMut[id].correct).length).toBeGreaterThan(1);
-    const detached = structuredClone(facts) as DeliverySourceFacts;
-    mutateDeliverySourceFact(detached, "A14");
-    expect(DELIVERY_ATOMIC_IDS.filter((id) => base[id].correct !== evaluateDeliveryAtomicObservations(inp, detached)[id].correct)).toEqual(["A14"]);
+    const before = S(inp);
+    const factsBefore = S(deriveDeliveryAtomicSourceFacts(inp));
+
+    for (const id of DELIVERY_ATOMIC_IDS) {
+      const inpBefore = S(inp);
+      const localFactsBefore = S(deriveDeliveryAtomicSourceFacts(inp));
+      const r = probeDeliveryAtomicSourceFactIsolation(id, inp);
+
+      expect(r.id, id).toBe(id);
+      expect(r.owned_fact, id).toBe(DELIVERY_ATOMIC_OWNED_SOURCE[id].owned_fact);
+      // exactly the governing assertion moves, recomputed from the real observer
+      expect(r.governing_changed, `${id} governing_changed`).toBe(true);
+      expect(r.cross_assertion_changes, `${id} cross_assertion_changes`).toEqual([]);
+      expect(r.recomputed_via_real_observer, `${id} recomputed_via_real_observer`).toBe(true);
+      expect(r.observation_recomputed, `${id} observation_recomputed`).toBe(true);
+      // the isolation action touched a raw projection field — never a derived result cell
+      expect(r.mutated_raw_projection_field, `${id} mutated_raw_projection_field`).toBe(true);
+      expect(r.changed_source_paths.length, `${id} changed_source_paths`).toBeGreaterThan(0);
+      expect(
+        r.changed_source_paths.every((p) => p === "projection" || p.startsWith("projection.")),
+        `${id} changed_source_paths ${JSON.stringify(r.changed_source_paths)}`,
+      ).toBe(true);
+      expect(r.mutated_expected_observation, `${id} mutated_expected_observation`).toBe(false);
+      expect(r.mutated_correct_flag, `${id} mutated_correct_flag`).toBe(false);
+      expect(r.mutated_decision, `${id} mutated_decision`).toBe(false);
+      // nothing real changed — original input and canonical facts are byte-identical
+      expect(r.original_input_unchanged, `${id} original_input_unchanged`).toBe(true);
+      expect(r.original_facts_unchanged, `${id} original_facts_unchanged`).toBe(true);
+      expect(S(inp), `${id} input byte-stable`).toBe(inpBefore);
+      expect(S(deriveDeliveryAtomicSourceFacts(inp)), `${id} facts byte-stable`).toBe(localFactsBefore);
+      // the probe result is accepted by the mechanical anti-tautology predicate
+      expect(isValidSourceFactIsolationEvidence(r), `${id} isValidSourceFactIsolationEvidence`).toBe(true);
+    }
+
+    expect(S(inp)).toBe(before);
+    expect(S(deriveDeliveryAtomicSourceFacts(inp))).toBe(factsBefore);
+  });
+
+  it("wrong-field negative control: mutating an unread projection field leaves the governing observation put", () => {
+    const facts = deriveDeliveryAtomicSourceFacts(baseInput());
+    // A01 reads only *.revision_ref; project_ref rides along in the projection but is never read.
+    const canonical = S(observeAtomicFromSourceFact("A01", facts.A01));
+    const clone = structuredClone(facts.A01);
+    (clone.projection.input as { delivery_identity: { project_ref: string } }).delivery_identity.project_ref = "proj:UNREAD_PROBE";
+    expect(S(observeAtomicFromSourceFact("A01", clone))).toBe(canonical);
+
+    // A13's predicate reads demo_surface.exists, demo_script.length and one blocker code; the demo_script
+    // step *titles* ride along in the projection but are never read — mutating one must not move A13.
+    const a13 = structuredClone(facts.A13);
+    const a13Canon = S(observeAtomicFromSourceFact("A13", facts.A13));
+    const a13Pkg = (a13.projection.decision as { package: { demo_script: Array<{ title: string }> } | null }).package;
+    if (!a13Pkg) throw new Error("A13 projection lost its package");
+    a13Pkg.demo_script[0].title = "UNREAD_TITLE_PROBE";
+    expect(S(observeAtomicFromSourceFact("A13", a13))).toBe(a13Canon);
+  });
+
+  it("anti-tautology regression: a direct expected_observation mutation is NOT valid isolation evidence", () => {
+    // The rejected cf49b45 mechanism: overwrite the already-derived expected_observation cell.
+    // `changed_source_paths` here is computed by the same deep-diff the real probe uses, so this
+    // is a mechanical rejection of the old path, not a narrative one.
+    for (const id of ["A01", "A14", "A29"] as const) {
+      const legacy = legacyMutationEvidence(baseInput(), id);
+      expect(legacy.changed_source_paths.some((p) => p.split(".").includes("expected_observation")), id).toBe(true);
+      expect(legacy.changed_source_paths.every((p) => p.startsWith("projection")), id).toBe(false);
+      expect(isValidSourceFactIsolationEvidence(legacy), id).toBe(false);
+    }
+
+    // Confirm the rejected primitive still behaves as documented (kept only for this proof).
+    const facts = deriveDeliverySourceFacts(baseInput());
+    mutateDeliverySourceFact(facts, "A14");
+    expect(facts.A14.expected_observation).toEqual({ isolation_probe_for: "A14" });
+
+    // The new owned-source-fact probe IS accepted for the same atomics.
+    for (const id of ["A01", "A14", "A29"] as const)
+      expect(isValidSourceFactIsolationEvidence(probeDeliveryAtomicSourceFactIsolation(id, baseInput())), id).toBe(true);
   });
 });
 
