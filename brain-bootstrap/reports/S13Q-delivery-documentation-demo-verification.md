@@ -603,3 +603,188 @@ above against the exact new candidate SHA recorded in the issue #1
 `CODEX_HANDOFF` comment (`INDEPENDENT_VERIFICATION_REQUIRED`) and the complete
 integrated S13Q DEEP Quality Contract. `HI-052` is not awarded by this builder;
 `steps.S13Q` remains `NOT_STARTED`; S13R remains `NOT_STARTED`.
+
+---
+
+## Isolation erratum reconciliation (2026-09-01)
+
+> **Supersedes** the "Part A §21 ruling requested" and every isolation count in
+> the "Source-fact isolation repair (2026-09-01)" section above. Everything else
+> in this report (positives, negatives, ablation, hard invariants, unsafe
+> counters, A/B) is unchanged and re-verified below.
+
+Canonical Part A is now four artifacts. `brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_1.md`
+(blob `fc63516c898aca6a888781bceeca4a3e377932aa`) is normative and defines the
+exact acceptance model: every `A01..A30` is classified `STRICT` |
+`STRUCTURAL_DEPENDENCY` | `GATE_CLASS` | `FAIL`, from ONE shared raw
+`{ input, audit }` model, ONE semantically governing fact mutated per probe
+(erratum §4/§6), the real `validateDeliveryInput`/`buildDeliveryPackage` rerun,
+and all 30 observations recomputed via the untouched `observeAtomic`.
+
+The prior candidate `5b084ae` (transferred to the branch at `36c2a5e`) is **not**
+verifier-authorized. This section reconciles Part B to the erratum and produces a
+new candidate SHA for **committed-source control-plane review** (not independent
+verification yet).
+
+### What changed in `quality.ts`
+
+- `DELIVERY_ATOMIC_OWNED_SOURCE` rebuilt: each entry now carries a
+  `governing_reason` (§4) and a declared `governing_paths` list; every mutation
+  targets the semantic property the atomic names. The pre-erratum invalid choices
+  were replaced: **A03** (was an unrelated `rf-nonfeat-deploy.subject_ref` rename)
+  → `rf-feat-builder.confidence` exercising `deriveClaimStatus`; **A09** (was
+  BOUNDARY-fact removal) → `af-model.is_proposed_decision`; **A13** (was
+  `demo_surface.steps.pop()`) → `demo_surface.exists=false`; **A26** (was a
+  two-fact add+edit, erratum §6 FAIL) → one `rf-cmd-build.value` undeclared
+  `$ENV`; **A27** (was an overclaim, A24/HI-022 territory) → one `lim-crlf.impact`
+  raw stack trace; **A25** re-verified to a single bearer-token field; **A19/A20**
+  re-chosen from `priority`/keyword-injection to the actual `status` label.
+- `classifyDeliveryAtomicIsolation` enforces §5 exactly: `STRUCTURAL_DEPENDENCY`
+  requires `cross` **set-equal** to the declared `also_changes` (not subset);
+  `GATE_CLASS` requires `blocked && package===null && blockers.includes(blocker)`;
+  a non-gate-class atomic that fail-closes is `FAIL`; `>1` mutated fact record is
+  `FAIL` (§8.4); measured paths not conforming to the declared `governing_paths`
+  is `FAIL` (§8.3).
+- `DELIVERY_ATOMIC_STRUCTURAL_DEPENDENCIES` rewritten with the EXACT measured
+  cross set per atomic (the old `A09 [A07,A08]` conservative superset is gone —
+  A09 is no longer structural). `DELIVERY_ATOMIC_GATE_CLASS` now records
+  `{ blocker, unsafe_counter, negative_fixture, forcing }` per member.
+- New `DELIVERY_ATOMIC_UNRESOLVED` map holds **A09** with its full reason string —
+  the gap is reported, not hidden.
+- New `legacyIrrelevantMoverEvidence` (§8.3 regression — the old A03 tuple-mover,
+  rejected via `paths_conform=false`) and `legacyTwoFactEvidence` (§8.4 regression
+  — the old A26 two-fact probe, rejected via `mutated_fact_records.length===2`).
+- `observeAtomic` (quality.ts lines 135-258) was **not touched** — byte-identical
+  to `1782a16` / `5b084ae`, so `deriveDeliverySourceFacts` and the 12-scenario
+  A/B gate are unaffected.
+
+### Final classification
+
+`strict_count = 15`, `structural_dependency_count = 7`, `gate_class_count = 7`,
+`fail_count = 1`.
+
+- **STRICT (15):** A02, A07, A08, A10, A11, A14, A15, A17, A18, A19, A22, A24, A28, A29, A30
+- **STRUCTURAL_DEPENDENCY (7):** A01→[A24], A03→[A05], A05→[A03,A24], A06→[A03], A16→[A18], A20→[A19], A23→[A22]
+- **GATE_CLASS (7):** A04, A12, A13, A21, A25, A26, A27
+- **FAIL (1):** A09 — reported semantic gap (see below)
+
+### Erratum §7 dependency/gate-class map (30 rows)
+
+| Axx | class | owned governing source fact | semantic reason it governs the atomic | fresh producer/gate rerun evidence | measured changed set | STRUCT declared dep set + forcing / GATE blocker+counter+fixture+no-leak |
+|-----|-------|-----------------------------|----------------------------------------|------------------------------------|----------------------|-------------------------------------------------------------------------|
+| A01 | STRUCTURAL_DEPENDENCY | `delivery_identity.revision_ref` | A01 observes `[pkg.identity.revision_ref, pkg.provenance.revision_ref, input…revision_ref]` — the delivered revision spine | rerun, not blocked | `{A01, A24}` | dep `[A24]`; `buildProvenance` (deliveryModel.ts:505) threads `delivery_identity.revision_ref` into `pkg.provenance.revision_ref` which A24 reads; nothing else reads the spine |
+| A02 | STRICT | `delivery_identity.audience` | A02 = scope_and_audience_preservation; audience is the named property | rerun, not blocked | `{A02}` | — |
+| A03 | STRUCTURAL_DEPENDENCY | `repository_facts[rf-feat-builder].confidence` | `deriveClaimStatus` maps confidence ACCEPTED→IMPLEMENTED vs REPORTED→AVAILABLE_NOT_VERIFIED (deliveryModel.ts:371-372) — the claim-state derivation A03 names | rerun, not blocked | `{A03, A05}` | dep `[A05]`; A03 and A05 both read `executive_summary.delivered.claim_status`; `claims_with_evidence` unchanged (both statuses ⇒ `evidence_refs:[]`) so A04 stays; `repository_fact:REPORTED` already in `source_kinds` (rf-feat-reporter) so A24 stays |
+| A04 | GATE_CLASS | `verification_evidence[ev-test-parser].status` | A04 = material_evidence_binding; ev-test-parser is the PASS binding for the one VERIFIED claim | rerun → **BLOCKED** `UNSUPPORTED_VERIFIED_CLAIM`; `package === null` | fail-closed (25-obs collapse) | blocker `UNSUPPORTED_VERIFIED_CLAIM` (deliveryModel.ts:233); counter `UC01` independently fireable; fixture `N06`; no leak (`package === null`) |
+| A05 | STRUCTURAL_DEPENDENCY | `repository_facts[rf-feat-reporter].confidence` | rf-feat-reporter is the only REPORTED fact — its confidence drives the AVAILABLE_NOT_VERIFIED derivation (deliveryModel.ts:372) A05 names | rerun, not blocked | `{A03, A05, A24}` | dep `[A03, A24]`; REPORTED→ACCEPTED (a) moves its `claim_status` in the shared table → A03, (b) deletes `repository_fact:REPORTED` from the deduped `provenance.source_kinds` set (buildProvenance:499-503) → A24. Minimality proof: A03's own probe *adds* a REPORTED that already exists, so its `source_kinds` set is unchanged and A24 stays put — same field, opposite direction, different measured set |
+| A06 | STRUCTURAL_DEPENDENCY | `repository_facts[rf-feat-builder].source_ref` | a roadmap/backlog/plan `source_ref` routes `deriveClaimStatus` to DEFERRED (deliveryModel.ts:368-369) — the roadmap-vs-implementation distinction A06 names | rerun, not blocked | `{A03, A06}` | dep `[A03]`; A06 and A03 both read the shared claim table; `confidence` untouched so `source_kinds`/A24 do not move |
+| A07 | STRICT | `architecture_facts[af-model].source_ref` | A07 observes `components.map([subject_ref, source_ref])` — the fact each component derives from | rerun, not blocked | `{A07}` | — |
+| A08 | STRICT | `architecture_facts[af-bound-core].value` | af-bound-core is a BOUNDARY fact whose value IS a preserved boundary line (buildArchitecture:393) | rerun, not blocked | `{A08}` | — |
+| A09 | **FAIL** | `architecture_facts[af-model].is_proposed_decision` | the exact governing raw-source condition for no_new_architecture_decision (deliveryModel.ts:259) | rerun → **BLOCKED** `NEW_ARCHITECTURE_DECISION`; `package === null` | fail-closed | **No unsafe counter UC01..UC12 covers the architecture-decision condition** ⇒ erratum §5.3 req 4 cannot be met ⇒ not GATE_CLASS. Blocking closes STRICT/STRUCTURAL (~25-obs collapse). §4 forbids the only non-blocking move (an unrelated boundary shifting `architecture_summary.partial`). Reported as a canonical Part A gap (missing counter) per erratum §6/§14 — **not** forced into a class |
+| A10 | STRICT | `verification_evidence[ev-build].subject_ref` | A10 = steps_evidence_backed; ev-build is the PASS evidence bound to the required build step (buildSetup:405-407) | rerun, not blocked | `{A10}` | — |
+| A11 | STRICT | `repository_facts[rf-cmd-build].precondition_refs` | A11 observes non-optional steps `[step_id, expected_signal>0, precondition_refs]` (buildSetup:413) | rerun, not blocked | `{A11}` | — |
+| A12 | GATE_CLASS | `repository_facts[rf-cmd-test].value` | an undeclared `:port` token in a command value is the governing prohibited condition for no_invented_token | rerun → **BLOCKED** `INVENTED_PORT`; `package === null` | fail-closed | blocker `INVENTED_PORT` (deliveryModel.ts:287-290); counter `UC02` fireable; fixture `N13`; no leak |
+| A13 | GATE_CLASS | `demo_surface.exists` | `exists=false` is the exact governing condition for demo_surface_exists | rerun → **BLOCKED** `DEMO_SURFACE_DOES_NOT_EXIST`; `package === null` | fail-closed | blocker `DEMO_SURFACE_DOES_NOT_EXIST` (deliveryModel.ts:308); counter `UC03` fireable; fixture `N17`; no leak |
+| A14 | STRICT | `demo_surface.steps[ds-happy].action_ref` | A14 observes per-step `[step_id, action>0, result>0, evidence_refs]` (buildDemo:443) | rerun, not blocked | `{A14}` | — |
+| A15 | STRICT | `demo_surface.steps[ds-happy].fallback_ref` | A15 observes per-step `[step_id, fallback>0]` + coverage (buildDemo:446) | rerun, not blocked | `{A15}` | — |
+| A16 | STRUCTURAL_DEPENDENCY | `policy.suppress_limitation_ids` | the mechanism that removes a limitation from the register (buildLimitations:453-455) | rerun, not blocked | `{A16, A18}` | dep `[A18]`; A16 and A18 both `.map` `pkg.limitations`; lim-crlf is LOW/KNOWN so `MATERIAL_LIMITATION_HIDDEN` does not fire and A17 (UNVERIFIED\|DEFERRED only) is unaffected |
+| A17 | STRICT | `limitations[lim-stdin].status` | A17 = unverified_unknown_explicit; status is the named property | rerun, not blocked | `{A17}` | — |
+| A18 | STRICT | `limitations[lim-crlf].severity` | A18 observes per-limitation `[id, severity, impact>0, source_refs]` | rerun, not blocked | `{A18}` | — |
+| A19 | STRICT | `next_step_candidates[ns-fixtures].status` | A19 = status_labeled; status is the label (buildNextSteps:474). ns-fixtures is not S13R/deploy-matching so A20 is unaffected | rerun, not blocked | `{A19}` | — |
+| A20 | STRUCTURAL_DEPENDENCY | `next_step_candidates[ns-deploy].status` | ns-deploy IS the S13R deployment next step; its status label is exactly the boundary property A20 names | rerun, not blocked | `{A19, A20}` | dep `[A19]`; A19 observes every next-step status, A20 the S13R-filtered subset; a non-S13R relabel (A19's own probe) moves only A19 ⇒ `[A19]` is exact-and-minimal for the ns-deploy mutation |
+| A21 | GATE_CLASS | `architecture_facts[af-quality].value` (S14 marker) | an architecture fact carrying S14 capability/MCP work is the governing prohibited condition for s14_s15_boundary | rerun → **BLOCKED** `S14_CAPABILITY_PULLED_FORWARD`; `package === null` | fail-closed | blocker `S14_CAPABILITY_PULLED_FORWARD` (deliveryModel.ts:349); counter `UC09` fireable (independently, via demo-runtime marker); fixture `N28`; no leak |
+| A22 | STRICT | `verification_evidence[ev-typecheck].evidence_id` | the evidence_id is what `buildEvidenceIndex` resolves, deduplicates and orders (deliveryModel.ts:492-494) | rerun, not blocked | `{A22}` | — |
+| A23 | STRUCTURAL_DEPENDENCY | append `verification_evidence` `ev-probe-fail` FAIL for subject `repo` | a same-subject PASS+FAIL pair is exactly the conflict `detectEvidenceConflicts` records (deliveryModel.ts:521-524) | rerun, not blocked | `{A22, A23}` | dep `[A22]`; the conflict requires appending one evidence record, which `buildEvidenceIndex` then lists ⇒ A22's evidence-id list moves; `evidence_refs_total` is A23's own tuple element |
+| A24 | STRICT | `delivery_identity.baseline_revision_ref` | a named `provenance` completeness field (buildProvenance:506) | rerun, not blocked | `{A24}` | — |
+| A25 | GATE_CLASS | `demo_surface.steps[ds-failure].action_ref` (bearer token) | a secret value in a raw-source field is the governing prohibited condition for no_secret_or_raw_sensitive_material | rerun → **BLOCKED** `SECRET_MATERIAL`; `package === null` | fail-closed | blocker `SECRET_MATERIAL` (deliveryModel.ts:147,194); counter `UC06` fireable; fixture `N34`; no leak — `SECRET_MATERIAL`'s detail is generic, the secret value appears nowhere in the decision |
+| A26 | GATE_CLASS | `repository_facts[rf-cmd-build].value` (undeclared `$ENV`) | an undeclared `$ENV` name in a command value is the governing prohibited condition for secret_variable_names_only_when_approved | rerun → **BLOCKED** `INVENTED_ENV_VARIABLE`; `package === null` | fail-closed | blocker `INVENTED_ENV_VARIABLE` (deliveryModel.ts:284); counter `UC02` fireable; fixture `N12`; no leak into an accepted artifact (`package === null`) — the variable NAME appears only in the fail-closed rejection reason `blockers[].detail`, contrast A25 where the VALUE is never echoed |
+| A27 | GATE_CLASS | `limitations[lim-crlf].impact` (raw stack trace) | a raw stack trace in a raw-source field is the governing prohibited condition for no_raw_log_prompt_tool_or_private_payload | rerun → **BLOCKED** `RAW_LOG_MATERIAL`; `package === null`; **observation unchanged** (`governing_changed=false`, permitted by erratum §5.3 final paragraph) | fail-closed | blocker `RAW_LOG_MATERIAL` (deliveryModel.ts:148,194); counter `UC06` fireable; fixture `N36`; no leak — never reaches `collectStrings(decision)` |
+| A28 | STRICT | `audit.input_snapshot_after` | A28 = output_and_ordering; the input-stability audit fact is the named property | audit-family (no producer rerun required; determinism observation) | `{A28}` | — |
+| A29 | STRICT | `audit.candidate_gate_valid` | A29 = actual_candidate_and_no_self_certification; candidate_gate_valid is the named property | audit-family | `{A29}` | — |
+| A30 | STRICT | `audit.core_or_contract_changed` | A30 = core_agentdef_dependencies_prior_contracts; core_or_contract_changed is the named property | audit-family | `{A30}` | — |
+
+### Erratum §8 anti-tautology — all four mechanically rejected
+
+| # | fake-isolation mechanism | probe | rejected via | `classify` |
+|---|--------------------------|-------|--------------|-----------|
+| §8.1 | direct `expected_observation` overwrite (cf49b45) | `legacyExpectedObservationMutationEvidence` | diff path carries `expected_observation` ⇒ `pathsAreRawSourceOnly` false | `FAIL` |
+| §8.2 | direct derived `decision.*` overwrite (1782a16) | `legacyDerivedDecisionMutationEvidence` | diff paths carry `decision.` segments | `FAIL` |
+| §8.3 | semantically irrelevant tuple-mover (pre-erratum A03) | `legacyIrrelevantMoverEvidence` | ONE raw-source fact, but measured path `input.repository_facts.4.subject_ref` does not conform to A03's declared `governing_paths` ⇒ `paths_conform=false` | `FAIL` |
+| §8.4 | two independent source facts in one probe (pre-erratum A26) | `legacyTwoFactEvidence` | both raw-source `input.` fields, but land on two distinct fact records ⇒ `mutated_fact_records.length===2` | `FAIL` |
+
+Positive paths (erratum §8 final paragraph): `A02` STRICT accepted, `A01`/`A16`
+STRUCTURAL_DEPENDENCY accepted, `A25`/`A27` GATE_CLASS accepted.
+
+### Fresh A/B (erratum §12 — recomputed from scratch)
+
+`S12 → S10 → S09 → actual parsed candidate → deterministic actual-candidate gate
+→ post-gate decision → deterministic evaluator`, 12 scenarios × 30 atomics × 2 arms.
+
+| metric | fresh value |
+|--------|-------------|
+| baseline total correct | **126** |
+| Skill total correct | **360** |
+| delta | **+234** |
+| per-assertion contributions | `D01..D08` = `{9,9,9}` each; `D09` = `{A25:0, A26:9, A27:0}`; `D10` = `{A28:0, A29:9, A30:0}` |
+| qualified dimensions | **8** (`D01..D08`; threshold ≥ 7) |
+| distinct improved assertion ids per qualified dim | 3 (≥ 2) |
+| regressions | **0** |
+| max single-assertion share — per qualified dim | 9/27 = **0.333** (≤ 0.50) |
+| max single-assertion share — global | 9/234 ≈ **0.038** |
+| per-scenario flips | `[0, 0, 0, 26, 26, 26, 26, 26, 26, 26, 26, 26]` |
+| gate-valid baseline scenarios | **3** (the minimal scenarios) |
+| Skill-arm unsafe counters (aggregate `UC01..UC12`) | **0 / 0** |
+
+The frozen A/B table in the test was recomputed and **reproduced the prior
+values exactly** — `observeAtomic` was not touched, so no frozen expectation
+required updating (erratum §12: reported as freshly reproduced, not carried
+forward).
+
+### DEEP QA (Node 24.19.0 / npm 11.17.0)
+
+| gate | result |
+|------|--------|
+| `npm run typecheck` | clean |
+| focused `npx vitest run tests/delivery-documentation-demo` | **82/82** |
+| full `npm test` (pre-build) | **1322/1322** across 24 files |
+| `rm -rf dist` (confirmed absent) → `npm run build` | clean — **786** emitted files (262 `.js` + 262 `.d.ts` + 262 `.js.map`) |
+| full `npm test` (post-build) | **1322/1322** — equal pre/post |
+| `git diff --check` on `quality.ts` + S13Q test | clean |
+| allowed-path audit (`git diff --stat cf49b45..HEAD`) | only `S13Q_ISOLATION_ERRATUM_1.md`, `quality.ts`, the S13Q test, this report, and handoff files |
+| canonical Part A blobs at HEAD | skill `1198834124dc32c34721130566efdc5fda78465f`, quality-contract `5f931e5372ff0319eee6e86fe0a1879c0300153f`, semantic-contract `6d7078633c1d0a90e8204a277de6100ed517a112`, erratum `fc63516c898aca6a888781bceeca4a3e377932aa` — all four match |
+| independent review (advisor) before declaring done | performed; A05 `[A03,A24]` confirmed exact-and-minimal, A26 no-leak predicate tightened to `package===null`, classifier ordering + pairwise-distinct `governing_paths` added |
+
+### Remaining semantic gap — A09 (reported, not resolved)
+
+`A09 no_new_architecture_decision_in_summary` has **no valid class** under the
+erratum. Its only governing raw-source condition (`is_proposed_decision` /
+`ARCHITECTURE_DECISION_MARKER`) is fail-closed to `NEW_ARCHITECTURE_DECISION` →
+`BLOCKED`, which rules out STRICT and STRUCTURAL_DEPENDENCY (package-null collapse
+moves ~25 observations). GATE_CLASS requires (erratum §5.3 req 4) a
+corresponding independently-fireable unsafe counter, and **none of `UC01..UC12`
+covers the architecture-decision condition** — the closest, `UC09`, is
+future-stage pull-forward (S14/S15/demo-runtime/next-step-completed). Erratum §4
+forbids the only non-blocking move (mutating an unrelated boundary to shift
+`architecture_summary.partial`). This is a missing unsafe counter in canonical
+Part A, reported per erratum §6 / §14 for control-plane ruling. It is recorded in
+`DELIVERY_ATOMIC_UNRESOLVED.A09`; `classifyDeliveryAtomicIsolation` returns
+`FAIL` for it and the S13Q test asserts that FAIL and that A09 is **not** present
+in `DELIVERY_ATOMIC_STRUCTURAL_DEPENDENCIES` or `DELIVERY_ATOMIC_GATE_CLASS`.
+
+### Control-plane action required
+
+Review the committed 30-row dependency/gate-class map above and:
+
+1. **Accept or reject** the 7 `STRUCTURAL_DEPENDENCY` closures (erratum §5.2 —
+   each measured cross set is exact; `A05 [A03,A24]` is the widest).
+2. **Accept or reject** the 7 `GATE_CLASS` classifications (erratum §5.3 — each
+   backed by blocker + independently-fireable counter + named negative fixture +
+   `package === null` no-leak proof).
+3. **Rule on A09**: either add a `NEW_ARCHITECTURE_DECISION` unsafe counter to
+   canonical Part A (then A09 becomes GATE_CLASS), accept A09 as a permanent
+   non-isolable atomic, or re-decompose A09 in the semantic contract.
+4. **Authorize or withhold** a fresh independent verifier for the new candidate
+   SHA recorded in the issue #1 `CODEX_HANDOFF` comment.
+
+`HI-052` is **not** awarded by this builder. `steps.S13Q` remains `NOT_STARTED`.
+S13R remains `NOT_STARTED`.

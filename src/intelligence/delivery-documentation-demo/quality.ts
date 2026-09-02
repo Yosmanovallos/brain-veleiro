@@ -258,16 +258,21 @@ function observeAtomic(
 }
 
 // ---------------------------------------------------------------------------
-// Owned-source-fact isolation — ONE shared detached RAW `{ input, audit }`
-// model upstream of `buildDeliveryPackage` (QC `source_fact_isolation`,
-// semantic contract §21). Repair #3 (2026-09-01): rejected mechanisms were
-//   - cf49b45: direct `expected_observation` overwrite
-//   - 1782a16: per-atomic detached DERIVED-decision projections
-// Neither mutated an underlying input/evidence fact and reran the real
-// producer. This layer clones the shared raw source, mutates exactly one real
-// `DeliveryDocumentationDemoInput` / explicit audit-evidence field, reruns the
-// real `buildDeliveryPackage`, and recomputes ALL 30 observations via the one
-// real `observeAtomic` predicate — never a per-atomic result clone.
+// One-governing-source causal isolation (QC `source_fact_isolation`; semantic
+// contract §21 as amended by brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_1.md).
+//
+// Every A01..A30 is classified STRICT | STRUCTURAL_DEPENDENCY | GATE_CLASS |
+// FAIL. One shared detached RAW `{ input, audit }` model is frozen upstream of
+// `buildDeliveryPackage`; a probe clones it, mutates exactly ONE semantically
+// governing raw fact (erratum §4/§6), reruns the real
+// `validateDeliveryInput`/`buildDeliveryPackage`, recomputes all 30 atomic
+// observations via the one real `observeAtomic`, and measures the changed set.
+//
+// Rejected mechanisms (mechanically proven invalid below):
+//   - cf49b45: direct `expected_observation` overwrite       -> legacyExpectedObservationMutationEvidence
+//   - 1782a16: direct derived-`decision` field overwrite     -> legacyDerivedDecisionMutationEvidence
+//   - erratum §8.3: semantically irrelevant tuple-mover      -> legacyIrrelevantMoverEvidence
+//   - erratum §8.4: two independent source facts in one probe -> legacyTwoFactEvidence
 // ---------------------------------------------------------------------------
 
 export interface DeliveryAtomicRawSource {
@@ -302,79 +307,353 @@ const nfBy = (s: DeliveryAtomicRawSource, id: string) =>
 const dsBy = (s: DeliveryAtomicRawSource, ref: string) =>
   reqTarget((mi(s).demo_surface.steps ?? []).find((x) => x.step_ref === ref), `input.demo_surface.steps[step_ref=${ref}]`);
 
+export interface DeliveryAtomicOwnedSource {
+  /** Human label — pairwise distinct across the 30. */
+  owned_fact: string;
+  /** Erratum §4: why this fact exercises the semantic property the atomic names. */
+  governing_reason: string;
+  source_family: "input" | "audit";
+  /**
+   * Declared raw-source dot-paths the one-fact mutation is expected to touch
+   * (relative to the shared `{ input, audit }` model). The classifier requires
+   * the MEASURED `mutated_field_paths` to conform to exactly these — a probe
+   * whose measured paths land elsewhere is a semantically irrelevant tuple-mover
+   * (erratum §8.3) and classifies FAIL.
+   */
+  governing_paths: string[];
+  mutate: (src: DeliveryAtomicRawSource) => void;
+}
+
 /**
- * Per-atomic owned underlying fact + a mutation of exactly that one real field.
- * The 30 `owned_fact` labels are pairwise distinct; each `mutate` throws
- * `ISOLATION_TARGET_ABSENT:<path>` if its target is missing.
+ * Per-atomic one governing source fact + the mutation of exactly that fact.
+ * Frozen to the `baseInput()` fixture indices on purpose: a fixture reorder
+ * must fail the conformance check loudly rather than silently follow the move.
  */
-export const DELIVERY_ATOMIC_OWNED_SOURCE: Record<
-  DeliveryAtomicId,
-  { owned_fact: string; source_family: "input" | "audit"; mutate: (src: DeliveryAtomicRawSource) => void }
-> = {
-  A01: { owned_fact: "delivery_identity.revision_ref", source_family: "input", mutate: (s) => { reqTarget(mi(s).delivery_identity, "input.delivery_identity"); mi(s).delivery_identity.revision_ref = "rev:probe-a01aaaaaa"; } },
-  A02: { owned_fact: "delivery_identity.audience", source_family: "input", mutate: (s) => { reqTarget(mi(s).delivery_identity, "input.delivery_identity"); mi(s).delivery_identity.audience = "audience:probe-a02"; } },
-  A03: { owned_fact: "repository_facts[rf-nonfeat-deploy].subject_ref", source_family: "input", mutate: (s) => { rfBy(s, "rf-nonfeat-deploy").subject_ref = "feat:deploy-probe"; } },
-  A04: { owned_fact: "verification_evidence[ev-test-parser].subject_ref", source_family: "input", mutate: (s) => { veBy(s, "ev-test-parser").subject_ref = "feat:parser-detached"; } },
-  A05: { owned_fact: "repository_facts[rf-feat-reporter].subject_ref", source_family: "input", mutate: (s) => { rfBy(s, "rf-feat-reporter").subject_ref = "feat:reporter-probe"; } },
-  A06: { owned_fact: "repository_facts[rf-feat-builder].source_ref", source_family: "input", mutate: (s) => { rfBy(s, "rf-feat-builder").source_ref = "src:roadmap/builder-plan"; } },
-  A07: { owned_fact: "architecture_facts[af-model].source_ref", source_family: "input", mutate: (s) => { afBy(s, "af-model").source_ref = "src:module/deliveryModel-probe.ts"; } },
-  A08: { owned_fact: "architecture_facts[af-bound-core].value", source_family: "input", mutate: (s) => { afBy(s, "af-bound-core").value = "the module changes no Core surface (probe)"; } },
-  A09: { owned_fact: "architecture_facts[kind=BOUNDARY] (removed)", source_family: "input", mutate: (s) => { const facts = reqTarget(mi(s).architecture_facts, "input.architecture_facts"); mi(s).architecture_facts = facts.filter((a) => a.kind !== "BOUNDARY"); } },
-  A10: { owned_fact: "verification_evidence[ev-build].subject_ref", source_family: "input", mutate: (s) => { veBy(s, "ev-build").subject_ref = "script:build-probe"; } },
-  A11: { owned_fact: "repository_facts[rf-cmd-build].precondition_refs", source_family: "input", mutate: (s) => { const f = rfBy(s, "rf-cmd-build"); f.precondition_refs = [...(f.precondition_refs ?? []), "pre:probe-a11"]; } },
-  A12: { owned_fact: "repository_facts[rf-cmd-test].value", source_family: "input", mutate: (s) => { const f = rfBy(s, "rf-cmd-test"); f.value = `${f.value} # probe`; } },
-  A13: { owned_fact: "demo_surface.steps (last removed)", source_family: "input", mutate: (s) => { const steps = reqTarget(mi(s).demo_surface.steps, "input.demo_surface.steps"); if (steps.length === 0) throw new Error("ISOLATION_TARGET_ABSENT:input.demo_surface.steps[last]"); mi(s).demo_surface.steps = steps.slice(0, -1); } },
-  A14: { owned_fact: "demo_surface.steps[ds-happy].action_ref", source_family: "input", mutate: (s) => { dsBy(s, "ds-happy").action_ref = ""; } },
-  A15: { owned_fact: "demo_surface.steps[ds-happy].fallback_ref", source_family: "input", mutate: (s) => { dsBy(s, "ds-happy").fallback_ref = ""; } },
-  A16: { owned_fact: "policy.suppress_limitation_ids", source_family: "input", mutate: (s) => { reqTarget(mi(s).policy, "input.policy").suppress_limitation_ids = ["lim-crlf"]; } },
-  A17: { owned_fact: "limitations[lim-stdin].status", source_family: "input", mutate: (s) => { lfBy(s, "lim-stdin").status = "KNOWN"; } },
-  A18: { owned_fact: "limitations[lim-crlf].severity", source_family: "input", mutate: (s) => { lfBy(s, "lim-crlf").severity = "MEDIUM"; } },
-  A19: { owned_fact: "next_step_candidates[ns-fixtures].priority", source_family: "input", mutate: (s) => { nfBy(s, "ns-fixtures").priority = "P0"; } },
-  A20: { owned_fact: "next_step_candidates[ns-fixtures].summary", source_family: "input", mutate: (s) => { const n = nfBy(s, "ns-fixtures"); n.summary = `${n.summary} deploy step`; } },
-  A21: { owned_fact: "next_step_candidates[ns-deploy].summary", source_family: "input", mutate: (s) => { const n = nfBy(s, "ns-deploy"); n.summary = `${n.summary} S14`; } },
-  A22: { owned_fact: "verification_evidence[ev-typecheck].evidence_id", source_family: "input", mutate: (s) => { veBy(s, "ev-typecheck").evidence_id = "ev-typecheck-probe"; } },
-  A23: { owned_fact: "verification_evidence (append ev-probe-fail FAIL for subject repo)", source_family: "input", mutate: (s) => { reqTarget(mi(s).verification_evidence, "input.verification_evidence").push({ evidence_id: "ev-probe-fail", kind: "TEST", subject_ref: "repo", revision_ref: "rev:abc123def456", status: "FAIL", summary_ref: "sum:probe", source_ref: "src:ci" }); } },
-  A24: { owned_fact: "delivery_identity.baseline_revision_ref", source_family: "input", mutate: (s) => { reqTarget(mi(s).delivery_identity, "input.delivery_identity"); mi(s).delivery_identity.baseline_revision_ref = "rev:probe-a24bbbbb"; } },
-  A25: { owned_fact: "repository_facts[rf-cmd-build].value (secret material)", source_family: "input", mutate: (s) => { rfBy(s, "rf-cmd-build").value = "TOKEN=sk-deadbeefdeadbeef01 npm run build"; } },
-  A26: { owned_fact: "repository_facts[rf-env-probe] added + repository_facts[rf-cmd-build].value", source_family: "input", mutate: (s) => { reqTarget(mi(s).repository_facts, "input.repository_facts").push({ fact_id: "rf-env-probe", kind: "SAFE_ENV_VARIABLE_NAME", subject_ref: "PROBE_VAR", value: "PROBE_VAR", source_ref: "src:README.md", revision_ref: "rev:abc123def456", confidence: "ACCEPTED" }); rfBy(s, "rf-cmd-build").value = "npm run build # ${PROBE_VAR}"; } },
-  A27: { owned_fact: "repository_facts[rf-feat-builder].value (overclaim demonstration)", source_family: "input", mutate: (s) => { rfBy(s, "rf-feat-builder").value = "this module is production-ready"; } },
-  A28: { owned_fact: "audit.input_snapshot_after", source_family: "audit", mutate: (s) => { s.audit.input_snapshot_after = `${reqTarget(s.audit.input_snapshot_after, "audit.input_snapshot_after")}::probe`; } },
-  A29: { owned_fact: "audit.candidate_gate_valid", source_family: "audit", mutate: (s) => { s.audit.candidate_gate_valid = false; } },
-  A30: { owned_fact: "audit.core_or_contract_changed", source_family: "audit", mutate: (s) => { s.audit.core_or_contract_changed = true; } },
+export const DELIVERY_ATOMIC_OWNED_SOURCE: Record<DeliveryAtomicId, DeliveryAtomicOwnedSource> = {
+  A01: {
+    owned_fact: "delivery_identity.revision_ref",
+    governing_reason: "A01 delivered_revision_match observes [pkg.identity.revision_ref, pkg.provenance.revision_ref, input.delivery_identity.revision_ref]; the delivered revision spine IS delivery_identity.revision_ref.",
+    source_family: "input",
+    governing_paths: ["input.delivery_identity.revision_ref"],
+    mutate: (s) => { mi(s).delivery_identity.revision_ref = "rev:probe-a01aaaaaa"; },
+  },
+  A02: {
+    owned_fact: "delivery_identity.audience",
+    governing_reason: "A02 scope_and_audience_preservation observes identity + executive_summary scope/audience; audience is the named property.",
+    source_family: "input",
+    governing_paths: ["input.delivery_identity.audience"],
+    mutate: (s) => { mi(s).delivery_identity.audience = "audience:probe-a02"; },
+  },
+  A03: {
+    owned_fact: "repository_facts[rf-feat-builder].confidence",
+    governing_reason: "A03 implemented_verified_available_deferred_states_not_conflated observes the executive_summary.delivered [subject_ref, claim_status] table; deriveClaimStatus maps confidence ACCEPTED->IMPLEMENTED vs REPORTED->AVAILABLE_NOT_VERIFIED (deliveryModel.ts:371-372), i.e. the claim-state derivation the atomic names.",
+    source_family: "input",
+    governing_paths: ["input.repository_facts.2.confidence"],
+    mutate: (s) => { rfBy(s, "rf-feat-builder").confidence = "REPORTED"; },
+  },
+  A04: {
+    owned_fact: "verification_evidence[ev-test-parser].status",
+    governing_reason: "A04 material_evidence_binding observes [claims_total, claims_with_evidence, every VERIFIED claim has evidence]; ev-test-parser is the PASS material evidence binding the one VERIFIED claim. Setting it FAIL removes the binding and fail-closes.",
+    source_family: "input",
+    governing_paths: ["input.verification_evidence.1.status"],
+    mutate: (s) => { veBy(s, "ev-test-parser").status = "FAIL"; },
+  },
+  A05: {
+    owned_fact: "repository_facts[rf-feat-reporter].confidence",
+    governing_reason: "A05 unsupported_claim_handling observes [UNKNOWN claim count, AVAILABLE_NOT_VERIFIED subjects]; rf-feat-reporter is the only REPORTED feature fact, so its confidence drives the AVAILABLE_NOT_VERIFIED derivation (deliveryModel.ts:372) the atomic names.",
+    source_family: "input",
+    governing_paths: ["input.repository_facts.3.confidence"],
+    mutate: (s) => { rfBy(s, "rf-feat-reporter").confidence = "ACCEPTED"; },
+  },
+  A06: {
+    owned_fact: "repository_facts[rf-feat-builder].source_ref",
+    governing_reason: "A06 roadmap_not_implementation_proof observes DEFERRED subjects; deriveClaimStatus routes a roadmap/backlog/plan source_ref to DEFERRED (deliveryModel.ts:368-369), i.e. the roadmap-vs-implementation distinction the atomic names.",
+    source_family: "input",
+    governing_paths: ["input.repository_facts.2.source_ref"],
+    mutate: (s) => { rfBy(s, "rf-feat-builder").source_ref = "src:roadmap/builder-plan"; },
+  },
+  A07: {
+    owned_fact: "architecture_facts[af-model].source_ref",
+    governing_reason: "A07 components_from_facts observes components.map([subject_ref, source_ref]); source_ref is the fact each component is derived from.",
+    source_family: "input",
+    governing_paths: ["input.architecture_facts.0.source_ref"],
+    mutate: (s) => { afBy(s, "af-model").source_ref = "src:module/deliveryModel-probe.ts"; },
+  },
+  A08: {
+    owned_fact: "architecture_facts[af-bound-core].value",
+    governing_reason: "A08 boundaries_preserved observes [boundaries, external_dependencies]; af-bound-core is a BOUNDARY fact whose value IS a preserved boundary line (buildArchitecture deliveryModel.ts:393).",
+    source_family: "input",
+    governing_paths: ["input.architecture_facts.2.value"],
+    mutate: (s) => { afBy(s, "af-bound-core").value = "the module keeps every Core boundary intact (probe)"; },
+  },
+  A09: {
+    owned_fact: "architecture_facts[af-model].is_proposed_decision",
+    governing_reason: "A09 no_new_architecture_decision_in_summary: is_proposed_decision=true is the exact governing raw-source condition (deliveryModel.ts:259). It fail-closes to NEW_ARCHITECTURE_DECISION -> BLOCKED, but NO unsafe counter UC01..UC12 covers the architecture-decision condition, so erratum §5.3 req 4 cannot be met and §4 forbids the non-blocking `partial` tuple-mover. Reported as an unresolved semantic gap (DELIVERY_ATOMIC_UNRESOLVED).",
+    source_family: "input",
+    governing_paths: ["input.architecture_facts.0.is_proposed_decision"],
+    mutate: (s) => { afBy(s, "af-model").is_proposed_decision = true; },
+  },
+  A10: {
+    owned_fact: "verification_evidence[ev-build].subject_ref",
+    governing_reason: "A10 steps_evidence_backed observes setup_and_run.map([step_id, evidence_refs, optional]); ev-build is the PASS evidence bound to the required build step by subject_ref (buildSetup deliveryModel.ts:405-407).",
+    source_family: "input",
+    governing_paths: ["input.verification_evidence.2.subject_ref"],
+    mutate: (s) => { veBy(s, "ev-build").subject_ref = "script:build-probe"; },
+  },
+  A11: {
+    owned_fact: "repository_facts[rf-cmd-build].precondition_refs",
+    governing_reason: "A11 preconditions_and_expected_signals observes non-optional steps [step_id, expected_signal>0, precondition_refs]; precondition_refs is the named property (buildSetup deliveryModel.ts:413).",
+    source_family: "input",
+    governing_paths: ["input.repository_facts.5.precondition_refs"],
+    mutate: (s) => { const f = rfBy(s, "rf-cmd-build"); f.precondition_refs = [...(f.precondition_refs ?? []), "pre:probe-a11"]; },
+  },
+  A12: {
+    owned_fact: "repository_facts[rf-cmd-test].value",
+    governing_reason: "A12 no_invented_token: an undeclared :port token in a command value is the governing prohibited condition; guardInventedTokens fail-closes to INVENTED_PORT -> BLOCKED (deliveryModel.ts:287-290) before an invented token can reach an accepted setup step.",
+    source_family: "input",
+    governing_paths: ["input.repository_facts.6.value"],
+    mutate: (s) => { rfBy(s, "rf-cmd-test").value = "BRAIN_LOG_LEVEL=$BRAIN_LOG_LEVEL npm test --port 9137"; },
+  },
+  A13: {
+    owned_fact: "demo_surface.exists",
+    governing_reason: "A13 demo_surface_exists: demo_surface.exists=false is the exact governing condition; buildDemoSubSteps fail-closes to DEMO_SURFACE_DOES_NOT_EXIST -> BLOCKED (deliveryModel.ts:308).",
+    source_family: "input",
+    governing_paths: ["input.demo_surface.exists"],
+    mutate: (s) => { mi(s).demo_surface.exists = false; },
+  },
+  A14: {
+    owned_fact: "demo_surface.steps[ds-happy].action_ref",
+    governing_reason: "A14 step_action_result_evidence_complete observes per-step [step_id, action>0, result>0, evidence_refs]; emptying ds-happy.action_ref exercises action completeness (buildDemo deliveryModel.ts:443).",
+    source_family: "input",
+    governing_paths: ["input.demo_surface.steps.0.action_ref"],
+    mutate: (s) => { dsBy(s, "ds-happy").action_ref = ""; },
+  },
+  A15: {
+    owned_fact: "demo_surface.steps[ds-happy].fallback_ref",
+    governing_reason: "A15 fallback_or_stop_condition_truthful observes per-step [step_id, fallback>0] + coverage.demo_steps_with_fallback; ds-happy.fallback_ref is the named property (buildDemo deliveryModel.ts:446).",
+    source_family: "input",
+    governing_paths: ["input.demo_surface.steps.0.fallback_ref"],
+    mutate: (s) => { dsBy(s, "ds-happy").fallback_ref = ""; },
+  },
+  A16: {
+    owned_fact: "policy.suppress_limitation_ids",
+    governing_reason: "A16 material_limitations_present observes pkg.limitations ids; policy.suppress_limitation_ids is the mechanism that removes a limitation from the register (buildLimitations deliveryModel.ts:453-455).",
+    source_family: "input",
+    governing_paths: ["input.policy.suppress_limitation_ids"],
+    mutate: (s) => { reqTarget(mi(s).policy, "input.policy").suppress_limitation_ids = ["lim-crlf"]; },
+  },
+  A17: {
+    owned_fact: "limitations[lim-stdin].status",
+    governing_reason: "A17 unverified_unknown_explicit observes limitations with status UNVERIFIED|DEFERRED; lim-stdin.status is the named property.",
+    source_family: "input",
+    governing_paths: ["input.limitations.1.status"],
+    mutate: (s) => { lfBy(s, "lim-stdin").status = "KNOWN"; },
+  },
+  A18: {
+    owned_fact: "limitations[lim-crlf].severity",
+    governing_reason: "A18 severity_impact_provenance_preserved observes per-limitation [limitation_id, severity, impact>0, source_refs]; severity is the named property.",
+    source_family: "input",
+    governing_paths: ["input.limitations.0.severity"],
+    mutate: (s) => { lfBy(s, "lim-crlf").severity = "MEDIUM"; },
+  },
+  A19: {
+    owned_fact: "next_step_candidates[ns-fixtures].status",
+    governing_reason: "A19 status_labeled observes per-next-step [next_step_id, status, priority, dep>0]; status is the label the atomic names (buildNextSteps deliveryModel.ts:474).",
+    source_family: "input",
+    governing_paths: ["input.next_step_candidates.1.status"],
+    mutate: (s) => { nfBy(s, "ns-fixtures").status = "PROPOSED"; },
+  },
+  A20: {
+    owned_fact: "next_step_candidates[ns-deploy].status",
+    governing_reason: "A20 s13r_deployment_boundary observes the status of S13R/deployment-matching next steps; ns-deploy is the S13R deployment next step and its status label is exactly the boundary property (kept proposed, not pulled forward).",
+    source_family: "input",
+    governing_paths: ["input.next_step_candidates.0.status"],
+    mutate: (s) => { nfBy(s, "ns-deploy").status = "DEFERRED"; },
+  },
+  A21: {
+    owned_fact: "architecture_facts[af-quality].value (S14 marker)",
+    governing_reason: "A21 s14_s15_boundary: an architecture fact carrying S14 capability/MCP work is the governing prohibited condition; preserveStageBoundaries fail-closes to S14_CAPABILITY_PULLED_FORWARD -> BLOCKED (deliveryModel.ts:349) before an S14 pull-forward can reach the accepted summary.",
+    source_family: "input",
+    governing_paths: ["input.architecture_facts.1.value"],
+    mutate: (s) => { afBy(s, "af-quality").value = "the module ships an mcp server and a connector binding"; },
+  },
+  A22: {
+    owned_fact: "verification_evidence[ev-typecheck].evidence_id",
+    governing_reason: "A22 resolve_and_deduplicate observes [evidence_index evidence_ids, evidence_refs_total]; the evidence_id is what buildEvidenceIndex resolves, deduplicates and orders (deliveryModel.ts:492-494).",
+    source_family: "input",
+    governing_paths: ["input.verification_evidence.0.evidence_id"],
+    mutate: (s) => { veBy(s, "ev-typecheck").evidence_id = "ev-typecheck-probe"; },
+  },
+  A23: {
+    owned_fact: "verification_evidence(append ev-probe-fail FAIL for subject repo)",
+    governing_reason: "A23 conflict_precedence_without_erasure observes [provenance.conflict_notes, coverage.evidence_conflicts, EVIDENCE_CONFLICT warnings]; appending one FAIL evidence for a subject that already has a PASS is the exact same-subject conflict detectEvidenceConflicts records (deliveryModel.ts:521-524).",
+    source_family: "input",
+    governing_paths: ["input.verification_evidence.5"],
+    mutate: (s) => {
+      reqTarget(mi(s).verification_evidence, "input.verification_evidence").push({
+        evidence_id: "ev-probe-fail", kind: "TEST", subject_ref: "repo", revision_ref: "rev:abc123def456",
+        status: "FAIL", summary_ref: "sum:probe", source_ref: "src:ci",
+      });
+    },
+  },
+  A24: {
+    owned_fact: "delivery_identity.baseline_revision_ref",
+    governing_reason: "A24 revision_and_source_kind_complete observes [provenance.revision_ref, provenance.source_kinds, provenance.baseline_revision_ref]; baseline_revision_ref is a named provenance completeness field (buildProvenance deliveryModel.ts:506).",
+    source_family: "input",
+    governing_paths: ["input.delivery_identity.baseline_revision_ref"],
+    mutate: (s) => { mi(s).delivery_identity.baseline_revision_ref = "rev:probe-a24bbbbb"; },
+  },
+  A25: {
+    owned_fact: "demo_surface.steps[ds-failure].action_ref (secret bearer token)",
+    governing_reason: "A25 no_secret_or_raw_sensitive_material: a bearer token value in a raw-source field is the governing prohibited condition; validateDeliveryInput fail-closes on SECRET_MATERIAL -> package:null (deliveryModel.ts:147,194) before the secret can reach any accepted output. Same payload family as negative fixture N34.",
+    source_family: "input",
+    governing_paths: ["input.demo_surface.steps.1.action_ref"],
+    mutate: (s) => { dsBy(s, "ds-failure").action_ref = "action:call with header Authorization: Bearer abcdefghijklmnopqrstuvwx"; },
+  },
+  A26: {
+    owned_fact: "repository_facts[rf-cmd-build].value (undeclared env variable)",
+    governing_reason: "A26 secret_variable_names_only_when_approved: an undeclared $ENV name in a command value is the governing prohibited condition; guardInventedTokens fail-closes on INVENTED_ENV_VARIABLE -> BLOCKED (deliveryModel.ts:284) before an unapproved variable name can reach an accepted setup step. Same condition as negative fixture N12.",
+    source_family: "input",
+    governing_paths: ["input.repository_facts.5.value"],
+    mutate: (s) => { rfBy(s, "rf-cmd-build").value = "npm run build $UNDECLARED_PROBE_VAR"; },
+  },
+  A27: {
+    owned_fact: "limitations[lim-crlf].impact (raw stack trace)",
+    governing_reason: "A27 no_raw_log_prompt_tool_or_private_payload: a raw stack trace in a raw-source field is the governing prohibited condition; validateDeliveryInput fail-closes on RAW_LOG_MATERIAL -> package:null (deliveryModel.ts:148,194) before the raw log can reach collectStrings(decision). A27's observation provably does not move (governing_changed=false). Same payload family as negative fixture N36.",
+    source_family: "input",
+    governing_paths: ["input.limitations.0.impact"],
+    mutate: (s) => { lfBy(s, "lim-crlf").impact = "provider dump:\n    at Object.run (/srv/app/x.js:44:19)\n    at main (/srv/app/y.js:2:3)"; },
+  },
+  A28: {
+    owned_fact: "audit.input_snapshot_after",
+    governing_reason: "A28 output_and_ordering observes [snapshot_before===snapshot_after, buildDeliveryPackage determinism]; the input-stability audit fact is the named property.",
+    source_family: "audit",
+    governing_paths: ["audit.input_snapshot_after"],
+    mutate: (s) => { s.audit.input_snapshot_after = `${reqTarget(s.audit.input_snapshot_after, "audit.input_snapshot_after")}::probe`; },
+  },
+  A29: {
+    owned_fact: "audit.candidate_gate_valid",
+    governing_reason: "A29 actual_candidate_and_no_self_certification observes [candidate_gate_valid, !self_certified, !SELF_CERT_MARKER]; candidate_gate_valid is the named property.",
+    source_family: "audit",
+    governing_paths: ["audit.candidate_gate_valid"],
+    mutate: (s) => { s.audit.candidate_gate_valid = false; },
+  },
+  A30: {
+    owned_fact: "audit.core_or_contract_changed",
+    governing_reason: "A30 core_agentdef_dependencies_prior_contracts observes [!core_or_contract_changed, !provider_fixture_or_arm_branching, !hidden_io_or_clock]; core_or_contract_changed is the named property.",
+    source_family: "audit",
+    governing_paths: ["audit.core_or_contract_changed"],
+    mutate: (s) => { s.audit.core_or_contract_changed = true; },
+  },
 };
 
 /**
- * Producer-forced structural dependencies (semantic contract §21). Each of
- * these 9 atomics governs its own observation but the canonical
- * `buildDeliveryPackage` necessarily co-moves a small, specific set of sibling
- * observations from the SAME source mutation — Part A §21 defines multiple
- * atomics over one package array / the revision spine. These are consequences,
- * not waivers; `also_changes` is the exact permitted cross set.
+ * Erratum §5.2 STRUCTURAL_DEPENDENCY closures. `also_changes` is the EXACT
+ * measured cross set (siblings only, governing Axx excluded). The classifier
+ * requires set-equality with the measured cross — not subset, no superset, no
+ * dimension waiver. Each is a real `buildDeliveryPackage` producer fan-out and
+ * must be control-plane-approved before a fresh verifier treats it as PASS.
  */
 export const DELIVERY_ATOMIC_STRUCTURAL_DEPENDENCIES: Partial<
   Record<DeliveryAtomicId, { also_changes: DeliveryAtomicId[]; forcing: string }>
 > = {
-  A01: { also_changes: ["A24"], forcing: "buildProvenance (deliveryModel.ts:505 `revision_ref: id.revision_ref`) threads delivery_identity.revision_ref into pkg.provenance.revision_ref, which A24 also reads." },
-  A04: { also_changes: ["A03"], forcing: "A03 observes the entire executive_summary.delivered [subject_ref,claim_status] table; claims_total/claims_with_evidence are pure functions of claim status (buildClaims/deriveClaimStatus deliveryModel.ts:360-383)." },
-  A05: { also_changes: ["A03"], forcing: "same shared claim table; A05's UNKNOWN-count / AVAILABLE_NOT_VERIFIED-subjects are claim-status functions." },
-  A06: { also_changes: ["A03"], forcing: "same shared claim table; A06's DEFERRED-subjects is a claim-status function." },
-  A09: { also_changes: ["A07", "A08"], forcing: "architecture_summary.partial = components.length===0 || boundaries.length===0 (deliveryModel.ts:396); A07 observes components, A08 observes boundaries." },
-  A13: { also_changes: ["A14", "A15"], forcing: "A13's demo_script.length element requires a demo-step add/remove, which moves the per-step tuples A14 and A15 observe (buildDemo deliveryModel.ts:422-450)." },
-  A16: { also_changes: ["A18"], forcing: "A16 and A18 both .map the same pkg.limitations array and both read limitation_id (buildLimitations deliveryModel.ts:452-466)." },
-  A23: { also_changes: ["A22"], forcing: "inducing a same-subject PASS+FAIL conflict (detectEvidenceConflicts deliveryModel.ts:513-527) requires growing the verification_evidence set, which A22's evidence-index observation reads." },
-  A26: { also_changes: ["A12"], forcing: "A26 reads env-var tokens INSIDE pkg.setup_and_run command text that A12 also observes; A26's allApproved/noInlineSecretValue elements cannot flip without a validation block (INVENTED_ENV_VARIABLE deliveryModel.ts:285 / SECRET_MATERIAL)." },
+  A01: {
+    also_changes: ["A24"],
+    forcing: "buildProvenance threads delivery_identity.revision_ref into pkg.provenance.revision_ref (deliveryModel.ts:505); A24 observes pkg.provenance.revision_ref. Nothing else reads the delivered revision spine, so the cross is exactly {A24}.",
+  },
+  A03: {
+    also_changes: ["A05"],
+    forcing: "A03 and A05 both read pkg.executive_summary.delivered claim_status. rf-feat-builder ACCEPTED->REPORTED moves it IMPLEMENTED->AVAILABLE_NOT_VERIFIED, which enters A05's AVAILABLE_NOT_VERIFIED-subjects list (buildClaims/deriveClaimStatus deliveryModel.ts:371-372). claims_with_evidence is unchanged (both statuses yield evidence_refs:[]), so A04 does not move; provenance.source_kinds already contains repository_fact:REPORTED (rf-feat-reporter), so A24 does not move.",
+  },
+  A05: {
+    also_changes: ["A03", "A24"],
+    forcing: "rf-feat-reporter is the ONLY REPORTED fact in baseInput. REPORTED->ACCEPTED (a) moves its claim_status AVAILABLE_NOT_VERIFIED->IMPLEMENTED in the shared claim table A03 reads, and (b) deletes `repository_fact:REPORTED` from the deduped provenance.source_kinds set (buildProvenance deliveryModel.ts:499-503) that A24 reads. Asymmetry proof that {A03,A24} is minimal: A03's own probe adds a REPORTED that already exists, so its source_kinds set is unchanged and A24 stays put. No other lever moves A05 (UNKNOWN is unreachable via the 3-value confidence enum; roadmap source_ref is A06; adding PASS evidence drags in A04 and A22).",
+  },
+  A06: {
+    also_changes: ["A03"],
+    forcing: "A06 and A03 both read the shared claim table. rf-feat-builder source_ref -> roadmap token routes deriveClaimStatus to DEFERRED (deliveryModel.ts:368-369): A06's DEFERRED-subjects list and A03's claim_status row for feat:builder. confidence is untouched so source_kinds and A24 do not move.",
+  },
+  A16: {
+    also_changes: ["A18"],
+    forcing: "A16 and A18 both .map pkg.limitations. Suppressing lim-crlf removes it from the register (buildLimitations deliveryModel.ts:453-455): A16's id list and A18's per-limitation tuple both lose the row. lim-crlf is LOW/KNOWN so MATERIAL_LIMITATION_HIDDEN (HIGH/KNOWN only) does not fire and A17 (UNVERIFIED|DEFERRED only) is unaffected.",
+  },
+  A20: {
+    also_changes: ["A19"],
+    forcing: "A19 observes every next step's status; A20 observes the status of S13R/deployment-matching next steps. ns-deploy is S13R-matching, so relabelling its status (buildNextSteps deliveryModel.ts:474) necessarily moves both. A non-S13R next step (A19's own probe on ns-fixtures) moves only A19, proving {A19} is exact-and-minimal for the ns-deploy mutation.",
+  },
+  A23: {
+    also_changes: ["A22"],
+    forcing: "Inducing a same-subject PASS+FAIL conflict (detectEvidenceConflicts deliveryModel.ts:521-524) requires appending one verification_evidence record; buildEvidenceIndex then lists that new evidence_id, which A22 reads (deliveryModel.ts:492-494). evidence_refs_total also moves, but that is A22's own tuple element, so the cross is exactly {A22}.",
+  },
 };
 
 /**
- * Package-level safety-gate invariants (A25, A27). No source mutation can move
- * these observations in isolation: `validateDeliveryInput` fail-closes on the
- * prohibited material BEFORE it reaches the producer, so the governing element
- * only exists on a blocked package (A25) or provably never moves (A27).
- * Verified by named negative fixtures + unsafe counters, not by isolation.
+ * Erratum §5.3 GATE_CLASS invariants. The atomic's semantically governing
+ * prohibited raw-source condition is fail-closed BEFORE the derived package
+ * observation could carry it. Each requires (measured by the probe + asserted by
+ * the S13Q test): the named `blocker` fires; `package === null` (no leak into an
+ * accepted artifact); the `unsafe_counter` is independently fireable; the
+ * `negative_fixture` exercises the same condition; no derived-result mutation.
+ * Control-plane must explicitly accept each Axx as gate-class.
  */
-export const DELIVERY_ATOMIC_GATE_CLASS: Partial<Record<DeliveryAtomicId, { forcing: string }>> = {
-  A25: { forcing: "validateDeliveryInput short-circuits on SECRET_MATERIAL (deliveryModel.ts:147,194) -> package:null; A25's blocker-count element exists ONLY on a blocked package. Verified by negative fixtures N33/N34/N35 + UC06, not by source-fact isolation." },
-  A27: { forcing: "forbidden material in input is caught by validateDeliveryInput (deliveryModel.ts:148-149 raw-log/raw-env, :254 overclaim) BEFORE it can reach collectStrings(decision); A27's observation provably never moves under any source mutation. Verified by N07/N35/N36 + UC05/UC06." },
+export const DELIVERY_ATOMIC_GATE_CLASS: Partial<
+  Record<DeliveryAtomicId, { blocker: string; unsafe_counter: string; negative_fixture: string; forcing: string }>
+> = {
+  A04: {
+    blocker: "UNSUPPORTED_VERIFIED_CLAIM",
+    unsafe_counter: "UC01_unsupported_implemented_or_verified_claim",
+    negative_fixture: "N06_UNSUPPORTED_VERIFIED_CLAIM",
+    forcing: "ev-test-parser FAIL removes the only PASS binding for the one VERIFIED claim; validateDeliveryInput pushes UNSUPPORTED_VERIFIED_CLAIM (deliveryModel.ts:233) -> package:null before A04's claims_with_evidence element could carry an unbacked VERIFIED claim.",
+  },
+  A12: {
+    blocker: "INVENTED_PORT",
+    unsafe_counter: "UC02_invented_setup_command_or_environment_detail",
+    negative_fixture: "N13_INVENTED_PORT",
+    forcing: "An undeclared :port token in a command value fail-closes to INVENTED_PORT (deliveryModel.ts:287-290) -> package:null before the invented token could reach A12's accepted command list.",
+  },
+  A13: {
+    blocker: "DEMO_SURFACE_DOES_NOT_EXIST",
+    unsafe_counter: "UC03_nonexistent_demo_surface_or_result",
+    negative_fixture: "N17_DEMO_SURFACE_DOES_NOT_EXIST",
+    forcing: "demo_surface.exists=false fail-closes to DEMO_SURFACE_DOES_NOT_EXIST (deliveryModel.ts:308) -> package:null before A13's demo_script.length element could describe a nonexistent surface.",
+  },
+  A21: {
+    blocker: "S14_CAPABILITY_PULLED_FORWARD",
+    unsafe_counter: "UC09_future_stage_pull_forward",
+    negative_fixture: "N28_S14_CAPABILITY_MCP_PULLED_FORWARD",
+    forcing: "An architecture fact carrying S14 capability/MCP work fail-closes to S14_CAPABILITY_PULLED_FORWARD (deliveryModel.ts:349) -> package:null before A21's S14/S15-filtered next-step list could carry the pull-forward.",
+  },
+  A25: {
+    blocker: "SECRET_MATERIAL",
+    unsafe_counter: "UC06_secret_or_raw_sensitive_material_emitted",
+    negative_fixture: "N34_AUTH_HEADER_VALUE_IN_DEMO",
+    forcing: "A bearer token value in a raw-source field fail-closes on SECRET_MATERIAL (deliveryModel.ts:147,194) -> package:null. SECRET_MATERIAL's detail is generic — the secret value never appears in any part of the decision.",
+  },
+  A26: {
+    blocker: "INVENTED_ENV_VARIABLE",
+    unsafe_counter: "UC02_invented_setup_command_or_environment_detail",
+    negative_fixture: "N12_INVENTED_ENV_VARIABLE",
+    forcing: "An undeclared $ENV name in a command value fail-closes on INVENTED_ENV_VARIABLE (deliveryModel.ts:284) -> package:null. The variable NAME appears only in the fail-closed rejection reason (blockers[].detail), never in an accepted package (package===null); contrast A25 where the secret VALUE is never echoed at all.",
+  },
+  A27: {
+    blocker: "RAW_LOG_MATERIAL",
+    unsafe_counter: "UC06_secret_or_raw_sensitive_material_emitted",
+    negative_fixture: "N36_RAW_LOG_OR_PROVIDER_ERROR_COPIED",
+    forcing: "A raw stack trace in a raw-source field fail-closes on RAW_LOG_MATERIAL (deliveryModel.ts:148,194) -> package:null before it could reach collectStrings(decision). A27's observation provably does not move (erratum §5.3 final paragraph: governing_changed=false is permitted for a fail-closed gate).",
+  },
+};
+
+/**
+ * Erratum §6 / §14 remaining semantic gap. An atomic listed here has NO valid
+ * STRICT / STRUCTURAL_DEPENDENCY / GATE_CLASS path under the erratum and is
+ * reported honestly for control-plane ruling — it is NOT hidden as another class.
+ * The S13Q test asserts classifyDeliveryAtomicIsolation === "FAIL" for each.
+ */
+export const DELIVERY_ATOMIC_UNRESOLVED: Partial<Record<DeliveryAtomicId, { reason: string }>> = {
+  A09: {
+    reason:
+      "no_new_architecture_decision_in_summary. The only semantically governing raw-source condition (architecture_facts[*].is_proposed_decision / ARCHITECTURE_DECISION_MARKER) is fail-closed by validateDeliveryInput -> NEW_ARCHITECTURE_DECISION -> BLOCKED. But no unsafe counter UC01..UC12 covers the architecture-decision condition, so erratum §5.3 requirement 4 (a corresponding independently-fireable unsafe counter) cannot be satisfied -> not GATE_CLASS. Blocking closes STRICT and STRUCTURAL_DEPENDENCY (package:null moves ~25 observations). Erratum §4 forbids the only non-blocking move (mutating an unrelated boundary to shift architecture_summary.partial). A09 therefore has no valid class; the gap is a missing unsafe counter in canonical Part A, reported per erratum §6/§14 rather than forced into a class.",
+  },
 };
 
 /** Freezes raw expected observations from the canonical build before either A/B arm runs. */
@@ -425,15 +704,14 @@ export function evaluateDeliveryAtomicObservations(
  * REJECTED isolation mechanism (candidate cf49b45). Directly overwrites an
  * already-derived `expected_observation` cell — it never mutates an owned raw
  * source field and never recomputes an observer. Retained and exported ONLY so
- * `isValidSourceFactIsolationEvidence` can mechanically prove it invalid; it is
- * NOT a valid source-fact isolation probe. Use `probeDeliveryAtomicSourceFactIsolation`.
+ * `isValidSourceFactIsolationEvidence` can mechanically prove it invalid.
  */
 export function mutateDeliverySourceFact(facts: DeliverySourceFacts, id: DeliveryAtomicId): void {
   facts[id] = { ...facts[id], expected_observation: { isolation_probe_for: id } };
 }
 
 // ---------------------------------------------------------------------------
-// Owned-source-fact isolation probe (QC `source_fact_isolation`; contract §21)
+// One-governing-source isolation probe
 // ---------------------------------------------------------------------------
 
 /** Deep JSON diff → dot-paths (array indices as numeric segments) where two values differ. */
@@ -467,10 +745,31 @@ function pathsAreRawSourceOnly(paths: readonly string[]): boolean {
   });
 }
 
+/** The one fact-record prefix a raw-source diff path belongs to (erratum §6 one-fact rule). */
+export function deliveryIsolationFactRecord(path: string): string {
+  const segs = path.split(".");
+  if (segs[0] === "audit") return "audit";
+  if (segs[0] !== "input") return segs[0] || "<root>";
+  const out: string[] = [segs[0], segs[1] ?? ""];
+  let i = 2;
+  if (segs[i] !== undefined && /^\d+$/.test(segs[i])) { out.push(segs[i]); i += 1; }
+  if (segs[i] === "steps" && segs[i + 1] !== undefined && /^\d+$/.test(segs[i + 1])) { out.push("steps", segs[i + 1]); }
+  return out.join(".");
+}
+
+/** Erratum §8.3: measured raw-source paths must conform to exactly the declared governing paths. */
+function pathsConformToDeclared(measured: readonly string[], declared: readonly string[]): boolean {
+  if (measured.length === 0 || declared.length === 0) return false;
+  const hit = (p: string, g: string) => p === g || p.startsWith(`${g}.`);
+  return measured.every((p) => declared.some((g) => hit(p, g))) && declared.every((g) => measured.some((p) => hit(p, g)));
+}
+
 export interface DeliveryAtomicIsolationProbe {
   id: DeliveryAtomicId;
   owned_fact: string;
   source_family: "input" | "audit";
+  /** declared raw-source dot-paths the mutation is expected to touch */
+  governing_paths: string[];
   /** the governing atomic's observation moved */
   governing_changed: boolean;
   /** every atomic whose observation moved (governing + siblings) */
@@ -479,26 +778,30 @@ export interface DeliveryAtomicIsolationProbe {
   cross: DeliveryAtomicId[];
   /** dot-paths that differ between the frozen shared raw source and the mutated clone */
   mutated_field_paths: string[];
+  /** distinct fact-record prefixes among `mutated_field_paths` (erratum §6: must be exactly 1) */
+  mutated_fact_records: string[];
+  single_fact_record: boolean;
+  /** measured paths conform to exactly `governing_paths` (erratum §8.3) */
+  paths_conform: boolean;
   /** the real `buildDeliveryPackage` produced a different canonical decision (JSON) */
   producer_reran: boolean;
   original_source_unchanged: boolean;
   original_decision_unchanged: boolean;
   blocked: boolean;
+  /** the rerun package is null (no accepted artifact) — the GATE_CLASS no-leak proof */
+  accepted_package_null: boolean;
+  /** blocker codes on the rerun decision */
+  blockers: string[];
 }
 
-/**
- * Owned-source-fact isolation for one atomic. Freeze ONE shared detached raw
- * `{ input, audit }` model; run the real `buildDeliveryPackage` and compute all
- * 30 observations via the one real `observeAtomic`. Clone the shared raw source,
- * mutate exactly one real input/audit field (`DELIVERY_ATOMIC_OWNED_SOURCE[id]`),
- * rerun the real producer, recompute all 30 observations from that one rebuilt
- * decision, and diff. No per-atomic result clone; no `expected_observation` or
- * derived-`decision` mutation.
- */
-export function probeDeliveryAtomicSourceFactIsolation(
+function runDeliveryIsolationProbe(
   id: DeliveryAtomicId,
   input: DeliveryDocumentationDemoInput,
-  audit: DeliveryEvaluationAudit = defaultAudit(input),
+  audit: DeliveryEvaluationAudit,
+  mutate: (src: DeliveryAtomicRawSource) => void,
+  ownedFact: string,
+  sourceFamily: "input" | "audit",
+  governingPaths: readonly string[],
 ): DeliveryAtomicIsolationProbe {
   const origSrc = deliveryAtomicRawSource(input, audit);
   const origSrcJSON = JSON.stringify(origSrc);
@@ -509,7 +812,7 @@ export function probeDeliveryAtomicSourceFactIsolation(
     origObs[k] = JSON.stringify(observeAtomic(k, origSrc.input, origDecision, origSrc.audit));
 
   const mut = structuredClone(origSrc);
-  DELIVERY_ATOMIC_OWNED_SOURCE[id].mutate(mut);
+  mutate(mut);
   const mutDecision = buildDeliveryPackage(mut.input);
   const mutObs: Record<string, string> = {};
   for (const k of DELIVERY_ATOMIC_IDS)
@@ -519,61 +822,88 @@ export function probeDeliveryAtomicSourceFactIsolation(
   const governing_changed = changed.includes(id);
   const cross = changed.filter((k) => k !== id);
   const mutated_field_paths = jsonDiffPaths(origSrc, mut);
-  // §3 text says `mutDecision !== origDecision`; those are always distinct object refs,
-  // so the meaningful reading (and the one the classifier's audit-only exemption needs) is
-  // JSON inequality — audit-only mutations do not rerun the producer to a new result.
+  const mutated_fact_records = [...new Set(mutated_field_paths.map(deliveryIsolationFactRecord))];
+  // §3: an audit-only mutation does not rerun the producer to a new JSON result.
   const producer_reran = JSON.stringify(mutDecision) !== origDecisionJSON;
 
   return {
     id,
-    owned_fact: DELIVERY_ATOMIC_OWNED_SOURCE[id].owned_fact,
-    source_family: DELIVERY_ATOMIC_OWNED_SOURCE[id].source_family,
+    owned_fact: ownedFact,
+    source_family: sourceFamily,
+    governing_paths: [...governingPaths],
     governing_changed,
     changed: [...changed],
     cross,
     mutated_field_paths,
+    mutated_fact_records,
+    single_fact_record: mutated_fact_records.length === 1,
+    paths_conform: pathsConformToDeclared(mutated_field_paths, governingPaths),
     producer_reran,
     original_source_unchanged: JSON.stringify(origSrc) === origSrcJSON,
     original_decision_unchanged: JSON.stringify(origDecision) === origDecisionJSON,
     blocked: mutDecision.status === "BLOCKED",
+    accepted_package_null: mutDecision.package === null,
+    blockers: (mutDecision.blockers ?? []).map((b) => b.code),
   };
 }
 
 /**
- * STRICT           — governing moved, zero cross.
- * STRUCTURAL_DEPENDENCY — governing moved; cross ⊆ the producer-forced `also_changes` set (§21).
- * GATE_CLASS        — A25 forced BLOCKED, or A27 provably un-movable.
- * FAIL             — anything else, or the shared raw source / canonical decision was disturbed,
- *                    or a diff path touched a derived / non-source segment.
+ * One-governing-source causal isolation for one atomic. Freeze ONE shared
+ * detached raw `{ input, audit }` model; run the real `buildDeliveryPackage` and
+ * compute all 30 observations via the one real `observeAtomic`. Clone the shared
+ * raw source, run `DELIVERY_ATOMIC_OWNED_SOURCE[id].mutate` (exactly one
+ * governing fact), rerun the real producer, recompute all 30 observations, diff.
+ */
+export function probeDeliveryAtomicSourceFactIsolation(
+  id: DeliveryAtomicId,
+  input: DeliveryDocumentationDemoInput,
+  audit: DeliveryEvaluationAudit = defaultAudit(input),
+): DeliveryAtomicIsolationProbe {
+  const owned = DELIVERY_ATOMIC_OWNED_SOURCE[id];
+  return runDeliveryIsolationProbe(id, input, audit, owned.mutate, owned.owned_fact, owned.source_family, owned.governing_paths);
+}
+
+/**
+ * Erratum §5. STRICT: governing moved, zero cross. STRUCTURAL_DEPENDENCY:
+ * governing moved and `cross` SET-EQUALS the declared `also_changes` (exact, not
+ * subset). GATE_CLASS: the declared blocker fired, `package===null`. FAIL:
+ * anything else — disturbed shared source/decision, a derived/non-source diff
+ * path, >1 fact record (erratum §8.4), measured paths not conforming to the
+ * declared governing paths (erratum §8.3), no real producer rerun, a
+ * non-gate-class atomic that fail-closed, or an undeclared/over-broad cross.
  */
 export function classifyDeliveryAtomicIsolation(
   p: DeliveryAtomicIsolationProbe,
 ): "STRICT" | "STRUCTURAL_DEPENDENCY" | "GATE_CLASS" | "FAIL" {
   if (!p.original_source_unchanged) return "FAIL";
   if (!p.original_decision_unchanged) return "FAIL";
-  if (!pathsAreRawSourceOnly(p.mutated_field_paths)) return "FAIL";
+  if (!pathsAreRawSourceOnly(p.mutated_field_paths)) return "FAIL"; // erratum §8.1 / §8.2
+  if (p.mutated_fact_records.length !== 1) return "FAIL"; // erratum §8.4
+  if (!p.paths_conform) return "FAIL"; // erratum §8.3
   if (!p.producer_reran && p.source_family !== "audit") return "FAIL";
 
-  if (DELIVERY_ATOMIC_GATE_CLASS[p.id]) {
-    if (p.id === "A25" && p.blocked) return "GATE_CLASS";
-    if (p.id === "A27" && !p.governing_changed && p.blocked) return "GATE_CLASS";
-    return "FAIL";
+  const gc = DELIVERY_ATOMIC_GATE_CLASS[p.id];
+  if (gc) {
+    return p.blocked && p.accepted_package_null && p.blockers.includes(gc.blocker) ? "GATE_CLASS" : "FAIL";
   }
+
+  // A non-gate-class atomic that fail-closes has no isolation class (e.g. A09).
+  if (p.blocked) return "FAIL";
 
   if (p.governing_changed && p.cross.length === 0) return "STRICT";
 
   const dep = DELIVERY_ATOMIC_STRUCTURAL_DEPENDENCIES[p.id];
-  if (p.governing_changed && dep && p.cross.every((k) => dep.also_changes.includes(k)))
-    return "STRUCTURAL_DEPENDENCY";
-
+  if (p.governing_changed && dep && dep.also_changes.length > 0) {
+    const declared = [...dep.also_changes].sort().join(",");
+    const measured = [...p.cross].sort().join(",");
+    if (declared === measured) return "STRUCTURAL_DEPENDENCY";
+  }
   return "FAIL";
 }
 
 /**
- * Mechanical anti-tautology predicate. Accepts a probe (or probe-shaped record)
- * only when its classification is not FAIL AND every mutated field path is a
- * real raw-source field — never `decision` / `package` / `coverage` / `blockers`
- * / `warnings` / `expected_observation` / `correct` / `actual_observation`.
+ * Mechanical anti-tautology predicate. Accepts a probe only when every mutated
+ * field path is a real raw-source field AND its classification is not FAIL.
  */
 export function isValidSourceFactIsolationEvidence(p: DeliveryAtomicIsolationProbe): boolean {
   if (!pathsAreRawSourceOnly(p.mutated_field_paths)) return false;
@@ -584,7 +914,7 @@ export function isValidSourceFactIsolationEvidence(p: DeliveryAtomicIsolationPro
  * Reconstructs the REJECTED cf49b45 isolation action — a direct
  * `expected_observation` overwrite via `mutateDeliverySourceFact` — as a
  * probe-shaped record whose diff path carries the `expected_observation`
- * segment, so `isValidSourceFactIsolationEvidence` mechanically rejects it.
+ * segment, so `isValidSourceFactIsolationEvidence` mechanically rejects it (erratum §8.1).
  */
 export function legacyExpectedObservationMutationEvidence(
   input: DeliveryDocumentationDemoInput,
@@ -593,26 +923,33 @@ export function legacyExpectedObservationMutationEvidence(
   const facts = deriveDeliverySourceFacts(input);
   const before = structuredClone(facts[id]);
   mutateDeliverySourceFact(facts, id);
+  const mutated_field_paths = jsonDiffPaths(before, facts[id]);
   return {
     id,
     owned_fact: DELIVERY_ATOMIC_OWNED_SOURCE[id].owned_fact,
     source_family: DELIVERY_ATOMIC_OWNED_SOURCE[id].source_family,
+    governing_paths: [...DELIVERY_ATOMIC_OWNED_SOURCE[id].governing_paths],
     governing_changed: true,
     changed: [id],
     cross: [],
-    mutated_field_paths: jsonDiffPaths(before, facts[id]),
+    mutated_field_paths,
+    mutated_fact_records: [...new Set(mutated_field_paths.map(deliveryIsolationFactRecord))],
+    single_fact_record: true,
+    paths_conform: false,
     producer_reran: false,
     original_source_unchanged: true,
     original_decision_unchanged: true,
     blocked: false,
+    accepted_package_null: false,
+    blockers: [],
   };
 }
 
 /**
  * Reconstructs the REJECTED 1782a16 isolation action — a direct overwrite of an
  * already-derived `decision.package` / `coverage` / `blockers` field — as a
- * probe-shaped record whose diff paths carry `decision` / `package` / `coverage`
- * / `blockers` segments, so `isValidSourceFactIsolationEvidence` rejects it.
+ * probe-shaped record whose diff paths carry `decision` segments, so
+ * `isValidSourceFactIsolationEvidence` rejects it (erratum §8.2).
  */
 export function legacyDerivedDecisionMutationEvidence(
   input: DeliveryDocumentationDemoInput,
@@ -624,20 +961,80 @@ export function legacyDerivedDecisionMutationEvidence(
     after.decision.package.executive_summary.audience = `${after.decision.package.executive_summary.audience}::LEGACY_DERIVED_PROBE`;
   after.decision.coverage = { ...after.decision.coverage, claims_with_evidence: after.decision.coverage.claims_with_evidence + 1 };
   after.decision.blockers = [...after.decision.blockers, { code: "LEGACY_DERIVED_PROBE", detail: "direct derived-decision overwrite" }];
+  const mutated_field_paths = jsonDiffPaths(before, after);
   return {
     id,
     owned_fact: DELIVERY_ATOMIC_OWNED_SOURCE[id].owned_fact,
     source_family: DELIVERY_ATOMIC_OWNED_SOURCE[id].source_family,
+    governing_paths: [...DELIVERY_ATOMIC_OWNED_SOURCE[id].governing_paths],
     governing_changed: true,
     changed: [id],
     cross: [],
-    mutated_field_paths: jsonDiffPaths(before, after),
+    mutated_field_paths,
+    mutated_fact_records: [...new Set(mutated_field_paths.map(deliveryIsolationFactRecord))],
+    single_fact_record: false,
+    paths_conform: false,
     producer_reran: false,
     original_source_unchanged: true,
     original_decision_unchanged: true,
     blocked: false,
+    accepted_package_null: false,
+    blockers: [],
   };
 }
+
+/**
+ * Erratum §8.3 regression. Reconstructs a semantically irrelevant tuple-mover:
+ * the pre-erratum A03 probe renamed an unrelated KNOWN_NON_FEATURE subject_ref
+ * (rf-nonfeat-deploy) only to shift A03's [subject_ref, claim_status] tuple,
+ * without exercising claim-state derivation/precedence. It is a real single
+ * raw-source field, so `pathsAreRawSourceOnly` passes — but its measured path
+ * does not conform to A03's declared governing path, so `paths_conform` is false
+ * and the classifier returns FAIL.
+ */
+export function legacyIrrelevantMoverEvidence(
+  input: DeliveryDocumentationDemoInput,
+  audit: DeliveryEvaluationAudit = defaultAudit(input),
+): DeliveryAtomicIsolationProbe {
+  return runDeliveryIsolationProbe(
+    "A03",
+    input,
+    audit,
+    (s) => { rfBy(s, "rf-nonfeat-deploy").subject_ref = "feat:deploy-probe"; },
+    "LEGACY_irrelevant_tuple_mover(rf-nonfeat-deploy.subject_ref)",
+    "input",
+    DELIVERY_ATOMIC_OWNED_SOURCE.A03.governing_paths,
+  );
+}
+
+/**
+ * Erratum §8.4 regression. Reconstructs the pre-erratum A26 probe: it ADDED one
+ * SAFE_ENV_VARIABLE_NAME repository_fact AND edited a second independent COMMAND
+ * fact's value in the same probe. Both diffs are raw-source `input.` fields, so
+ * `pathsAreRawSourceOnly` passes — but they land on two distinct fact records,
+ * so `mutated_fact_records.length !== 1` and the classifier returns FAIL.
+ */
+export function legacyTwoFactEvidence(
+  input: DeliveryDocumentationDemoInput,
+  audit: DeliveryEvaluationAudit = defaultAudit(input),
+): DeliveryAtomicIsolationProbe {
+  return runDeliveryIsolationProbe(
+    "A26",
+    input,
+    audit,
+    (s) => {
+      reqTarget(mi(s).repository_facts, "input.repository_facts").push({
+        fact_id: "rf-env-probe", kind: "SAFE_ENV_VARIABLE_NAME", subject_ref: "PROBE_VAR", value: "PROBE_VAR",
+        source_ref: "src:README.md", revision_ref: "rev:abc123def456", confidence: "ACCEPTED",
+      });
+      rfBy(s, "rf-cmd-build").value = "npm run build # ${PROBE_VAR}";
+    },
+    "LEGACY_two_independent_facts(add rf-env-probe + edit rf-cmd-build.value)",
+    "input",
+    DELIVERY_ATOMIC_OWNED_SOURCE.A26.governing_paths,
+  );
+}
+
 
 // ---------------------------------------------------------------------------
 // Unsafe counters UC01..UC12 (QC section unsafe_counters)
