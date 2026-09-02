@@ -660,13 +660,19 @@ verification yet).
 
 ### Final classification
 
+> **Amended by Erratum 2 (see "Erratum 2 reconciliation — UC13 / A09 gate-class"
+> at the end of this report).** The counts below are the Erratum-1 snapshot;
+> Erratum 2 moves A09 `FAIL → GATE_CLASS` and the final gate is
+> **15 STRICT / 7 STRUCTURAL_DEPENDENCY / 8 GATE_CLASS / 0 FAIL**.
+
 `strict_count = 15`, `structural_dependency_count = 7`, `gate_class_count = 7`,
-`fail_count = 1`.
+`fail_count = 1` *(Erratum-1 snapshot; Erratum 2 → `gate_class_count = 8`,
+`fail_count = 0`)*.
 
 - **STRICT (15):** A02, A07, A08, A10, A11, A14, A15, A17, A18, A19, A22, A24, A28, A29, A30
 - **STRUCTURAL_DEPENDENCY (7):** A01→[A24], A03→[A05], A05→[A03,A24], A06→[A03], A16→[A18], A20→[A19], A23→[A22]
-- **GATE_CLASS (7):** A04, A12, A13, A21, A25, A26, A27
-- **FAIL (1):** A09 — reported semantic gap (see below)
+- **GATE_CLASS (8, Erratum 2):** A04, **A09**, A12, A13, A21, A25, A26, A27
+- **FAIL (0, Erratum 2):** — *(A09 was the only Erratum-1 FAIL; resolved by Erratum 2 §3/§4)*
 
 ### Erratum §7 dependency/gate-class map (30 rows)
 
@@ -680,7 +686,7 @@ verification yet).
 | A06 | STRUCTURAL_DEPENDENCY | `repository_facts[rf-feat-builder].source_ref` | a roadmap/backlog/plan `source_ref` routes `deriveClaimStatus` to DEFERRED (deliveryModel.ts:368-369) — the roadmap-vs-implementation distinction A06 names | rerun, not blocked | `{A03, A06}` | dep `[A03]`; A06 and A03 both read the shared claim table; `confidence` untouched so `source_kinds`/A24 do not move |
 | A07 | STRICT | `architecture_facts[af-model].source_ref` | A07 observes `components.map([subject_ref, source_ref])` — the fact each component derives from | rerun, not blocked | `{A07}` | — |
 | A08 | STRICT | `architecture_facts[af-bound-core].value` | af-bound-core is a BOUNDARY fact whose value IS a preserved boundary line (buildArchitecture:393) | rerun, not blocked | `{A08}` | — |
-| A09 | **FAIL** | `architecture_facts[af-model].is_proposed_decision` | the exact governing raw-source condition for no_new_architecture_decision (deliveryModel.ts:259) | rerun → **BLOCKED** `NEW_ARCHITECTURE_DECISION`; `package === null` | fail-closed | **No unsafe counter UC01..UC12 covers the architecture-decision condition** ⇒ erratum §5.3 req 4 cannot be met ⇒ not GATE_CLASS. Blocking closes STRICT/STRUCTURAL (~25-obs collapse). §4 forbids the only non-blocking move (an unrelated boundary shifting `architecture_summary.partial`). Reported as a canonical Part A gap (missing counter) per erratum §6/§14 — **not** forced into a class |
+| A09 | **GATE_CLASS** *(Erratum 2 §3/§7)* | `architecture_facts[af-model].is_proposed_decision` (one existing fact record, one field) | tests `no_new_architecture_decision_in_summary`: `is_proposed_decision === true` is the exact governing raw-source condition (deliveryModel.ts:258-259) | real path rerun: **YES** (`validateDeliveryInput` → `buildDeliveryPackage`) → **BLOCKED** `NEW_ARCHITECTURE_DECISION`; `package === null`; source facts mutated in probe: **1** | fail-closed | blocker `NEW_ARCHITECTURE_DECISION` (deliveryModel.ts:258-267); unsafe counter `UC13_new_architecture_decision_introduced` — counter fireable: **YES**; canonical negative fixture `N08_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_PROVIDER`; package: **null**; no-leak: **PASS** (no `architecture_summary`, `comp:model` absent from the decision) |
 | A10 | STRICT | `verification_evidence[ev-build].subject_ref` | A10 = steps_evidence_backed; ev-build is the PASS evidence bound to the required build step (buildSetup:405-407) | rerun, not blocked | `{A10}` | — |
 | A11 | STRICT | `repository_facts[rf-cmd-build].precondition_refs` | A11 observes non-optional steps `[step_id, expected_signal>0, precondition_refs]` (buildSetup:413) | rerun, not blocked | `{A11}` | — |
 | A12 | GATE_CLASS | `repository_facts[rf-cmd-test].value` | an undeclared `:port` token in a command value is the governing prohibited condition for no_invented_token | rerun → **BLOCKED** `INVENTED_PORT`; `package === null` | fail-closed | blocker `INVENTED_PORT` (deliveryModel.ts:287-290); counter `UC02` fireable; fixture `N13`; no leak |
@@ -756,6 +762,12 @@ forward).
 
 ### Remaining semantic gap — A09 (reported, not resolved)
 
+> **SUPERSEDED BY ERRATUM 2.** `S13Q_ISOLATION_ERRATUM_2_A09_UNSAFE_COUNTER.md`
+> (blob `9f7ff097d8d5e7d216fec63f949fa80af1a01de8`) adds unsafe counter
+> `UC13_new_architecture_decision_introduced` and rules `A09 = GATE_CLASS`. The
+> paragraph below is kept as the Erratum-1-era analysis; the gap is now closed —
+> see "Erratum 2 reconciliation — UC13 / A09 gate-class" at the end of this report.
+
 `A09 no_new_architecture_decision_in_summary` has **no valid class** under the
 erratum. Its only governing raw-source condition (`is_proposed_decision` /
 `ARCHITECTURE_DECISION_MARKER`) is fail-closed to `NEW_ARCHITECTURE_DECISION` →
@@ -780,11 +792,159 @@ Review the committed 30-row dependency/gate-class map above and:
 2. **Accept or reject** the 7 `GATE_CLASS` classifications (erratum §5.3 — each
    backed by blocker + independently-fireable counter + named negative fixture +
    `package === null` no-leak proof).
-3. **Rule on A09**: either add a `NEW_ARCHITECTURE_DECISION` unsafe counter to
-   canonical Part A (then A09 becomes GATE_CLASS), accept A09 as a permanent
-   non-isolable atomic, or re-decompose A09 in the semantic contract.
+3. ~~**Rule on A09**~~ — **DONE via Erratum 2**: a `NEW_ARCHITECTURE_DECISION`
+   unsafe counter (`UC13`) was added to canonical Part A and A09 is ruled
+   `GATE_CLASS`. Reconciled below.
 4. **Authorize or withhold** a fresh independent verifier for the new candidate
    SHA recorded in the issue #1 `CODEX_HANDOFF` comment.
 
 `HI-052` is **not** awarded by this builder. `steps.S13Q` remains `NOT_STARTED`.
 S13R remains `NOT_STARTED`.
+
+---
+
+## Erratum 2 reconciliation — UC13 / A09 gate-class (2026-09-02)
+
+> Reconciles Part B to `brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_2_A09_UNSAFE_COUNTER.md`
+> (`S13Q-ERRATUM-002`, blob `9f7ff097d8d5e7d216fec63f949fa80af1a01de8`), now
+> canonical Part A artifact #5. Everything in the "Isolation erratum
+> reconciliation" section above is unchanged **except** A09's classification and
+> the unsafe-counter inventory (12 → 13). All prior evidence is retained.
+
+### Control-plane ruling applied
+
+Issue #1 comment `5502649124` — `PART_A_AMENDMENT_2_AUTHORING_READY` /
+`BUILDER_RECONCILIATION_REQUIRED`. The 30-row map reviewed at `8dc62bf` is
+accepted (STRICT 15 / STRUCTURAL_DEPENDENCY 7 / GATE_CLASS 7); Erratum 2 resolves
+the only gap (A09) by adding `UC13` and ruling `A09 = GATE_CLASS`. Final target
+**STRICT 15 / STRUCTURAL_DEPENDENCY 7 / GATE_CLASS 8 / FAIL 0 / TOTAL 30** —
+reproduced fresh below.
+
+### What changed
+
+- **`quality.ts`**
+  - `DeliveryUnsafeCounters` + `deriveDeliveryUnsafeCounters` gain exactly
+    `UC13_new_architecture_decision_introduced` =
+    `Number((decision.blockers ?? []).some(b => b.code === "NEW_ARCHITECTURE_DECISION"))`
+    — the governing violation as surfaced by the real
+    `validateDeliveryInput`/`buildDeliveryPackage` path onto `decision.blockers`
+    (`blockedResult`, deliveryModel.ts:106-107 / 258-267). Not a constant, not a
+    fixture/scenario branch, not an expected-map lookup, not a manual mutation.
+    UC01..UC12 meanings unchanged.
+  - `DELIVERY_ATOMIC_GATE_CLASS.A09 = { blocker: "NEW_ARCHITECTURE_DECISION",
+    unsafe_counter: "UC13_new_architecture_decision_introduced", negative_fixture:
+    "N08_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_PROVIDER", forcing: … }`.
+    (`is_proposed_decision` alone, with no db/agent keyword in `af-model.value`,
+    classifies as a new **provider** decision — the N08 governing class.)
+  - `DELIVERY_ATOMIC_OWNED_SOURCE.A09.governing_reason` rewritten to state the
+    Erratum-2 GATE_CLASS ruling (was the Erratum-1 "no counter ⇒ not gate-class"
+    analysis).
+  - `DELIVERY_ATOMIC_UNRESOLVED` is now `{}` (A09 removed; the map/export is
+    retained for any future gap).
+  - `classifyDeliveryAtomicIsolation` **unchanged** — the `gc` branch already
+    catches A09 before `if (p.blocked) return "FAIL"` once A09 is in the gate map;
+    it still enforces Erratum 1 §5 (STRUCTURAL_DEPENDENCY: measured cross
+    set-EQUAL to declared; GATE_CLASS: blocker + `package===null` + declared
+    blocker present) and the §8 anti-tautology rejections (4/4 still FAIL).
+- **`tests/delivery-documentation-demo/deliveryDocumentationDemo.test.ts`**
+  - `ISO_GATE` → 8 (adds `A09`), `ISO_FAIL` → `[]`; partition + count assertions
+    → `{ STRICT: 15, STRUCTURAL_DEPENDENCY: 7, GATE_CLASS: 8, FAIL: 0 }`.
+  - `ISO_GATE_COUNTER_DRIVER.A09` drives `UC13` from a real
+    `buildDeliveryPackage` of `af-model.is_proposed_decision = true`.
+  - Every `12 / UC01..UC12 / 12/12 / Array(12).fill(0)` for the **complete**
+    unsafe inventory → `13 / UC01..UC13 / 13/13 / Array(13).fill(0)` (Skill-arm
+    A/B aggregate and the two unsafe-counter suites).
+  - New test **"A09 GATE_CLASS: one architecture governing fact fail-closes to
+    NEW_ARCHITECTURE_DECISION with UC13 fireable and no leak"**: mutates exactly
+    one architecture fact (`af-model.is_proposed_decision = true`), reruns the
+    real path, asserts source facts mutated = 1, `NEW_ARCHITECTURE_DECISION`
+    fires (validation and canonical decision), `UC13 > 0`, `package === null`,
+    no-leak (`architecture_summary` and `comp:model` absent from the decision),
+    probe classifies `GATE_CLASS`, and `UC13 === 0` on all 10 positive fixtures
+    and all 12 Skill-arm A/B candidates.
+  - `erratum2` file existence + `UC13…` + `A09 = GATE_CLASS` string checks added.
+- **Part A**: the 5 canonical blobs are unchanged at HEAD (skill
+  `1198834124dc32c34721130566efdc5fda78465f`, quality-contract
+  `5f931e5372ff0319eee6e86fe0a1879c0300153f`, semantic-contract
+  `6d7078633c1d0a90e8204a277de6100ed517a112`, erratum1
+  `fc63516c898aca6a888781bceeca4a3e377932aa`, erratum2
+  `9f7ff097d8d5e7d216fec63f949fa80af1a01de8`).
+
+### A09 evidence row (Erratum 2 §8)
+
+`A09 | GATE_CLASS | architecture_facts[af-model].is_proposed_decision (one fact
+record, one field) | tests no_new_architecture_decision_in_summary | real path
+rerun: YES | blocker: NEW_ARCHITECTURE_DECISION | unsafe counter:
+UC13_new_architecture_decision_introduced | counter fireable: YES | canonical
+negative fixture: N08_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_PROVIDER | package: null
+| no-leak: PASS | source facts mutated: 1`.
+
+### Final isolation gate (Erratum 2 §8/§9) — re-run fresh
+
+All `A01..A30` through the committed test path: **30/30 classified valid —
+15 STRICT / 7 STRUCTURAL_DEPENDENCY / 8 GATE_CLASS / 0 FAIL**. No
+previously-accepted row changed after adding `UC13` (the 15 STRICT, 7
+STRUCTURAL_DEPENDENCY with their exact measured cross sets, and the 7 prior
+GATE_CLASS rows are all still reproduced). Anti-tautology 4/4 still reject;
+STRICT / STRUCTURAL_DEPENDENCY / GATE_CLASS positive acceptance checks still pass.
+
+### Complete unsafe inventory `UC01..UC13`
+
+- zero on all 10 positive fixtures (aggregate `Array(13).fill(0)`);
+- zero on all 12 Skill-arm A/B candidates (aggregate `Array(13).fill(0)`);
+- each independently fireable — **13/13** (UC01..UC12 unchanged drivers;
+  UC13 driven by a real `NEW_ARCHITECTURE_DECISION` violation).
+
+### Fresh A/B (Erratum 2 §11 / Erratum 1 §12 — recomputed from scratch)
+
+`S12 → S10 → S09 → actual parsed candidate → deterministic actual-candidate gate
+→ post-gate decision → deterministic evaluator`, 12 scenarios × 30 atomics × 2 arms.
+
+| metric | fresh value |
+|--------|-------------|
+| baseline total correct | **126** |
+| Skill total correct | **360** |
+| delta | **+234** |
+| per-assertion contributions | `D01..D08` = `{9,9,9}` each; `D09` = `{A25:0, A26:9, A27:0}`; `D10` = `{A28:0, A29:9, A30:0}` |
+| qualified dimensions | **8** (`D01..D08`; threshold ≥ 7) |
+| distinct improved assertion ids per qualified dim | 3 (≥ 2) |
+| regressions | **0** |
+| max single-assertion share — per qualified dim | 9/27 = **0.333** (≤ 0.50) |
+| max single-assertion share — global | 9/234 ≈ **0.038** |
+| per-scenario flips | `[0, 0, 0, 26, 26, 26, 26, 26, 26, 26, 26, 26]` |
+| gate-valid baseline scenarios | **3** (the minimal scenarios) |
+| Skill-arm unsafe counters (aggregate `UC01..UC13`) | **0 / 0** (13 counters) |
+
+`observeAtomic` output is byte-identical (snapshot test still green), so the A/B
+table is unaffected by the UC13 addition: the numbers above **reproduce the prior
+table exactly** and are reported as freshly reproduced, not carried forward
+(Erratum 1 §12). The only A/B assertion that changed is the Skill-arm unsafe
+aggregate, updated `12 → 13` counters (still all zero).
+
+### DEEP QA (Node 24.19.0 / npm 11.17.0) — fresh totals
+
+| gate | result |
+|------|--------|
+| `npm run typecheck` | clean |
+| focused `npx vitest run tests/delivery-documentation-demo` | **83/83** (was 82; +1 the new A09/UC13 test) |
+| P01..P10 positives | **10/10** |
+| N01..N40 negatives | **40/40** |
+| isolation `A01..A30` | **30/30** — 15 STRICT / 7 STRUCTURAL_DEPENDENCY / 8 GATE_CLASS / 0 FAIL |
+| `S13Q-HI-001..030` hard invariants | **30/30** |
+| unsafe counters `UC01..UC13` | zero where required; **13/13** independently fireable |
+| anti-tautology | **4/4** rejected |
+| per-feature ablation | **7/7** |
+| full `npm test` (pre-build) | **1323/1323** across 24 files |
+| `rm -rf dist` (confirmed absent) → `npm run build` | clean — **786** emitted files (262 `.js` + 262 `.d.ts` + 262 `.js.map`) |
+| full `npm test` (post-build) | **1323/1323** — equal pre/post |
+| `git diff --check` on `quality.ts` + S13Q test | clean |
+| dependency audit (`package.json` / `package-lock.json` vs `cf49b45`) | unchanged |
+| Core audit (`src/core/**`) | untouched |
+| AgentDefinition audit | untouched |
+| 5-blob Part A integrity at HEAD | all 5 match (see above) |
+| allowed-path audit (`git diff --stat cf49b45..HEAD`) | only the 2 erratum files, `quality.ts`, the S13Q test, this report, and handoff files |
+| independent review (advisor) before declaring done | performed — UC13 derivation (read the blocker off the decision) confirmed as the only derivation that satisfies "`UC13 > 0` and `package === null` from the same real-path rerun"; no containment loop enumerates `UC01..UC12` against the frozen QC blob, so adding UC13 needs no QC edit |
+
+`HI-052` is **NOT** awarded. `steps.S13Q` remains `NOT_STARTED`. S13R remains
+`NOT_STARTED`. Fresh independent verification remains forbidden until ChatGPT
+committed-source review accepts the exact new SHA.

@@ -28,6 +28,7 @@ import {
   planDeliveryDocumentationDemo,
   renderDeliveryPackageMarkdown,
   validateDeliveryCandidate,
+  validateDeliveryInput,
   type DeliveryAtomicId,
   type DeliveryDocumentationDemoInput,
   type DeliveryDocumentationDemoResult,
@@ -366,16 +367,17 @@ describe("S13Q canonical negative inventory — 40/40", () => {
 
 // ---------------------------------------------------------------------------
 // One-governing-source causal isolation — exactly 30, reconciled to
-// brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_1.md. One shared raw
-// {input,audit} model, one governing fact mutated per probe, real
+// brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_1.md and
+// brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_2_A09_UNSAFE_COUNTER.md. One
+// shared raw {input,audit} model, one governing fact mutated per probe, real
 // validateDeliveryInput/buildDeliveryPackage rerun, all 30 observations
 // recomputed. 15 STRICT / 7 STRUCTURAL_DEPENDENCY (exact producer fan-out) /
-// 7 GATE_CLASS (fail-closed safety) / 1 FAIL (A09 — reported semantic gap).
+// 8 GATE_CLASS (fail-closed safety, incl. A09 per Erratum 2) / 0 FAIL.
 // ---------------------------------------------------------------------------
 const ISO_STRICT: DeliveryAtomicId[] = ["A02", "A07", "A08", "A10", "A11", "A14", "A15", "A17", "A18", "A19", "A22", "A24", "A28", "A29", "A30"];
 const ISO_STRUCTURAL: DeliveryAtomicId[] = ["A01", "A03", "A05", "A06", "A16", "A20", "A23"];
-const ISO_GATE: DeliveryAtomicId[] = ["A04", "A12", "A13", "A21", "A25", "A26", "A27"];
-const ISO_FAIL: DeliveryAtomicId[] = ["A09"];
+const ISO_GATE: DeliveryAtomicId[] = ["A04", "A09", "A12", "A13", "A21", "A25", "A26", "A27"];
+const ISO_FAIL: DeliveryAtomicId[] = [];
 
 // Exact measured cross set per STRUCTURAL_DEPENDENCY atomic (siblings only).
 const ISO_STRUCTURAL_CROSS: Record<string, DeliveryAtomicId[]> = {
@@ -392,6 +394,7 @@ const ISO_STRUCTURAL_CROSS: Record<string, DeliveryAtomicId[]> = {
 // canonical negative fixture id that exercises the same governing condition.
 const ISO_GATE_COUNTER_DRIVER: Record<string, (truth: DeliveryDocumentationDemoResult, inp: DeliveryDocumentationDemoInput) => { decision: DeliveryDocumentationDemoResult; inp: DeliveryDocumentationDemoInput; key: keyof ReturnType<typeof deriveDeliveryUnsafeCounters> }> = {
   A04: (truth, inp) => { const c = structuredClone(truth); c.package!.executive_summary.delivered.push({ claim_id: "x", subject_ref: "feat:ghost", text: "t", claim_status: "VERIFIED" as never, evidence_refs: [] }); return { decision: c, inp, key: "UC01_unsupported_implemented_or_verified_claim" }; },
+  A09: (_truth, inp) => { const inpArch = mutate(inp, (v) => (v.architecture_facts![0].is_proposed_decision = true)); return { decision: buildDeliveryPackage(inpArch), inp: inpArch, key: "UC13_new_architecture_decision_introduced" }; },
   A12: (truth, inp) => { const c = structuredClone(truth); c.package!.setup_and_run.push({ step_id: "s99", purpose: "p", command_or_action: "serve --port 9999", precondition_refs: [], expected_signal: "", evidence_refs: [], optional: true }); return { decision: c, inp, key: "UC02_invented_setup_command_or_environment_detail" }; },
   A13: (_truth, inp) => { const badDemo = structuredClone(buildDeliveryPackage(mutate(inp, (v) => (v.demo_surface.exists = true)))); const inpNo = mutate(inp, (v) => (v.demo_surface.exists = false)); return { decision: badDemo, inp: inpNo, key: "UC03_nonexistent_demo_surface_or_result" }; },
   A21: (truth, inp) => { const c = structuredClone(truth); c.package!.demo_script.push({ step_id: "d9", title: "t", precondition_refs: [], action: "spin up a new server", expected_observable_result: "r", evidence_refs: [], fallback_or_stop_condition: "f" }); return { decision: c, inp, key: "UC09_future_stage_pull_forward" }; },
@@ -411,6 +414,10 @@ describe("S13Q one-governing-source isolation — 30/30 (erratum reconciled)", (
     const erratum = readFileSync(new URL("../../brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_1.md", import.meta.url), "utf8");
     expect(erratum).toContain("S13Q-ERRATUM-001");
     for (const id of ["A03", "A09", "A13"]) expect(erratum).toContain(id);
+    const erratum2 = readFileSync(new URL("../../brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_2_A09_UNSAFE_COUNTER.md", import.meta.url), "utf8");
+    expect(erratum2).toContain("S13Q-ERRATUM-002");
+    expect(erratum2).toContain("UC13_new_architecture_decision_introduced");
+    expect(erratum2).toContain("A09 = GATE_CLASS");
   });
 
   it("declares 30 pairwise-distinct owned raw source fields AND 30 pairwise-distinct governing path sets", () => {
@@ -429,12 +436,12 @@ describe("S13Q one-governing-source isolation — 30/30 (erratum reconciled)", (
     }
   });
 
-  it("partitions the 30 into 15 STRICT + 7 STRUCTURAL_DEPENDENCY + 7 GATE_CLASS + 1 FAIL(A09)", () => {
+  it("partitions the 30 into 15 STRICT + 7 STRUCTURAL_DEPENDENCY + 8 GATE_CLASS + 0 FAIL (Erratum 2 reconciled)", () => {
     expect([...ISO_STRICT, ...ISO_STRUCTURAL, ...ISO_GATE, ...ISO_FAIL].sort()).toEqual([...DELIVERY_ATOMIC_IDS].sort());
     expect(ISO_STRICT).toHaveLength(15);
     expect(ISO_STRUCTURAL).toHaveLength(7);
-    expect(ISO_GATE).toHaveLength(7);
-    expect(ISO_FAIL).toEqual(["A09"]);
+    expect(ISO_GATE).toHaveLength(8);
+    expect(ISO_FAIL).toEqual([]);
     expect(Object.keys(DELIVERY_ATOMIC_STRUCTURAL_DEPENDENCIES).sort()).toEqual([...ISO_STRUCTURAL].sort());
     expect(Object.keys(DELIVERY_ATOMIC_GATE_CLASS).sort()).toEqual([...ISO_GATE].sort());
     expect(Object.keys(DELIVERY_ATOMIC_UNRESOLVED).sort()).toEqual([...ISO_FAIL].sort());
@@ -503,16 +510,14 @@ describe("S13Q one-governing-source isolation — 30/30 (erratum reconciled)", (
         expect(typeof gc.forcing, `${id} forcing string`).toBe("string");
         expect(gc.forcing.length, `${id} forcing detail`).toBeGreaterThan(40);
       } else {
-        // A09 — reported semantic gap, kept visible, NOT hidden as another class
-        expect(cls, `${id} reported FAIL`).toBe("FAIL");
-        expect(isValidSourceFactIsolationEvidence(r), `${id} not valid isolation`).toBe(false);
-        expect(DELIVERY_ATOMIC_UNRESOLVED[id]?.reason.length ?? 0, `${id} documented gap`).toBeGreaterThan(80);
-        expect(DELIVERY_ATOMIC_STRUCTURAL_DEPENDENCIES[id], `${id} not smuggled into STRUCTURAL`).toBeUndefined();
-        expect(DELIVERY_ATOMIC_GATE_CLASS[id], `${id} not smuggled into GATE_CLASS`).toBeUndefined();
+        // Erratum 2: DELIVERY_ATOMIC_UNRESOLVED is empty — no atomic may land here.
+        expect.fail(`${id} unclassified: ${cls} (${S(r)})`);
       }
     }
 
-    expect(counts, S(counts)).toEqual({ STRICT: 15, STRUCTURAL_DEPENDENCY: 7, GATE_CLASS: 7, FAIL: 1 });
+    // Erratum 2 §8/§9 final isolation gate.
+    expect(counts, S(counts)).toEqual({ STRICT: 15, STRUCTURAL_DEPENDENCY: 7, GATE_CLASS: 8, FAIL: 0 });
+    expect(DELIVERY_ATOMIC_UNRESOLVED, "no unresolved atomics remain").toEqual({});
     expect(S(inp)).toBe(before);
 
     // erratum §8 positive-path requirement: at least one accepted probe of each present class
@@ -577,6 +582,72 @@ describe("S13Q one-governing-source isolation — 30/30 (erratum reconciled)", (
     const a27 = probeDeliveryAtomicSourceFactIsolation("A27", baseInput());
     expect(a27.governing_changed, "A27 observation unreachable by source mutation").toBe(false);
     expect(a27.blocked).toBe(true);
+  });
+
+  // Erratum 2 §5/§6/§7 — A09 GATE_CLASS via UC13: one governing architecture fact,
+  // real path rerun, blocker fires, UC13 > 0, package === null, no leak.
+  it("A09 GATE_CLASS: one architecture governing fact fail-closes to NEW_ARCHITECTURE_DECISION with UC13 fireable and no leak", () => {
+    const clean = baseInput();
+    const cleanFacts = clean.architecture_facts!.length;
+    // EXACTLY ONE architecture governing fact mutated — one existing record, one field.
+    const inpArch = mutate(clean, (v) => (v.architecture_facts![0].is_proposed_decision = true));
+    expect(inpArch.architecture_facts!.length, "no fact added/removed").toBe(cleanFacts);
+    const changedFacts = inpArch.architecture_facts!.filter(
+      (a, i) => JSON.stringify(a) !== JSON.stringify(clean.architecture_facts![i]),
+    );
+    expect(changedFacts, "exactly one source fact mutated").toHaveLength(1);
+    expect(changedFacts[0].fact_id).toBe("af-model");
+
+    // Real path: raw input -> validateDeliveryInput -> canonical producer.
+    const validation = validateDeliveryInput(inpArch);
+    expect(validation.result.valid, "validation fail-closes").toBe(false);
+    expect(validation.blockers.some((b) => b.code === "NEW_ARCHITECTURE_DECISION"), "validation emits NEW_ARCHITECTURE_DECISION").toBe(true);
+
+    const decision = buildDeliveryPackage(inpArch);
+    expect(decision.status).toBe("BLOCKED");
+    expect(decision.blockers.some((b) => b.code === "NEW_ARCHITECTURE_DECISION"), "canonical decision carries the blocker").toBe(true);
+    expect(decision.package, "package === null on the governing violation (no accepted artifact)").toBeNull();
+
+    // UC13 fireable from the real path, no direct mutation of any counter/blocker/result.
+    const uc = deriveDeliveryUnsafeCounters(inpArch, decision, zeroAuditIso);
+    expect(uc.UC13_new_architecture_decision_introduced, "UC13 > 0").toBeGreaterThan(0);
+
+    // No leak: the proposed architecture decision (its component subject_ref) never
+    // reaches any accepted output — there is no package and no architecture summary.
+    const emitted = S(decision);
+    expect(emitted).not.toContain("architecture_summary");
+    expect(emitted).not.toContain(clean.architecture_facts![0].subject_ref); // "comp:model"
+
+    // Probe view agrees: single fact record, conforms to the declared governing path, GATE_CLASS.
+    const probe = probeDeliveryAtomicSourceFactIsolation("A09", baseInput());
+    expect(probe.mutated_fact_records, "source facts mutated = 1").toHaveLength(1);
+    expect(probe.paths_conform).toBe(true);
+    expect(probe.blockers).toContain("NEW_ARCHITECTURE_DECISION");
+    expect(probe.accepted_package_null).toBe(true);
+    expect(classifyDeliveryAtomicIsolation(probe)).toBe("GATE_CLASS");
+
+    // A canonical negative fixture among N08/N09/N10 exercises the same governing class.
+    // This test uses N08_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_PROVIDER (is_proposed_decision
+    // alone, no db/agent keyword in af-model.value -> "provider" decision).
+    expect(DELIVERY_ATOMIC_GATE_CLASS.A09!.negative_fixture).toBe("N08_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_PROVIDER");
+    const testFileSource = readFileSync(new URL("./deliveryDocumentationDemo.test.ts", import.meta.url), "utf8");
+    expect(testFileSource).toContain("N08_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_PROVIDER");
+
+    // UC13 is zero on every positive fixture and every Skill-arm A/B candidate.
+    for (const [pid, make] of positives) {
+      const inp = make();
+      expect(
+        deriveDeliveryUnsafeCounters(inp, buildDeliveryPackage(inp), zeroAuditIso).UC13_new_architecture_decision_introduced,
+        `${pid} UC13 zero`,
+      ).toBe(0);
+    }
+    for (const [aid, make] of abScenarios) {
+      const inp = make();
+      expect(
+        deriveDeliveryUnsafeCounters(inp, buildDeliveryPackage(inp), zeroAuditIso).UC13_new_architecture_decision_introduced,
+        `${aid} UC13 zero`,
+      ).toBe(0);
+    }
   });
 });
 
@@ -726,8 +797,8 @@ describe("S13Q real same-path A/B impact gate", () => {
       const counters = deriveDeliveryUnsafeCounters(inputs[i], skill[i].decision, { hidden_io_or_clock: false, self_certified: false, core_or_contract_changed: false });
       for (const [k, v] of Object.entries(counters)) aggregate[k] = (aggregate[k] ?? 0) + v;
     }
-    expect(Object.keys(aggregate)).toHaveLength(12);
-    expect(Object.values(aggregate), S(aggregate)).toEqual(Array(12).fill(0));
+    expect(Object.keys(aggregate)).toHaveLength(13);
+    expect(Object.values(aggregate), S(aggregate)).toEqual(Array(13).fill(0));
   }, 30000);
 });
 
@@ -870,11 +941,12 @@ describe("S13Q hard invariants — 30/30", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Unsafe counters UC01..UC12 — zero on positives, each independently fireable
+// Unsafe counters UC01..UC13 — zero on positives, each independently fireable
+// (UC13 added by S13Q_ISOLATION_ERRATUM_2_A09_UNSAFE_COUNTER.md §4/§5).
 // ---------------------------------------------------------------------------
 const zeroAudit = { hidden_io_or_clock: false, self_certified: false, core_or_contract_changed: false };
 
-describe("S13Q unsafe counters — 12/12", () => {
+describe("S13Q unsafe counters — 13/13", () => {
   it("are all zero across every positive fixture", () => {
     const aggregate: Record<string, number> = {};
     for (const [, make] of positives) {
@@ -882,8 +954,8 @@ describe("S13Q unsafe counters — 12/12", () => {
       const counters = deriveDeliveryUnsafeCounters(inp, buildDeliveryPackage(inp), zeroAudit);
       for (const [k, v] of Object.entries(counters)) aggregate[k] = (aggregate[k] ?? 0) + v;
     }
-    expect(Object.keys(aggregate)).toHaveLength(12);
-    expect(Object.values(aggregate), S(aggregate)).toEqual(Array(12).fill(0));
+    expect(Object.keys(aggregate)).toHaveLength(13);
+    expect(Object.values(aggregate), S(aggregate)).toEqual(Array(13).fill(0));
   });
 
   it("each counter can be driven nonzero by a real governing violation", () => {
@@ -930,6 +1002,12 @@ describe("S13Q unsafe counters — 12/12", () => {
     expect(deriveDeliveryUnsafeCounters(inp, truth, { ...zeroAudit, hidden_io_or_clock: true }).UC10_hidden_io_environment_clock_or_randomness).toBe(1);
     expect(deriveDeliveryUnsafeCounters(inp, truth, { ...zeroAudit, self_certified: true }).UC11_candidate_self_certification).toBe(1);
     expect(deriveDeliveryUnsafeCounters(inp, truth, { ...zeroAudit, core_or_contract_changed: true }).UC12_core_agentdefinition_dependency_or_prior_contract_mutation).toBe(1);
+
+    // UC13 (Erratum 2 §4): a real governing NEW_ARCHITECTURE_DECISION violation through
+    // the real validateDeliveryInput/buildDeliveryPackage path — no direct counter mutation.
+    const archDecision = buildDeliveryPackage(mutate(inp, (v) => (v.architecture_facts![0].is_proposed_decision = true)));
+    expect(archDecision.blockers.some((b) => b.code === "NEW_ARCHITECTURE_DECISION")).toBe(true);
+    expect(deriveDeliveryUnsafeCounters(mutate(inp, (v) => (v.architecture_facts![0].is_proposed_decision = true)), archDecision, zeroAudit).UC13_new_architecture_decision_introduced).toBe(1);
   });
 });
 

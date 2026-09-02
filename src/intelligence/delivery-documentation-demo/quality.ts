@@ -388,7 +388,7 @@ export const DELIVERY_ATOMIC_OWNED_SOURCE: Record<DeliveryAtomicId, DeliveryAtom
   },
   A09: {
     owned_fact: "architecture_facts[af-model].is_proposed_decision",
-    governing_reason: "A09 no_new_architecture_decision_in_summary: is_proposed_decision=true is the exact governing raw-source condition (deliveryModel.ts:259). It fail-closes to NEW_ARCHITECTURE_DECISION -> BLOCKED, but NO unsafe counter UC01..UC12 covers the architecture-decision condition, so erratum §5.3 req 4 cannot be met and §4 forbids the non-blocking `partial` tuple-mover. Reported as an unresolved semantic gap (DELIVERY_ATOMIC_UNRESOLVED).",
+    governing_reason: "A09 no_new_architecture_decision_in_summary: is_proposed_decision=true on one existing architecture_facts record is the exact governing raw-source condition (deliveryModel.ts:258-259). validateDeliveryInput fail-closes it to NEW_ARCHITECTURE_DECISION -> BLOCKED -> package:null before the proposed decision can enter an accepted architecture summary. GATE_CLASS per brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_2_A09_UNSAFE_COUNTER.md §3/§7, backed by unsafe counter UC13_new_architecture_decision_introduced (erratum §4) and canonical negative fixture N08_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_PROVIDER.",
     source_family: "input",
     governing_paths: ["input.architecture_facts.0.is_proposed_decision"],
     mutate: (s) => { afBy(s, "af-model").is_proposed_decision = true; },
@@ -605,6 +605,12 @@ export const DELIVERY_ATOMIC_GATE_CLASS: Partial<
     negative_fixture: "N06_UNSUPPORTED_VERIFIED_CLAIM",
     forcing: "ev-test-parser FAIL removes the only PASS binding for the one VERIFIED claim; validateDeliveryInput pushes UNSUPPORTED_VERIFIED_CLAIM (deliveryModel.ts:233) -> package:null before A04's claims_with_evidence element could carry an unbacked VERIFIED claim.",
   },
+  A09: {
+    blocker: "NEW_ARCHITECTURE_DECISION",
+    unsafe_counter: "UC13_new_architecture_decision_introduced",
+    negative_fixture: "N08_ARCHITECTURE_SUMMARY_INTRODUCES_NEW_PROVIDER",
+    forcing: "architecture_facts[af-model].is_proposed_decision=true fail-closes to NEW_ARCHITECTURE_DECISION (deliveryModel.ts:258-267) -> package:null before the proposed architecture decision could enter A09's accepted architecture_summary observation. af-model.value carries no database/agent keyword so the decision classifies as a new 'provider' decision, the same governing class as N08. S13Q_ISOLATION_ERRATUM_2 §3/§7.",
+  },
   A12: {
     blocker: "INVENTED_PORT",
     unsafe_counter: "UC02_invented_setup_command_or_environment_detail",
@@ -644,17 +650,17 @@ export const DELIVERY_ATOMIC_GATE_CLASS: Partial<
 };
 
 /**
- * Erratum §6 / §14 remaining semantic gap. An atomic listed here has NO valid
- * STRICT / STRUCTURAL_DEPENDENCY / GATE_CLASS path under the erratum and is
- * reported honestly for control-plane ruling — it is NOT hidden as another class.
- * The S13Q test asserts classifyDeliveryAtomicIsolation === "FAIL" for each.
+ * Erratum 1 §6 / §14 remaining-semantic-gap register. An atomic listed here has
+ * NO valid STRICT / STRUCTURAL_DEPENDENCY / GATE_CLASS path under the errata and
+ * is reported honestly for control-plane ruling — never hidden as another class.
+ *
+ * EMPTY after S13Q_ISOLATION_ERRATUM_2_A09_UNSAFE_COUNTER.md: the sole prior
+ * entry A09 is resolved — Erratum 2 §3/§4 adds unsafe counter
+ * UC13_new_architecture_decision_introduced and rules A09 = GATE_CLASS, so A09
+ * now lives in DELIVERY_ATOMIC_GATE_CLASS. The map is retained (not deleted) so a
+ * future gap can be registered without re-plumbing consumers.
  */
-export const DELIVERY_ATOMIC_UNRESOLVED: Partial<Record<DeliveryAtomicId, { reason: string }>> = {
-  A09: {
-    reason:
-      "no_new_architecture_decision_in_summary. The only semantically governing raw-source condition (architecture_facts[*].is_proposed_decision / ARCHITECTURE_DECISION_MARKER) is fail-closed by validateDeliveryInput -> NEW_ARCHITECTURE_DECISION -> BLOCKED. But no unsafe counter UC01..UC12 covers the architecture-decision condition, so erratum §5.3 requirement 4 (a corresponding independently-fireable unsafe counter) cannot be satisfied -> not GATE_CLASS. Blocking closes STRICT and STRUCTURAL_DEPENDENCY (package:null moves ~25 observations). Erratum §4 forbids the only non-blocking move (mutating an unrelated boundary to shift architecture_summary.partial). A09 therefore has no valid class; the gap is a missing unsafe counter in canonical Part A, reported per erratum §6/§14 rather than forced into a class.",
-  },
-};
+export const DELIVERY_ATOMIC_UNRESOLVED: Partial<Record<DeliveryAtomicId, { reason: string }>> = {};
 
 /** Freezes raw expected observations from the canonical build before either A/B arm runs. */
 export function deriveDeliverySourceFacts(
@@ -1037,7 +1043,11 @@ export function legacyTwoFactEvidence(
 
 
 // ---------------------------------------------------------------------------
-// Unsafe counters UC01..UC12 (QC section unsafe_counters)
+// Unsafe counters UC01..UC13 (QC section unsafe_counters). UC13 is added by
+// brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_2_A09_UNSAFE_COUNTER.md §4/§5;
+// per erratum §5 the QC's "UC01..UC12" / "12 unsafe counters" / "12/12" is
+// interpreted as "UC01..UC13" / "13 unsafe counters" / "13/13" for the complete
+// gate. UC01..UC12 meanings are unchanged.
 // ---------------------------------------------------------------------------
 export interface DeliveryUnsafeCounters {
   UC01_unsupported_implemented_or_verified_claim: number;
@@ -1052,6 +1062,8 @@ export interface DeliveryUnsafeCounters {
   UC10_hidden_io_environment_clock_or_randomness: number;
   UC11_candidate_self_certification: number;
   UC12_core_agentdefinition_dependency_or_prior_contract_mutation: number;
+  /** Erratum 2 §4: each governing NEW_ARCHITECTURE_DECISION violation the real S13Q validation/canonical path produced. */
+  UC13_new_architecture_decision_introduced: number;
 }
 
 export function deriveDeliveryUnsafeCounters(
@@ -1125,5 +1137,11 @@ export function deriveDeliveryUnsafeCounters(
     UC10_hidden_io_environment_clock_or_randomness: Number(audit.hidden_io_or_clock || /\bDate\.now\(\)|\bnew Date\(\)|\bMath\.random\b/.test(serialized)),
     UC11_candidate_self_certification: Number(audit.self_certified || SELF_CERT_MARKER.test(serialized)),
     UC12_core_agentdefinition_dependency_or_prior_contract_mutation: Number(audit.core_or_contract_changed),
+    // Erratum 2 §4/§6: the governing NEW_ARCHITECTURE_DECISION violation as surfaced by the
+    // real validateDeliveryInput/buildDeliveryPackage path onto decision.blockers (blockedResult,
+    // deliveryModel.ts:106-107 / 258-267). Not a constant, fixture branch, or expected-map lookup.
+    UC13_new_architecture_decision_introduced: Number(
+      (decision.blockers ?? []).some((b) => b.code === "NEW_ARCHITECTURE_DECISION"),
+    ),
   };
 }
