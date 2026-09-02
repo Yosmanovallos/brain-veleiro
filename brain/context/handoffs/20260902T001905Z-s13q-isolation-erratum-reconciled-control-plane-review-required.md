@@ -30,10 +30,11 @@ All four verified at the new candidate HEAD.
 ## Candidate
 
 - branch: `s13q-delivery-documentation-demo-part-b`
-- new SHA: `__NEW_SHA__`
-- parent chain: `__NEW_SHA__` → `36c2a5e` → `5b084ae` → `41f723f` → `1782a16` → `cf49b45`
+- reconciliation code commit: `1c21e41dde9095ba4098b596646c0a3587fb7c0f`
+- candidate SHA: branch HEAD after this handoff is finalized (recorded in the issue #1 `CODEX_HANDOFF` comment)
+- parent chain: `<candidate>` → `1c21e41` → `36c2a5e` → `5b084ae` → `41f723f` → `1782a16` → `cf49b45`
 - `main` unchanged: **YES** — `main` = `origin/main` = `cf49b45519c45b6ce3e930b813df97f6e983c151`
-- files touched vs `cf49b45`: `S13Q_ISOLATION_ERRATUM_1.md` (from the erratum transfer commit), `src/intelligence/delivery-documentation-demo/quality.ts`, `tests/delivery-documentation-demo/deliveryDocumentationDemo.test.ts`, `brain-bootstrap/reports/S13Q-delivery-documentation-demo-verification.md`, this handoff
+- files touched vs `cf49b45`: `brain-bootstrap/specs/S13Q_ISOLATION_ERRATUM_1.md` (erratum transfer commit `36c2a5e`), `src/intelligence/delivery-documentation-demo/quality.ts`, `tests/delivery-documentation-demo/deliveryDocumentationDemo.test.ts`, `brain-bootstrap/reports/S13Q-delivery-documentation-demo-verification.md`, and this handoff
 
 ## Final classification
 
