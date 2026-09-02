@@ -948,3 +948,79 @@ aggregate, updated `12 → 13` counters (still all zero).
 `HI-052` is **NOT** awarded. `steps.S13Q` remains `NOT_STARTED`. S13R remains
 `NOT_STARTED`. Fresh independent verification remains forbidden until ChatGPT
 committed-source review accepts the exact new SHA.
+
+---
+
+## Addendum — accepted fresh independent verification + factual closure (2026-09-02)
+
+*Appended at factual closure. The builder narrative above is unchanged; earlier
+rejected isolation approaches (`1782a16`, `41f723f`, `5b084ae`, the two erratum
+reconciliation steps) remain part of the audit trail and were superseded, not
+verified.*
+
+### Committed-source review + verification authorization
+
+- ChatGPT committed-source review accepted the exact candidate SHA in GitHub
+  Issue #1 comment `5503071799` (`SOURCE_REVIEW_ACCEPTED /
+  FRESH_INDEPENDENT_VERIFICATION_AUTHORIZED`).
+
+### Fresh independent verifier — PASS
+
+- GitHub Issue #1 comment `5503283730`, `step: S13Q`, `status: PASS`.
+- Verifier identity: fresh session, non-authoring, non-fork, read-only, not the
+  builder's advisor, did not repair the candidate; performed **no** repository
+  writes (verification ran in a detached `git worktree` at the exact SHA).
+- Exact target immutable end-to-end: candidate stayed
+  `a70933a41826c25c1ebda87f897750a6f0d7818e`, `main` stayed
+  `cf49b45519c45b6ce3e930b813df97f6e983c151`.
+- Independently reproduced, from scratch: all five Part A blobs exact;
+  `P01..P10` 10/10; `N01..N40` 40/40; isolation 30/30 =
+  15 STRICT / 7 STRUCTURAL_DEPENDENCY / 8 GATE_CLASS / 0 FAIL with exact measured
+  cross-sets; A09 manual one-fact proof
+  (`architecture_facts[af-model].is_proposed_decision` → real
+  `validateDeliveryInput`/`buildDeliveryPackage` → `NEW_ARCHITECTURE_DECISION` →
+  `UC13 = 1` → `package === null` → `N08` → no leak); `UC01..UC13` zero where
+  required and 13/13 independently fireable; anti-tautology 4/4 rejected;
+  `S13Q-HI-001..030` 30/30; ablation 7/7; actual
+  `S12 → S10 → S09 → parsed actual candidate → actual-candidate gate → post-gate
+  evaluator` path with no faithful substitute; fresh A/B with a from-scratch
+  scoring loop converging on baseline **126** / Skill **360** / **+234** /
+  8 qualified dimensions / 0 regressions / concentration ≈ **0.0385** / Skill-arm
+  unsafe aggregate all zero; Node 24.19.0 typecheck PASS, focused **83/83**, full
+  **1323/1323** across 24 files pre-build, genuine dist-absent clean build **786**
+  emitted files, full **1323/1323** post-build; `git diff --check` clean; Core /
+  AgentDefinition / dependencies / prior contracts / `STATE.yaml` / `CURRENT.md` /
+  S13R untouched.
+- Environment note (accepted, non-blocking): default shell exposed Node 22.23.1
+  and plain `npm ci` could not run better-sqlite3's native install script; the
+  verifier explicitly activated Node 24 and used lock-faithful
+  `npm ci --ignore-scripts`; the real memory-provider DB suite and every
+  canonical executable QA/build gate passed. The S13Q quality contract does not
+  require a successful dependency-install script as a pass criterion.
+
+### ChatGPT control-plane acceptance + HI-052
+
+- GitHub Issue #1 comment `5503286781`:
+  `decision: VERIFIED_PASS_ACCEPTED / HI-052_AWARDED / FACTUAL_CLOSURE_AUTHORIZED`.
+- **`HI-052` is `AWARDED`** by the control plane — canonical DEC-08 satisfied
+  (fresh non-authoring, non-fork, read-only verifier independently reproduced the
+  required evidence; the control plane factually accepts the result).
+
+### Factual closure
+
+- `main` fast-forwarded `cf49b45..a70933a` via `git merge --ff-only` — no squash,
+  rebase, amend, cherry-pick, conflict resolution, force or candidate
+  modification. `main` HEAD equalled `a70933a…` before the closure commit.
+- Post-fast-forward re-check: five Part A blobs exact at HEAD; typecheck PASS;
+  focused **83/83** — no implementation change made to pass checks.
+- One bounded docs-only closure commit created on top of `a70933a…`, touching
+  only `brain-bootstrap/STATE.yaml`, `brain/context/CURRENT.md`, this addendum,
+  and the new closure handoff
+  `brain/context/handoffs/20260902T021901Z-s13q-verified-pass-closure.md`.
+- `STATE.yaml`: `current_step: S13Q`, `status: PASS`, `steps.S13Q: PASS`,
+  `steps.S13R: NOT_STARTED`; `repository.head_sha` reconciled from the stale
+  `76e8ce9…` to the verified implementation target `a70933a…` (the direct parent
+  of the closure commit, per the established continuity convention).
+- **`steps.S13Q` is now `PASS`. `steps.S13R` remains `NOT_STARTED`** and was not
+  started, inspected or authored by this closure. Only a fresh S13R factual
+  preflight + ChatGPT Authoring Gate is now eligible.

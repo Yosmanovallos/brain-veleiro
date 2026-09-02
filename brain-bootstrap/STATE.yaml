@@ -1,12 +1,12 @@
 bootstrap_version: 1.2.0
-current_step: S13P
+current_step: S13Q
 status: PASS
 primary_builder: codex
 independent_verifier: codex-fresh-non-authoring-non-fork-read-only
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-09-01T18:14:17Z"
+last_verified_at: "2026-09-02T02:09:56Z"
 steps:
   S00: PASS
   S01: PASS
@@ -37,7 +37,7 @@ steps:
   S13N: PASS
   S13O: PASS
   S13P: PASS
-  S13Q: NOT_STARTED
+  S13Q: PASS
   S13R: NOT_STARTED
   S14: NOT_STARTED
   S15: NOT_STARTED
@@ -58,9 +58,9 @@ repository:
   default_branch: main
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
-  commits: 122
-  head_sha: "76e8ce9bd48fb9cc17336366d5783e82bec7c739"
-  head_sha_note: "Parent of the S13Q canonical Part A integration commit (origin/main == 76e8ce9 at integration time; itself the S13Q preflight commit). State: S13P VERIFIED PASS / CLOSED, HI-051 AWARDED; S13Q Part A integrated byte-identically, S13Q Part B NOT_STARTED. Refreshed from the stale S13O target a6e035a per the S13Q preflight repository.head_sha reconciliation (issue #1 comment 5499211058) -- mechanical continuity maintenance, not S13P repair and not S13Q step-status change. The integration commit follows."
+  commits: 132
+  head_sha: "a70933a41826c25c1ebda87f897750a6f0d7818e"
+  head_sha_note: "Exact fresh-independently-verified S13Q delivery-documentation-demo Part B implementation target and the DIRECT PARENT of the S13Q factual closure commit. Per the established continuity convention this field stores the verified implementation target, not a self-referencing closure SHA; `main` is fast-forwarded to a70933a with zero candidate modification and the bounded docs-only closure commit (STATE.yaml + CURRENT.md + one closure handoff) is created immediately on top of it. State: S00-S13Q VERIFIED PASS / CLOSED; HI-052 AWARDED by ChatGPT control-plane (issue #1 comment 5503286781) on fresh-verifier relay comment 5503283730; S13R NOT_STARTED. The stale S13Q-Part-A-era 76e8ce9 metadata is superseded and no longer live."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -662,6 +662,33 @@ repository:
     skill_vs_no_skill: "12 frozen scenarios (AB01..AB12), 32 atomic assertions per arm (max 384/arm), same materialized path and same visible packet object identity; baseline arm no Skill, candidate arm loads the real S13P Skill; both score the post-gate decision. Baseline 214; candidate 384; delta +170; 9 of 10 dimensions qualified (threshold >=7); 0 assertion/scenario regressions; largest single-assertion share of positive delta approx 0.053; baseline candidate gated REJECTED on 9 of 12 scenarios while the Skill candidate is byte-identical to the recomputed canonical bundle on all 12; all 16 unsafe counters zero; 32/32 isolation re-checked."
     boundaries: "No Core change, AgentDefinition change, package dependency, provider SDK/vendor binding, durable store, exporter, collector, dashboard, network/HTTP/queue handle, pricing/FX service, hidden clock or unseeded randomness, S13Q/S13R/S14/S15/S20 work, or semantic edit to canonical Part A. One append-only referenceSkillCatalogEntries entry (intelligence.observability-ai-systems.s13p, 19th); two adjacent boundary tests updated mechanically only (catalog length 18->19 and removal of the now-authorized observability-ai-systems directory token from two forbidden-directory regexes), exactly as the S13O implementation updated the equivalent async-reliability markers."
     note: "VERIFIED PASS. Fresh non-authoring, non-fork, read-only VERIF1 returned PASS for exactly candidate 0a278220f7498249ec2ade2790ea9abe5e7f32b9 (baseline 9ca9affad062e04f989eed02067b0f68da81ef31), posted in issue #1 comment 5498346326; the verified branch was published non-force to origin/s13p-observability-ai-systems-part-b (comment 5498924829); ChatGPT control-plane accepted the evidence and authorized factual closure in comment 5498956095 (decision VERIFIED_PASS_ACCEPTED / FACTUAL_CLOSURE_AUTHORIZED). HI-051 awarded during this closure. Part A byte-identical, 24/24 hard invariants, 10 dimensions, 32/32 atomic isolation, 14/14 positives, 52/52 negatives, 12/12 A/B scenarios with baseline 214 -> candidate 384 (+170), 9/10 qualified dimensions, 0 regressions, concentration approx 0.053, 16/16 unsafe counters zero and each independently fireable, actual candidate lineage/gating, determinism/privacy/anti-gaming PASS, S12->S10->S09 canonical integration PASS, architecture/dependency/boundary audit PASS, typecheck/focused 88/88/full 1240/1240 pre-build/clean build 756 files/full 1240/1240 post-build. main fast-forwarded to 0a278220f7498249ec2ade2790ea9abe5e7f32b9 with no candidate modification. S13Q remains NOT_STARTED and was not started, inspected or authored by this closure."
+
+  delivery_documentation_demo:
+    status: PASS
+    classification: SKILL_ONLY
+    depth: DEEP
+    verified_implementation_target: "a70933a41826c25c1ebda87f897750a6f0d7818e"
+    verified_candidate_branch: "s13q-delivery-documentation-demo-part-b"
+    frozen_main_before_closure: "cf49b45519c45b6ce3e930b813df97f6e983c151"
+    independent_verification_comment_id: 5503283730
+    control_plane_acceptance_comment_id: 5503286781
+    control_plane_decision: "VERIFIED_PASS_ACCEPTED / HI-052_AWARDED / FACTUAL_CLOSURE_AUTHORIZED"
+    independently_verified_at: "2026-09-02T02:09:56Z"
+    honor_invariant: "HI-052 AWARDED"
+    builder_report: "brain-bootstrap/reports/S13Q-delivery-documentation-demo-verification.md"
+    closure_handoff: "brain/context/handoffs/20260902T021901Z-s13q-verified-pass-closure.md"
+    part_a_blobs:
+      skill: "1198834124dc32c34721130566efdc5fda78465f"
+      quality_contract: "5f931e5372ff0319eee6e86fe0a1879c0300153f"
+      contract: "6d7078633c1d0a90e8204a277de6100ed517a112"
+      isolation_erratum_1: "fc63516c898aca6a888781bceeca4a3e377932aa"
+      isolation_erratum_2_a09_unsafe_counter: "9f7ff097d8d5e7d216fec63f949fa80af1a01de8"
+    part_a_note: "Canonical Part A is five artifacts: the original three (Skill / Quality Contract / Semantic Contract, already on frozen main) plus S13Q_ISOLATION_ERRATUM_1.md and S13Q_ISOLATION_ERRATUM_2_A09_UNSAFE_COUNTER.md (added on the Part B branch). Erratum 2 normatively re-reads every 'UC01..UC12 / 12 unsafe counters / 12/12' reference as 'UC01..UC13 / 13 / 13/13' and rules A09 = GATE_CLASS via new counter UC13_new_architecture_decision_introduced. All five blobs reproduced exactly by the fresh verifier and again at closure HEAD."
+    contract_tests: "Focused S13Q 83/83 PASS: exact 10 positives (P01..P10) and exact 40 negatives (N01..N40), each id present in the Quality Contract; one-governing-source causal isolation 30/30 = 15 STRICT / 7 STRUCTURAL_DEPENDENCY / 8 GATE_CLASS / 0 FAIL with exact measured cross-sets (A01->[A24], A03->[A05], A05->[A03,A24], A06->[A03], A16->[A18], A20->[A19], A23->[A22]); A09 GATE_CLASS proven from one governing architecture_facts[af-model].is_proposed_decision fact through the real validateDeliveryInput/buildDeliveryPackage path to NEW_ARCHITECTURE_DECISION, UC13>0, package===null, canonical negative fixture N08, no architecture-decision leak; unsafe counters UC01..UC13 zero on every positive fixture and every Skill-arm A/B candidate and each independently fireable 13/13; anti-tautology 4/4 invalid isolation mechanisms mechanically rejected; hard invariants S13Q-HI-001..030 30/30 recomputed outside the module; per-feature ablation 7/7; actual S12->S10->S09->parsed actual candidate->actual-candidate deterministic gate->post-gate evaluator path with no faithful substitute."
+    quality_checks: "Node 24.19.0 / npm 11.17.0. typecheck PASS; focused 83/83; full 1323/1323 across 24 files pre-build; genuine dist-absent proof then tsc -p tsconfig.json clean build PASS with 786 emitted files (262 .js + 262 .js.map + 262 .d.ts); full 1323/1323 post-build; git diff --check clean; Core, AgentDefinition, package.json/package-lock.json, prior canonical contracts, STATE.yaml and CURRENT.md untouched by the candidate diff; all five canonical Part A Git blobs match expected exactly. Fresh verifier environment note (accepted by control-plane, non-blocking): default shell exposed Node 22.23.1 and plain `npm ci` could not run better-sqlite3's native install script, so lock-faithful `npm ci --ignore-scripts` under Node 24 was used; the real memory-provider DB suite and every canonical executable QA/build gate passed."
+    skill_vs_no_skill: "12 frozen scenarios (3 minimal + 9 rich), 30 atomic assertions per arm (max 360/arm), same materialized S12->S10->S09 path and same visible packet object identity; baseline arm loads no Skill, candidate arm loads the real S13Q Skill; both score only the post-gate decision. Baseline 126; Skill 360; delta +234; 8 of 10 dimensions qualified (threshold >=7); 0 assertion/scenario regressions; global max single-assertion share of positive delta approx 0.0385; per-scenario flips [0,0,0, 26x9]; exactly the 3 minimal scenarios are baseline-gate-valid; all 13 Skill-arm unsafe counters zero. Fresh verifier re-implemented the scoring/aggregation loop from scratch and converged on these exact figures."
+    boundaries: "SKILL_ONLY. No Core change, AgentDefinition change, package dependency, provider SDK/vendor binding, network/HTTP/filesystem/browser handle, hidden clock or unseeded randomness, S13R/S14/S15 work, and no semantic edit to canonical Part A. The Part B implementation diff vs frozen main is contained to src/intelligence/delivery-documentation-demo/quality.ts (isolation machinery + UC13) plus the S13Q focused test file, the two errata specs, the verification report and four reconciliation handoffs. No referenceSkillCatalogEntries change was required (the S13Q Skill was already catalogued at Part A)."
+    note: "VERIFIED PASS / CLOSED. Fresh non-authoring, non-fork, read-only independent verifier reproduced exactly candidate a70933a41826c25c1ebda87f897750a6f0d7818e (frozen main cf49b45519c45b6ce3e930b813df97f6e983c151) and returned PASS in issue #1 comment 5503283730; ChatGPT control-plane accepted the result and awarded HI-052 in issue #1 comment 5503286781 (decision VERIFIED_PASS_ACCEPTED / HI-052_AWARDED / FACTUAL_CLOSURE_AUTHORIZED). main fast-forwarded cf49b45..a70933a with zero candidate modification; this bounded docs-only closure commit follows on top. Reconciliation lineage on the Part B branch: 1782a16 / 41f723f / 5b084ae / 36c2a5e+1c21e41 (erratum 1) / f3e9970+a70933a (erratum 2); earlier isolation approaches were superseded, not verified. S13R remains NOT_STARTED and was not started, inspected or authored by this closure; only a fresh S13R factual preflight + ChatGPT Authoring Gate is now eligible."
 
 build_day:
   date: "2026-08-29"
