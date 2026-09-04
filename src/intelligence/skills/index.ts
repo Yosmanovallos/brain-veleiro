@@ -1,3 +1,4 @@
+import { deploymentSkillS13R } from '../deployment/deploymentSkill.js';
 import type { SkillCatalogEntry } from "../../core/skill/index.js";
 import { toSkillDescriptor } from "../../core/skill/index.js";
 import { researchEvidenceGroundedS11 } from "./definitions/researchEvidenceGroundedS11.js";
@@ -137,4 +138,5 @@ export const referenceSkillCatalogEntries: SkillCatalogEntry[] = [
     descriptor: toSkillDescriptor(deliveryDocumentationDemoSkillS13Q),
     load_definition: async () => deliveryDocumentationDemoSkillS13Q,
   },
+  { descriptor: toSkillDescriptor(deploymentSkillS13R), load_definition: async () => deploymentSkillS13R },
 ];
