@@ -1,4 +1,4 @@
-# Deployment Engineering Contract — S13R
+# BRAIN — Deployment Contract S13R
 
 ## 1. Status and authority
 
@@ -12,151 +12,60 @@ status: AUTHORING_READY
 honor_invariant_candidate: HI-053
 ```
 
-This contract is the semantic authority for S13R.
+This semantic contract is the authority for S13R.
 
-S13R defines a reusable Docker-first deployment-engineering method for target projects. It converts caller-supplied, verified repository/runtime facts into a provider-neutral containerization plan, safe environment/secret boundary, health/lifecycle mapping, persistence-preserving deployment handoff and evidence-based verification status.
+S13R follows S13Q delivery-documentation-demo and precedes S14 Capability Registry / Tools / MCP.
 
-It does **not** mean that `brain-veleiro` itself must become a web service. Repository reality at the S13R Authoring Gate proves `brain-veleiro` is a TypeScript library/in-process SDK with no production entry point, start command, public port or long-running process. S13R must preserve that fact rather than invent a server.
+## 2. Repository-grounded resolution
 
-Normative words `MUST`, `MUST NOT`, `SHOULD`, `MAY`, `READY_TO_PACKAGE`, `PACKAGE_VERIFIED`, `DEPLOYED_VERIFIED`, `BLOCKED`, `UNKNOWN` and `DEFERRED` have strict contract meaning.
-
-## 2. Repository-grounded identity
-
-The bootstrap source defines:
+The bootstrap roadmap defines:
 
 ```text
 S13R — deployment
 Docker first, environment/secrets, health checks, deploy verification; provider-specific adapters later.
 ```
 
-S13Q explicitly deferred to S13R:
+Preflight at baseline `56770fc631381b7a26d97405af5e6e10320012f9` proves:
 
 ```text
-Docker/containerization
-environment/secrets provisioning
-health checks
-hosting/provider mapping
-deployment execution
-deployed verification
-provider-specific deployment adapters
+Brain is a private TypeScript/ESM library/in-process SDK.
+There is no product start script, bin, CLI, server, worker or daemon.
+There is no product-bound port, health endpoint or runtime environment contract.
+There is no Docker/platform/CI deployment artifact or selected provider.
 ```
 
-The phrase `provider-specific adapters later` constrains S13R v1: this step owns the provider-neutral method, artifacts, generic handoff and verification semantics, but does not hardcode or implement a specific hosting adapter absent a separate canonical decision.
+The apparent contradiction is resolved normatively:
 
-## 3. Canonical resolution
+> S13R defines and verifies deployment semantics. It does not create a new product runtime merely so this repository can be deployed.
 
-### 3.1 Classification
+For the current Brain baseline, the correct deployment assessment is therefore blocked on the missing deployable entrypoint.
+
+## 3. Canonical classification
 
 ```text
-S13R = SKILL_ONLY
+S13R = SKILL_ONLY + DEEP
 ```
 
-Reason: deployment is a reusable engineering procedure over repository/runtime/evidence facts. S13R does not require a new adaptive agent role, new AgentDefinition or Core runtime branch. It uses the existing generic Skill discovery/AgentDefinition/runtime path.
+No new adaptive AgentDefinition is justified. The work is deterministic reasoning over bounded caller-supplied repository/runtime/deployment evidence.
 
-```text
-S12 Skill discovery + exact lazy selected-Skill load
-→ compatible existing AgentDefinition
-→ S10 compileAgentDefinition()
-→ S09 runAgent()
-→ parse actual candidate
-→ deterministic candidate gate
-→ deterministic deployment evaluator
-```
+DEEP is required because deployment combines credential safety, runtime/process identity, external-effect readiness and a high risk of false production claims.
 
-### 3.2 Quality depth
+## 4. Architectural boundary
 
-```text
-S13R = DEEP
-```
-
-Deployment has infrastructure side effects, native dependency/platform compatibility, secret boundaries, network exposure and false production-readiness risk. A DEEP quality contract is mandatory.
-
-### 3.3 Deployable-unit decision
-
-Canonical unit kinds:
-
-```text
-SERVICE
-WORKER
-JOB
-CLI
-LIBRARY
-NONE
-```
-
-S13R may package only an already-existing executable `SERVICE`, `WORKER`, `JOB` or `CLI` for executable container verification.
-
-`LIBRARY` and `NONE` are valid classifications. They become `BLOCKED` when the requested deployment requires a process that does not exist. S13R cannot convert them into a service/worker/CLI by invention.
-
-This is the ruling for the current `brain-veleiro` repository: applying S13R to `brain-veleiro` with a request for a live hosted service must block unless an upstream approved architecture first introduces an executable unit. The S13R reference implementation therefore demonstrates the method on target-project fixtures; it does not make Brain itself a server.
-
-### 3.4 Provider posture
-
-```text
-S13R v1 provider posture = PROVIDER_NEUTRAL
-```
-
-No Render, Fly.io, Railway, Vercel, AWS, GCP, Azure, Kubernetes or other provider is canonical at this point.
-
-S13R may emit a provider-neutral handoff containing:
-
-```text
-unit kind
-artifact/revision identity
-start command
-ports/protocols when existing
-health/readiness semantics when existing
-environment-variable names
-secret refs
-persistence requirements
-resource/privilege limitations when evidenced
-verification requirements
-```
-
-A named-provider mapping may be validated only when an already-approved provider constraint is passed as input. It may not introduce SDK/MCP/OAuth/account provisioning logic in the reference planner.
-
-### 3.5 Persistence posture
-
-S13R preserves existing persistence. It does not decide that an ephemeral store must become durable, or that SQLite/local files must become Postgres/object storage.
-
-For the current Brain reference memory provider, `:memory:` remains ephemeral/reference behavior. A caller-supplied file `databasePath` is not evidence that deployment requires a durable volume. A volume is justified only by an existing durability requirement or approved architecture fact.
-
-### 3.6 Health posture
-
-Health/readiness is runtime-kind-specific:
-
-```text
-SERVICE -> existing endpoint or executable health command
-WORKER  -> existing process/self-check semantics
-JOB     -> bounded execution + expected exit/result
-CLI     -> bounded execution + expected exit/result
-LIBRARY -> no process health
-NONE    -> no process health
-```
-
-S13R MUST NOT create a health server or route merely because deployment tooling commonly expects one.
-
-## 4. Architectural decision for Part B
-
-Part B is a pure deterministic Intelligence reference module plus focused fixtures/tests.
-
-Part B MAY add responsibilities equivalent to:
+Part B may add a pure reference module equivalent to:
 
 ```text
 src/intelligence/deployment/
   constants.ts
   types.ts
   validateDeploymentInput.ts
-  classifyDeployableUnit.ts
+  deriveDeploymentFacts.ts
+  assessEntrypoint.ts
   buildContainerPlan.ts
   buildEnvironmentPlan.ts
-  buildPersistencePlan.ts
   buildHealthPlan.ts
-  buildProviderHandoff.ts
-  buildVerificationPlan.ts
-  renderDockerfile.ts
-  renderDockerignore.ts
-  renderEnvExample.ts
+  buildPersistencePlan.ts
+  evaluateDeploymentEvidence.ts
   validateDeploymentCandidate.ts
   quality.ts
   deploymentSkill.ts
@@ -164,779 +73,508 @@ src/intelligence/deployment/
   index.ts
 ```
 
-Exact filenames may follow repository conventions.
+Exact filenames may follow repository convention.
 
-The existing pre-S13R boundary tests that forbid a `src/intelligence/deployment` directory may be updated **mechanically only** to recognize this newly authorized canonical S13R module, following the same pattern used by prior S13x additions. That mechanical authorization is not permission to weaken S14+ or Core boundaries.
-
-Allowed Part B additions:
+Allowed adjacent changes:
 
 ```text
-one append-only S12 reference Skill catalog entry for intelligence.deployment.s13r
-src/intelligence/deployment/** deterministic reference implementation
-focused deployment fixtures/tests
-one disposable executable target-project fixture under tests/deployment/fixtures/**
-verification report and handoff
-deterministic in-memory Dockerfile/.dockerignore/.env.example projection
-mechanical adjacent boundary-test updates required solely by S13R's authorized module/catalog entry
+one append-only S12 Skill catalog entry
+focused deterministic tests/fixtures
+verification report/handoff
+mechanical updates to existing boundary tests so they allow exactly the canonical S13R deployment reference module
 ```
 
-Forbidden Part B changes:
+Part B canonical logic performs no filesystem, shell, Docker-daemon, network, hosting or secret-manager side effect.
 
-```text
-Core semantics
-new AgentDefinition
-new npm runtime/dev dependency
-provider SDK or vendor client
-MCP/connector/OAuth/account provisioning
-production server/worker/CLI added to brain-veleiro
-persistent database/provider migration
-CI/CD platform or release automation
-secret values
-provider-specific deployment adapter
-S14+ implementation
-semantic edit to S09..S13Q canonical Part A
-```
+This contract does not authorize creation of a product runtime. It also does not authorize an actual repo-root Dockerfile for the current Brain baseline because no executable launch target exists to put in it.
 
-The reference module performs no filesystem, shell, Docker-daemon, environment, network or provider I/O. Real Docker evidence is produced by an external verification procedure operating on the deterministic artifact projection/fixture.
+## 5. Input model
 
-## 5. Canonical input model
+Reference shape:
 
 ```ts
-type DeployableUnitKind = "SERVICE" | "WORKER" | "JOB" | "CLI" | "LIBRARY" | "NONE";
-
-type DeploymentStatus =
-  | "READY_TO_PACKAGE"
-  | "PACKAGE_VERIFIED"
-  | "DEPLOYED_VERIFIED"
-  | "BLOCKED";
-
 interface DeploymentInput {
-  deployment_identity: DeploymentIdentity;
-  repository_facts: readonly DeploymentRepositoryFact[];
+  identity: DeploymentIdentity;
+  repository_facts: readonly RepositoryFact[];
   runtime_surface: RuntimeSurface;
+  build_contract: BuildContract;
+  container_policy: ContainerPolicy;
   environment_contract: EnvironmentContract;
-  persistence_facts: readonly PersistenceFact[];
-  health_facts: readonly HealthFact[];
-  verification_evidence: readonly DeploymentEvidence[];
+  health_contract: HealthContract;
+  persistence_contract: PersistenceContract;
+  deployment_evidence: readonly DeploymentEvidence[];
   policy: DeploymentPolicy;
-  provider_constraints?: ProviderConstraint;
-  native_dependency_facts?: readonly NativeDependencyFact[];
+  provider_authority?: ProviderAuthority;
   evidence_refs?: readonly SafeRef[];
 }
 ```
 
-All arrays are immutable caller data. The implementation MUST clone/normalize before processing and MUST NOT mutate caller input.
+### 5.1 DeploymentIdentity
 
-## 6. DeploymentIdentity
-
-Required fields:
+Required:
 
 ```text
 project_ref
 revision_ref
-deployment_intent_ref
-requested_unit_kind
-artifact_ref
+deployment_scope_ref
 ```
 
 Optional:
 
 ```text
-accepted_ancestor_refs
-source_handoff_ref
+baseline_revision_ref
+accepted_ancestry_or_range_ref
 ```
 
-All refs use the repository's bounded safe-ref grammar. Revision identity must be unambiguous.
+All material evidence must bind to `revision_ref` or an explicitly accepted ancestry/range.
 
-## 7. RuntimeSurface
+### 5.2 RuntimeSurface
+
+Canonical fields:
+
+```text
+kind = LIBRARY_ONLY | HTTP_SERVICE | WORKER | CLI_PROCESS | OTHER_EXECUTABLE | NONE
+entrypoint_ref?
+start_command_ref?
+start_command?
+port_ref?
+port?
+health_transport = HTTP | COMMAND | PROCESS | NONE
+```
+
+`LIBRARY_ONLY` and `NONE` are not deployable process kinds by themselves.
+
+The evaluator must not infer a missing entrypoint from build artifacts, package name, index barrels, tests or roadmap text.
+
+### 5.3 BuildContract
+
+Canonical fields:
+
+```text
+build_command
+build_artifact_refs
+runtime_name
+runtime_version
+package_manager?
+install_command?
+```
+
+Every command/value must originate from accepted repository facts. The system must not choose npm/yarn/pnpm/bun or a runtime version merely because one is common.
+
+### 5.4 ContainerPolicy
+
+Canonical fields:
+
+```text
+strategy = DOCKER_FIRST
+base_runtime_ref?
+non_root_required?
+read_only_root_preferred?
+working_directory?
+```
+
+The policy cannot make an ineligible runtime eligible.
+
+### 5.5 EnvironmentContract
+
+Each environment item contains:
+
+```text
+name
+requirement = REQUIRED | OPTIONAL
+classification = PUBLIC_CONFIG | SENSITIVE_REFERENCE
+source_ref
+secret_ref?
+```
+
+No value field exists for sensitive material.
+
+Unknown names are not guessed.
+
+### 5.6 HealthContract
+
+Canonical fields:
+
+```text
+transport = HTTP | COMMAND | PROCESS | NONE
+liveness_check?
+readiness_check?
+source_ref?
+```
+
+For HTTP, any path/port must be evidenced by the runtime surface. For COMMAND, the exact check command must be evidenced. For PROCESS, only process-level semantics may be claimed.
+
+`NONE` is valid for a non-running library but cannot support deployment READY for a long-running service requiring health evidence.
+
+### 5.7 PersistenceContract
+
+Canonical mode:
+
+```text
+NONE
+EPHEMERAL
+PERSISTENT_LOCAL
+EXTERNAL_SERVICE
+UNKNOWN
+```
+
+Include writable-path facts only when real. A volume/external service is not selected by inference.
+
+### 5.8 DeploymentEvidence
+
+Canonical evidence kinds include:
+
+```text
+BUILD_PASS
+IMAGE_BUILD_PASS
+PROCESS_START_PASS
+LIVENESS_PASS
+READINESS_PASS
+DEPLOYED_REVISION_OBSERVED
+DEPLOYED_SMOKE_PASS
+```
+
+Evidence fields include:
+
+```text
+evidence_id
+kind
+revision_ref
+subject_ref
+result = PASS | FAIL | UNKNOWN
+source_ref
+evidence_refs
+```
+
+Evidence must be non-empty, resolving and revision-consistent to support READY.
+
+Candidate prose saying "deployed" is not deployment evidence.
+
+## 6. Entrypoint eligibility
+
+Canonical rule:
+
+```text
+if runtime_surface.kind in {LIBRARY_ONLY, NONE}
+  => BLOCKED / BLOCKED_NO_DEPLOYABLE_ENTRYPOINT
+```
+
+An executable kind additionally requires an evidenced entrypoint/start contract.
+
+The following are not entrypoint proof:
+
+```text
+TypeScript compilation
+presence of dist/
+index.ts barrels
+unit tests
+package.json name/type
+README roadmap
+S13Q setup/demo text
+```
+
+No workaround may synthesize a new server/worker/CLI.
+
+## 7. Docker-first packaging
+
+If and only if entrypoint eligibility passes, derive a structured Docker plan containing facts such as:
+
+```text
+runtime/base image intent
+working directory
+copy/install/build phases
+runtime artifact set
+start command
+exposed port only when real
+user/security intent
+healthcheck only when real
+```
+
+The canonical plan may produce a deterministic Dockerfile projection.
+
+The projection is not authority. It cannot introduce an install command, runtime image, port, command, path or environment name absent from accepted facts/policy.
+
+If required container facts are unknown, status is PARTIAL/BLOCKED rather than guessed.
+
+## 8. Environment and secrets
+
+Secret minimization is mandatory.
+
+The canonical shape stores only secret references and presence state. It rejects secret-bearing canonical keys or values including credentials, bearer tokens, private keys, raw `.env` payloads and raw secret-manager responses.
+
+Returned BLOCKED decisions must sanitize blocker text and references so the rejected value is not echoed.
+
+S13R defines injection requirements, not a concrete secret manager.
+
+## 9. Health/readiness
+
+Canonical separation:
+
+```text
+build success != process start success
+process start success != liveness
+liveness != readiness
+unit tests != deployed readiness
+```
+
+Health/readiness must be derived from the existing process semantics.
+
+- HTTP: path/port must already exist.
+- Worker/CLI: command/process check only if already defined.
+- No process: no invented health endpoint.
+
+## 10. Persistence
+
+The evaluator must make persistence assumptions explicit.
+
+`PERSISTENT_LOCAL` requires an evidenced writable path plus an authorized persistence/volume decision. `EXTERNAL_SERVICE` requires an already-authorized external-service fact.
+
+For the current Brain memory provider, an optional caller-supplied SQLite path does not itself authorize a deployment volume or external DB. Default/reference `:memory:` behavior remains an upstream fact, not an S13R architecture migration.
+
+If deployment would require a new persistence architecture, the builder must stop at a semantic/ADR gate instead of silently widening S13R.
+
+## 11. Provider mapping
+
+Canonical default:
+
+```text
+PROVIDER_NEUTRAL
+```
+
+A provider-specific mapping is allowed only when explicit `ProviderAuthority` references a canonical repository/caller decision. The provider name may affect adapter projection but cannot alter core package truth.
+
+No provider can be inferred from prior user projects or preferences.
+
+Provider-specific adapters are not part of this initial S13R Part B.
+
+## 12. Candidate gate
+
+Execution order is normative:
+
+```text
+model/provider candidate
+→ parse candidate
+→ deterministic structural validation
+→ recompute protected fields/claims from input facts
+→ fail-closed candidate gate
+→ deterministic evaluator
+```
+
+The gate validates the actual candidate. It must not discard that candidate and score a separately synthesized answer.
+
+Protected claims include:
+
+```text
+entrypoint existence/kind
+build/start commands
+runtime version
+port/health surface
+environment names
+persistence mode
+provider authority
+revision identity
+READY/PARTIAL/BLOCKED status
+```
+
+## 13. Provider blindness and evidence truth
+
+Real Skill-vs-no-Skill evaluation must preserve identical:
+
+```text
+inputs
+frozen source truth
+generic provider implementation
+capability provider
+base AgentDefinition
+S12/S10/S09 execution path
+parser
+gate
+evaluator
+```
+
+Only selected Skill prose/availability differs.
+
+The evaluated provider may not see:
+
+```text
+fixture ID
+expected result
+hidden truth
+atomic evaluator helpers
+arm name
+with_skill flag
+Skill ID/name as answer key
+```
+
+Guidance consumption must be content-derived.
+
+## 14. Atomic quality and isolation
+
+The Quality Contract owns 10 semantic dimensions x 3 atomic assertions = 30 observations.
+
+Canonical isolation requires mutating one owned underlying input/source/evidence fact, then recomputing the real decision/evaluator. Do not mutate a final boolean or a private expected-observation copy.
+
+If one source fact structurally governs multiple assertions, any dependency must be explicit in test evidence; otherwise exactly the intended assertion must change.
+
+## 15. Skill-vs-no-Skill threshold
 
 Required:
 
 ```text
-kind
-exists
-```
-
-Executable units (`SERVICE`, `WORKER`, `JOB`, `CLI`) additionally require evidence-backed values as applicable:
-
-```text
-entrypoint_ref
-start_command_ref
-start_command
-runtime_ref
-runtime_major
-build_command_ref
-build_command
-protocol
-ports
-lifecycle_refs
-```
-
-`LIBRARY` and `NONE` MUST NOT carry a fabricated process start command.
-
-For `SERVICE`, ports/routes/protocols appear only if explicit repository/runtime evidence supports them.
-
-## 8. Repository facts
-
-Allowed fact kinds include bounded values such as:
-
-```text
-RUNTIME_VERSION
-PACKAGE_MANAGER
-LOCKFILE
-INSTALL_COMMAND
-BUILD_COMMAND
-START_COMMAND
-ENTRYPOINT
-PORT
-PROTOCOL
-HEALTH_ENDPOINT
-HEALTH_COMMAND
-SHUTDOWN_SIGNAL
-WORKING_DIRECTORY
-BUILD_OUTPUT
-DOCKER_CONTEXT_INCLUDE
-DOCKER_CONTEXT_EXCLUDE
-NATIVE_DEPENDENCY
-PLATFORM
-LIBC
-ARCHITECTURE
-```
-
-A fact records:
-
-```text
-fact_id
-kind
-subject_ref
-value
-revision_ref
-source_ref
-confidence = VERIFIED | COMMITTED | DECLARED
-```
-
-Free-form prose is not an executable fact.
-
-## 9. EnvironmentContract
-
-Each allowed variable is represented only by name/reference:
-
-```ts
-type EnvClass =
-  | "PUBLIC_CONFIG"
-  | "SECRET_REF"
-  | "OPTIONAL_CONFIG"
-  | "BUILD_ONLY"
-  | "TEST_ONLY";
-```
-
-Fields:
-
-```text
-name
-class
-required
-source_ref
-safe_example_value?  // forbidden for SECRET_REF
-```
-
-Secret values are not part of the schema. Unknown variables fail validation rather than being copied.
-
-A deterministic `.env.example` projection may contain:
-
-- safe non-secret example values explicitly supplied as safe facts;
-- empty placeholders or `<SECRET_REF:name>`-style non-secret reference markers for secret names.
-
-It may never contain a secret value.
-
-## 10. PersistenceFact
-
-Canonical storage classes:
-
-```text
-EPHEMERAL_MEMORY
-EPHEMERAL_FILE
-DURABLE_LOCAL_FILE
-EXTERNAL_DURABLE_SERVICE
-NONE
-```
-
-Each fact states the current architecture, not a desired migration.
-
-A volume/mount proposal is eligible only for `DURABLE_LOCAL_FILE` when the requirement is explicitly accepted. `EPHEMERAL_MEMORY` and `NONE` do not gain a volume by default.
-
-## 11. HealthFact
-
-Allowed health kinds:
-
-```text
-HTTP_HEALTH
-COMMAND_HEALTH
-PROCESS_SELF_CHECK
-JOB_EXIT
-CLI_EXIT
-NONE
-```
-
-Every non-`NONE` fact binds the runtime surface and source evidence. HTTP health requires an existing route/port/protocol; S13R does not create them.
-
-## 12. NativeDependencyFact
-
-Fields:
-
-```text
-package_ref
-native_kind
-supported_runtime_majors
-platform
-architecture
-libc
-prebuilt_available
-build_toolchain_refs
-runtime_library_refs
-source_ref
-```
-
-If target compatibility cannot be proven, the plan is `BLOCKED` rather than guessed.
-
-## 13. ProviderConstraint
-
-Canonical state:
-
-```text
-mode = PROVIDER_NEUTRAL | APPROVED_NAMED_PROVIDER
-provider_ref?  // safe opaque/name ref only when already approved
-requirements[]
-source_ref
-```
-
-`APPROVED_NAMED_PROVIDER` is caller evidence that a separate decision already exists; it is not created by S13R.
-
-No credential/account identifiers belong in this structure.
-
-## 14. DeploymentEvidence
-
-Allowed evidence levels:
-
-```text
-STATIC_PLAN
-IMAGE_BUILT
-CONTAINER_EXERCISED
-EXTERNAL_DEPLOYMENT_OBSERVED
-```
-
-Common fields:
-
-```text
-evidence_id
-level
-revision_ref
-artifact_ref
-artifact_digest?
-outcome = PASS | FAIL
-observable_code
-safe_ref
-source_kind
-```
-
-External evidence may add provider-neutral safe fields:
-
-```text
-deployment_ref
-observed_status
-health_or_exit_outcome
-safe_endpoint_ref?
-```
-
-Raw provider logs, credentials, headers, bodies, account IDs and tokens are forbidden.
-
-Evidence precedence:
-
-```text
-accepted direct executable observation
-> accepted artifact/build observation
-> committed repository fact
-> approved canonical contract/ADR
-> accepted handoff
-> caller assertion
-> UNKNOWN
-```
-
-## 15. DeploymentPolicy
-
-The v1 policy contains bounded choices only:
-
-```text
-require_docker_first: true
-allow_provider_specific_artifact: false
-require_non_root_when_feasible: true
-require_lockfile_fidelity: true
-require_secret_value_absence: true
-require_exact_revision_binding: true
-require_real_container_evidence_for_package_verified: true
-allow_runtime_invention: false
-allow_persistence_migration: false
-allow_ci_cd_creation: false
-```
-
-Part B may expose lower/stricter bounds but cannot loosen these canonical requirements.
-
-## 16. Canonical output model
-
-```ts
-interface DeploymentResult {
-  status: DeploymentStatus;
-  blockers: readonly DeploymentBlocker[];
-  deployment_identity: DeploymentIdentity;
-  deployable_unit: DeployableUnitDecision;
-  container_plan: ContainerPlan | null;
-  environment_plan: EnvironmentPlan;
-  secret_boundary: SecretBoundary;
-  persistence_plan: PersistencePlan;
-  health_plan: HealthPlan;
-  provider_handoff: ProviderHandoff;
-  verification_plan: VerificationPlan;
-  accepted_evidence: readonly AcceptedDeploymentEvidence[];
-  limitations: readonly DeploymentLimitation[];
-  warnings: readonly DeploymentWarning[];
-  provenance: DeploymentProvenance;
-}
-```
-
-All arrays/orderings are deterministic.
-
-## 17. ContainerPlan
-
-The plan is a structured representation first. Dockerfile text is derivative.
-
-Required fields for executable units:
-
-```text
-base_runtime_ref
-runtime_major
-platform
-install_strategy
-build_command
-start_command
-working_directory
-build_context_includes
-build_context_excludes
-final_user
-exposed_ports[]
-native_build_requirements[]
-proposed_files[]
-```
-
-`proposed_files` may include:
-
-```text
-Dockerfile
-.dockerignore
-.env.example  // only when environment names exist
-```
-
-No provider-specific manifest is part of the default S13R v1 output.
-
-## 18. Dockerfile projection rules
-
-A deterministic Dockerfile renderer MUST:
-
-1. use an evidence-backed bounded runtime/base-image reference;
-2. copy package manifests/lockfiles before source when that ecosystem strategy is applicable;
-3. use lock-faithful install semantics;
-4. use a separate build stage when native/build tooling or TypeScript compilation makes it materially safer/smaller;
-5. exclude secret values and secret files;
-6. include only evidence-backed build/start commands;
-7. set a non-root final user when feasible;
-8. expose only evidence-backed ports;
-9. add a Docker `HEALTHCHECK` only when a valid existing health command can execute in the final image without inventing a route/tool;
-10. preserve deterministic instruction order.
-
-The renderer is not permitted to add `curl`, `wget`, shell packages or another health dependency merely to fabricate a probe unless that package addition is separately justified by the target's deployment plan.
-
-## 19. Dockerignore projection rules
-
-At minimum, absent an evidence-backed exception, exclude:
-
-```text
-.git
-node_modules
-dist
-coverage
-.env
-.env.*
-*.pem
-*.key
-*.p12
-*.pfx
-*.log
-.tmp
-tmp
-```
-
-`.env.example` may be included only when it contains no secret values.
-
-Repository-specific safe exclusions may be added deterministically from facts.
-
-## 20. Status derivation
-
-### 20.1 BLOCKED
-
-`BLOCKED` when any material condition is true:
-
-- revision identity missing/conflicting;
-- requested executable unit does not exist;
-- entry/start/build command required but unsupported;
-- port/health surface invented;
-- env name unknown;
-- secret value present;
-- native target incompatible/unknown where required;
-- persistence would be silently changed;
-- unauthorized provider-specific artifact requested;
-- actual candidate fails deterministic gate.
-
-### 20.2 READY_TO_PACKAGE
-
-Requires:
-
-- all deterministic plan invariants pass;
-- executable unit exists;
-- container/environment/persistence/health plan is truthful;
-- no secret value;
-- no required real image/container evidence is yet accepted.
-
-Docker runtime absence is compatible with `READY_TO_PACKAGE` only when all deterministic plan conditions pass and the limitation is explicit.
-
-### 20.3 PACKAGE_VERIFIED
-
-Requires everything for `READY_TO_PACKAGE` plus:
-
-```text
-IMAGE_BUILT PASS
-CONTAINER_EXERCISED PASS
-exact revision/artifact binding
-applicable health/readiness or job/CLI exit observable PASS
-```
-
-Evidence must come from a real OCI/Docker runtime. Mocks/snapshots/simulated command transcripts do not qualify.
-
-### 20.4 DEPLOYED_VERIFIED
-
-Requires `PACKAGE_VERIFIED` semantics or equivalent exact external artifact provenance plus:
-
-```text
-EXTERNAL_DEPLOYMENT_OBSERVED PASS
-exact deployed artifact/revision binding
-applicable health/readiness or job/CLI exit observable PASS
-```
-
-No specific hosting provider is required by S13R closure. This status path must be tested deterministically with safe evidence fixtures, but real external-provider deployment is not a closure prerequisite while provider-specific adapters remain deferred.
-
-## 21. Real executable-container gate
-
-S13R factual closure requires at least one real disposable container build and exercise against an **existing executable fixture project**.
-
-Part B may add a bounded fixture under:
-
-```text
-tests/deployment/fixtures/existing-node-service/
-```
-
-The fixture MAY contain a minimal Node 24 service using only built-in runtime APIs, with its start command, port and health route explicitly present in the fixture before the S13R artifact plan is generated. The deployment skill must derive from those facts; it may not hide them in expected-answer lookup.
-
-Required real proof:
-
-```text
-render exact Dockerfile/.dockerignore from candidate plan
-write only into disposable fixture/work directory
-real docker/OCI build succeeds
-capture safe image/artifact identity
-disposable container starts
-existing fixture observable succeeds
-container stops/cleans up
-no secret material emitted
-```
-
-If the builder environment lacks a usable Docker/OCI runtime, it may complete deterministic Part B implementation and publish a candidate, but status remains:
-
-```text
-BLOCKED_FOR_EXECUTABLE_VERIFICATION
-```
-
-No fresh verifier or HI-053 award is authorized until the real gate is produced in an approved environment.
-
-## 22. Reference fixture is not product architecture
-
-The executable deployment fixture exists only to verify the S13R method. It MUST live under `tests/deployment/fixtures/**` or an equivalent explicitly test-only path.
-
-It does NOT create:
-
-```text
-brain-veleiro production server
-brain-veleiro public port
-brain-veleiro health endpoint
-new Core capability
-new AgentDefinition
-```
-
-Existing anti-server guardrails for `src/**` remain semantically valid.
-
-## 23. Source-fact isolation
-
-Every A01..A30 MUST be derived from an owned underlying input/evidence fact.
-
-A valid isolation probe:
-
-```text
-shared raw DeploymentInput + audit evidence
-→ clone
-→ mutate exactly one governing source fact
-→ rerun canonical validation/planner/candidate gate/evaluator
-→ recompute all A01..A30
-→ measure changed atomic set
-```
-
-Direct mutation of:
-
-```text
-DeploymentResult
-container_plan
-environment_plan
-health_plan
-unsafe counter
-expected observation
-actual observation
-correct flag
-```
-
-is not valid isolation.
-
-No structural cross-assertion dependency is pre-authorized by Part A. If Part B proves one is unavoidable, STOP and return the exact measured causal set to ChatGPT Authoring Gate before verification; do not invent a waiver.
-
-## 24. Unsafe counters
-
-The canonical counters are UC01..UC16 from the Quality Contract.
-
-Each must:
-
-- derive from real governing source/candidate evidence;
-- be zero on all canonical positive fixtures and Skill-arm A/B candidates;
-- be independently fireable with at least one named negative fixture;
-- never branch on fixture ID, scenario ID, arm ID or expected truth.
-
-## 25. Same-path Skill-vs-no-Skill proof
-
-Use 12 frozen scenarios and 30 atomic assertions per arm.
-
-The provider receives the same visible task/input facts in both arms. The Skill arm additionally receives the exact selected S13R Skill content through S12 lazy load. Provider cannot see fixture/scenario/arm IDs or expected truth.
-
-Path:
-
-```text
-S12
-→ S10
-→ S09
-→ actual parsed candidate
-→ deterministic candidate gate
-→ post-gate evaluator
-```
-
-Baseline may be weaker naturally but MUST NOT use a deliberately bad synthesizer.
-
-PASS thresholds:
-
-```text
-Skill score > baseline score
-qualified dimensions >= 7/10
+Skill atomic correctness > baseline
+>= 7/10 qualified dimensions
 >= 2 distinct improved assertion IDs per qualified dimension
-max one assertion share <= 0.50 within each qualified dimension
+max single assertion share <= 0.50
 0 atomic regressions
-all Skill-arm UC01..UC16 = 0
+all 30 S13R hard invariants true in Skill arm
+all 12 unsafe counters == 0
 ```
 
-Contribution math groups by assertion ID; `1/delta` is not a valid concentration calculation.
-
-## 26. Candidate gate
-
-The candidate gate validates the **actual parsed candidate**.
-
-The gate may deterministically recompute:
-
-- required schema/status constraints;
-- secret absence;
-- exact revision and deployable-unit consistency;
-- provider/persistence/stage boundaries;
-- evidence-level eligibility.
-
-It MUST NOT replace the actual candidate with a separately synthesized faithful plan before scoring.
-
-## 27. Secret detection boundary
-
-Structural exclusion is primary. Defensive pattern checks may reject obviously secret-bearing values but cannot claim universal secret detection.
-
-No test may prove secret safety solely by searching for one literal token. Canonical negative coverage must include multiple secret classes and structural locations.
-
-## 28. Determinism
-
-The reference module MUST NOT call:
+Grouped contribution share is:
 
 ```text
-Date.now
-new Date without caller value
-Math.random
-process.env
-filesystem
-git
-shell/child_process
-Docker API/CLI
-network/fetch/http
-cloud provider API
-mutable module-global state
+max(improved instances contributed by one assertion ID)
+/
+total improved instances in that dimension
 ```
 
-Equal normalized inputs and audit evidence produce byte-equivalent results and artifact projections.
+Never use `1 / delta` as a proxy.
 
-## 29. Protected boundaries
+## 16. Canonical current-repo positive
 
-S13R may not change semantic behavior in:
+The fixture representing authoring baseline must prove that an honest deployment Skill improves behavior by refusing false packaging:
 
 ```text
-src/core/**
-existing AgentDefinition compiler/runtime
-S09..S13Q canonical Part A
-existing provider ports
+runtime kind: LIBRARY_ONLY
+build: typecheck/test/build known
+start command: absent
+product port: absent
+health transport: NONE
+provider: none
 ```
 
-S14+ remain out of scope:
+Correct outcome:
 
 ```text
-Capability Registry / Tools / MCP
+BLOCKED
+BLOCKED_NO_DEPLOYABLE_ENTRYPOINT
+no Dockerfile projection
+no provider selection
+no invented env vars
+```
+
+This fixture prevents the stage from becoming a mechanism for manufacturing deployability.
+
+## 17. Architecture boundaries
+
+S13R may own the pure deployment reference module and deployment Skill semantics.
+
+S13R does not own:
+
+```text
+new application server architecture
+Capability Registry
+MCP/OAuth/connectors
+tool execution binding
 Verifier Agent
 Architecture Challenger
 Workflow Runtime
 Delegation
 Orchestrator
-cross-run Resource Manager
-Build-Day Operating Model
-unknown-domain E2E
-Freeze / Release
+resource-manager operating system
+multi-provider deployment factory
 ```
 
-CI/CD creation is also excluded from S13R v1 unless separately authorized.
+Core remains provider-neutral and cannot import the deployment module/provider implementation.
 
-## 30. Deployment claims and production claims
+No package dependency addition is expected or authorized by Part A.
 
-Allowed claims are bounded:
+## 18. Existing boundary-test reconciliation
+
+Earlier tests may contain pre-S13R assertions that `src/intelligence` has no `deployment` directory. Once this Part A is integrated, the builder may mechanically narrow those assertions so they:
 
 ```text
-plan valid
-image built
-container exercised
-deployment observed
-health/exit observable passed
+allow exactly src/intelligence/deployment/** as S13R
+continue forbidding capability-registry/provider-platform/future-stage implementation
 ```
 
-Forbidden inference without separate evidence:
+This is a stage-boundary update, not permission to weaken unrelated tests.
+
+## 19. Part B expected scope
+
+Expected additions are bounded to:
 
 ```text
-production-ready
-secure in all environments
-highly available
-scalable
-backed up
-SLO-compliant
-compliant/certified
-cost-optimized
-release-ready
+src/intelligence/deployment/**
+one Skill catalog append
+focused tests/fixtures
+verification report/handoff
+strictly mechanical adjacent boundary-test updates
+factual STATE/CURRENT transitions
 ```
 
-## 31. Canonical positive inventory
+Do not create a usable production deployment for Brain by adding runtime behavior outside this contract.
 
-Exactly 12:
+## 20. Positive and negative fixtures
+
+Part B must implement exactly the 10 positive and 36 negative fixture IDs listed in the Quality Contract. Fixture semantics are authoritative; builders may enrich input detail but may not weaken the named failure condition.
+
+## 21. Unsafe counters
+
+UC01..UC12 are behavior/audit-derived. They must not simply initialize to zero.
+
+Each counter must have at least one adversarial test proving the forbidden condition increments or is otherwise detected, while every canonical Skill-arm fixture must finish with zero unsafe counters.
+
+## 22. Determinism and side-effect boundary
+
+Canonical evaluation is pure with respect to caller-owned inputs.
+
+Forbidden hidden inputs:
 
 ```text
-P01_EXISTING_NODE_SERVICE_DOCKER_PLAN
-P02_EXISTING_WORKER_WITH_PROCESS_SELF_CHECK
-P03_ONE_SHOT_JOB_EXIT_VERIFICATION
-P04_EXISTING_CLI_CONTAINER_ARTIFACT
-P05_ENV_NAMES_AND_SECRET_REFS_ONLY
-P06_EPHEMERAL_SQLITE_PRESERVED
-P07_PREAPPROVED_DURABLE_FILE_VOLUME
-P08_NATIVE_ADDON_WITH_EXPLICIT_BUILD_TOOLCHAIN
-P09_PROVIDER_NEUTRAL_HANDOFF
-P10_RUNTIME_UNAVAILABLE_READY_TO_PACKAGE_ONLY
-P11_REAL_CONTAINER_EVIDENCE_PACKAGE_VERIFIED
-P12_EXTERNAL_EVIDENCE_DEPLOYED_VERIFIED
+filesystem discovery
+process.env values
+Docker daemon state
+network/provider APIs
+browser state
+wall clock
+randomness
 ```
 
-## 32. Canonical negative inventory
+Real external deployment execution may be performed only by a later caller/capability outside this pure reference evaluator and represented back as explicit `DeploymentEvidence`. S13R does not pull S14 capability execution forward.
 
-Exactly N01..N40 as named in `S13R_DEPLOYMENT_DEEP.yaml`.
+## 23. Verification protocol
 
-Every negative fixture must assert the governing blocker/counter, not merely that the overall status is `BLOCKED`.
-
-## 33. Verification order
-
-Required order:
-
-1. exact Part A blob identity;
-2. static/type correctness;
-3. P01..P12 and N01..N40;
-4. A01..A30 source-fact isolation;
-5. S13R-HI-001..030;
-6. UC01..UC16 zero/fireability;
-7. artifact projection determinism/secret safety;
-8. actual-candidate same-path A/B;
-9. full suite pre-build;
-10. genuine dist-absent clean build;
-11. full suite post-build;
-12. protected-boundary/diff audit;
-13. real disposable Docker/OCI build + container exercise;
-14. fresh non-authoring independent verification;
-15. control-plane acceptance/HI-053/factual closure.
-
-A deterministic test snapshot is not a substitute for step 13.
-
-## 34. Environment-blocked execution
-
-The current Authoring Gate knows that the primary WSL builder environment lacks a usable Docker daemon/runtime.
-
-Therefore Part B instructions must distinguish:
+Builder evidence must include:
 
 ```text
-IMPLEMENTATION_COMPLETE
-DETERMINISTIC_QA_PASS
-BLOCKED_FOR_EXECUTABLE_VERIFICATION
+Node 24
+typecheck
+focused S13R tests
+exact 10 positives
+exact 36 negatives
+30/30 real source/evidence isolation
+actual-candidate gating
+provider blindness/counterfactual guidance tests
+same-path A/B with raw grouped contributions
+HI-001..030 true
+UC01..UC12 zero on Skill arm
+full pre-build suite
+proof repo-local dist absent
+genuine build
+full post-build suite
+git diff --check
+Part A byte identity
+Core/AgentDefinition/dependency/provider/S14+ boundary checks
 ```
 
-A candidate may be committed/pushed with the first two true and the third true. It MUST NOT be labeled independently verified or ready for factual closure until the real container gate succeeds.
+The builder cannot award HI-053.
 
-Enabling/installing/changing host Docker is not automatically authorized by Part A. The builder must use an already-available approved environment or return the environmental blocker to the control plane/user.
+## 24. Independent close gate
 
-## 35. Part B stop boundary
+After builder PASS, a different fresh non-authoring, non-fork, read-only verifier must independently inspect committed source/tree evidence and execute the required checks against the exact candidate.
 
-Canonical Part A consists of exactly:
+Only after the verifier reproduces all required evidence may it report HI-053 PASS. The control plane then accepts or rejects closure.
 
-```text
-brain-bootstrap/skills/DEPLOYMENT_SKILL_S13R.md
-brain-bootstrap/quality-contracts/S13R_DEPLOYMENT_DEEP.yaml
-brain-bootstrap/specs/DEPLOYMENT_CONTRACT_S13R.md
-```
+S14 remains forbidden until S13R is `VERIFIED PASS / CLOSED` and the control plane explicitly advances the frontier.
 
-They are integrated byte-identically.
-
-After integration, S13R remains `NOT_STARTED` until explicit Part B authorization is issued according to repository protocol.
-
-Part B must stop after producing its candidate/evidence handoff. It cannot self-award PASS/HI-053, factually close S13R or start S14.
-
-## 36. Non-goals
-
-- Turning `brain-veleiro` into a production HTTP server.
-- Hardcoding a deployment vendor.
-- Multi-provider deployment factory.
-- Provider SDK/MCP/OAuth/account-resource management.
-- Database/persistence migration.
-- Secret-value storage/provisioning.
-- CI/CD platform or release automation.
-- S14+ work.
-- Production-readiness certification.

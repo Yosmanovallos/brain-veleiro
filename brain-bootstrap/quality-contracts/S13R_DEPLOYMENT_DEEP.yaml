@@ -14,446 +14,312 @@ canonical_artifacts:
   semantic_contract: brain-bootstrap/specs/DEPLOYMENT_CONTRACT_S13R.md
 
 purpose: >-
-  Prove that S13R derives Docker-first, provider-neutral deployment artifacts and
-  verification requirements from exact target-repository/runtime facts without
-  inventing an executable unit, port, health surface, environment variable,
-  secret value, persistence topology or provider, and without claiming package
-  or deployed verification absent real execution evidence.
+  Prove that S13R derives truthful Docker-first, provider-neutral deployment
+  readiness and verification from explicit repository/runtime evidence; fails
+  closed when no deployable entrypoint exists; never invents runtime, ports,
+  health routes, environment variables, persistence or provider selection; and
+  preserves S14+ boundaries.
 
 depth_selection:
   result: DEEP
   floors:
-    infrastructure_change: true
     secret_handling: true
-    external_side_effect_risk: true
+    deployment_boundary: true
   ratings:
-    risk:
-      level: HIGH
-      reason: >-
-        Deployment can expose services, secrets and storage, execute privileged
-        build/runtime operations, and make false production-readiness claims.
-    ambiguity:
-      level: HIGH
-      reason: >-
-        The bootstrap says Docker first, environment/secrets, health checks and
-        deploy verification, while the current Brain repo itself has no executable
-        production entry point or canonical provider.
-    novelty:
-      level: HIGH
-      reason: >-
-        No prior S13x owns container packaging or deployed-verification semantics.
-    irreversibility:
-      level: HIGH
-      reason: >-
-        Published images, leaked secrets and mutated external resources may be
-        difficult to retract completely.
-    downstream_impact:
-      level: HIGH
-      reason: >-
-        S13R is the final S13x engineering skill before S14 capability/tool work;
-        unsafe deployment semantics would contaminate later automation.
+    risk: {level: HIGH, reason: "Deployment mistakes can expose secrets, publish unusable artifacts or overclaim production readiness."}
+    ambiguity: {level: HIGH, reason: "The repository currently has no deployable process, so packaging must distinguish absence from a reason to invent runtime."}
+    novelty: {level: HIGH, reason: "No canonical deployment/container/health/env/provider surface exists in the repository."}
+    irreversibility: {level: HIGH, reason: "Bad deployment artifacts and credential handling can have external effects when later executed."}
+    downstream_impact: {level: HIGH, reason: "S13R is the final S13 engineering-method step before capability/tool stages."}
 
 repository_decisions:
   - id: DEC-01
-    decision: S13R is DEEP plus SKILL_ONLY; no new AgentDefinition is justified.
+    decision: S13R is DEEP plus SKILL_ONLY; no new AgentDefinition or Core branch.
   - id: DEC-02
     decision: >-
-      S13R is a reusable deployment-engineering Skill for target projects, not a
-      mandate to turn brain-veleiro itself into a server.
+      Current Brain baseline has no deployable product entrypoint. The canonical
+      answer for that fact set is BLOCKED_NO_DEPLOYABLE_ENTRYPOINT; S13R must not
+      create a server, CLI, worker, daemon, port or start command to escape it.
   - id: DEC-03
     decision: >-
-      Docker-first means provider-neutral OCI packaging for an already-existing
-      executable SERVICE, WORKER, JOB or CLI. Runtime invention is forbidden.
+      Docker-first means an OCI/Docker-compatible packaging plan is the first
+      packaging representation only after an existing deployable entrypoint is evidenced.
   - id: DEC-04
     decision: >-
-      The S13R reference module is deterministic and side-effect-free. A coding
-      agent may apply its approved plan externally, but the canonical planner
-      performs no filesystem, shell, Docker, network or provider mutation.
+      S13R Part B is a pure deterministic Intelligence reference module. It may
+      model deployment artifacts and evaluate caller-supplied deployment evidence,
+      but performs no network, Docker, hosting, filesystem or secret-manager side effect.
   - id: DEC-05
     decision: >-
-      No deployment provider is selected in v1. Provider-specific adapters and
-      the multi-provider deployment factory remain deferred.
+      Environment contracts contain names/classification/references only; secret
+      values/raw .env/raw secret-manager responses are forbidden.
   - id: DEC-06
     decision: >-
-      Health/readiness is derived from existing runtime semantics; a fake HTTP
-      health server/route is forbidden. JOB/CLI verification uses bounded exit/result.
+      Health/readiness checks require an existing process/check transport. Build
+      success or unit-test success alone is not liveness/readiness.
   - id: DEC-07
     decision: >-
-      Existing persistence semantics are preserved. S13R does not migrate SQLite
-      or local files to a new database/provider merely for deployment.
+      Provider mapping defaults to PROVIDER_NEUTRAL. Provider-specific adapters
+      require separate explicit authority and are not inferred from user history.
   - id: DEC-08
     decision: >-
-      READY_TO_PACKAGE, PACKAGE_VERIFIED and DEPLOYED_VERIFIED are distinct; the
-      latter two require real evidence for the exact revision/artifact.
+      New persistent volume/external shared-state requirements are architecture
+      decisions, not mechanical S13R repairs.
   - id: DEC-09
     decision: >-
-      Real Docker/OCI build plus container exercise is a mandatory executable
-      verification gate for S13R closure; lack of runtime remains an explicit blocker.
+      Structured deployment output is authoritative; Dockerfile/config/check
+      projections are deterministic derivatives and may not introduce facts.
+  - id: DEC-10
+    decision: >-
+      S14+ capability/MCP/OAuth/tool execution and S15+ agents/workflows remain forbidden.
+  - id: DEC-11
+    decision: >-
+      Existing tests that previously forbade any `deployment` Intelligence
+      directory may be mechanically narrowed to allow exactly the canonical
+      `src/intelligence/deployment/` S13R reference module while continuing to
+      forbid S14+ capability/provider/platform pull-forward.
+  - id: DEC-12
+    decision: >-
+      HI-053 requires a fresh non-authoring, non-fork, read-only verifier and
+      explicit control-plane acceptance.
 
-uncertainty_and_limitations:
-  - id: LIM-01
-    statement: >-
-      The current brain-veleiro repo is a library/in-process SDK and has no
-      production entry point, start command, port or long-running process.
-  - id: LIM-02
-    statement: >-
-      The current builder WSL environment has Docker CLI evidence but no usable
-      Docker daemon/runtime; real container verification may require another approved environment.
-  - id: LIM-03
-    statement: >-
-      better-sqlite3 is a native dependency; target ABI/libc and prebuild/toolchain
-      compatibility must be explicit when it is part of a deployable target.
-  - id: LIM-04
-    statement: >-
-      No canonical hosting provider or CI/CD system exists in the repository.
-  - id: LIM-05
-    statement: >-
-      S13R cannot prove SLOs, backup/recovery, compliance, autoscaling or cost optimization.
+limits:
+  max_repository_facts: 256
+  max_runtime_facts: 128
+  max_build_steps: 32
+  max_environment_variables: 64
+  max_health_checks: 16
+  max_deployment_evidence: 256
+  max_evidence_refs_per_claim: 8
+  max_total_evidence_refs: 512
+  max_safe_ref_chars: 160
+  max_text_chars_per_field: 2000
+  max_rendered_projection_bytes: 262144
+
+status_derivation:
+  READY:
+    requires:
+      - exact revision identity valid
+      - evidenced deployable entrypoint
+      - evidenced build and start contracts
+      - runtime version resolved
+      - Docker-first plan internally consistent
+      - environment names/references safe
+      - health/readiness contract valid for the existing process
+      - persistence assumptions explicit
+      - provider mapping authorized or provider-neutral
+      - required deployment verification evidence accepted
+      - all hard invariants pass
+      - all unsafe counters zero
+  PARTIAL:
+    allowed_when:
+      - a deployable entrypoint exists but optional provider/deployed evidence is incomplete
+      - missingness is explicit and no READY claim is made
+  BLOCKED:
+    when_any:
+      - input structurally invalid
+      - revision identity conflicts
+      - no deployable entrypoint
+      - required build/start fact missing
+      - runtime version unresolved where required
+      - secret value/raw env material present
+      - required health contract impossible or invented
+      - persistence architecture unresolved for required state
+      - unauthorized provider binding
+      - future-stage capability/tool/agent/workflow pulled forward
 
 hard_invariants:
-  - id: S13R-HI-001
-    rule: Every deployment result binds one exact non-empty revision and requested deployment intent.
-    failure: BLOCK
-  - id: S13R-HI-002
-    rule: Requested deployable unit kind is never silently changed to make deployment possible.
-    failure: BLOCK
-  - id: S13R-HI-003
-    rule: SERVICE/WORKER/JOB/CLI entrypoint and start command are evidence-backed and non-invented.
-    failure: BLOCK
-  - id: S13R-HI-004
-    rule: LIBRARY/NONE cannot be presented as a deployed service without an approved upstream runtime decision.
-    failure: BLOCK
-  - id: S13R-HI-005
-    rule: Ports, protocols, routes, hostnames and health paths are evidence-backed or absent.
-    failure: BLOCK
-  - id: S13R-HI-006
-    rule: Runtime major/base-image family follows accepted target evidence and never uses an unbounded latest tag for verified packaging.
-    failure: BLOCK
-  - id: S13R-HI-007
-    rule: Existing lockfile semantics are preserved by the install plan.
-    failure: BLOCK
-  - id: S13R-HI-008
-    rule: Native dependency platform/ABI/libc constraints and any required build toolchain are explicit.
-    failure: BLOCK
-  - id: S13R-HI-009
-    rule: Build context excludes secrets, local dependency trees, VCS metadata and unapproved host artifacts.
-    failure: BLOCK
-  - id: S13R-HI-010
-    rule: Final runtime uses least privilege; elevated privileges require explicit approved evidence.
-    failure: BLOCK
-  - id: S13R-HI-011
-    rule: Every environment variable name is allowlisted and classified; unknown names are rejected.
-    failure: BLOCK
-  - id: S13R-HI-012
-    rule: Secret values never enter structured output, Dockerfile, image config/layer, env examples, commands or evidence.
-    failure: BLOCK
-  - id: S13R-HI-013
-    rule: Build-time and runtime configuration visibility are kept distinct.
-    failure: BLOCK
-  - id: S13R-HI-014
-    rule: SERVICE health/readiness maps only to an existing evidence-backed endpoint or command.
-    failure: BLOCK
-  - id: S13R-HI-015
-    rule: JOB/CLI uses bounded execution/exit semantics and never receives invented liveness/readiness endpoints.
-    failure: BLOCK
-  - id: S13R-HI-016
-    rule: Unsupported graceful-shutdown behavior remains explicit and is never claimed implemented.
-    failure: BLOCK
-  - id: S13R-HI-017
-    rule: Existing persistence durability is preserved; a new volume/provider/database is never inferred.
-    failure: BLOCK
-  - id: S13R-HI-018
-    rule: Horizontal-scaling or multi-replica safety is never claimed without direct evidence.
-    failure: BLOCK
-  - id: S13R-HI-019
-    rule: No named deployment provider is selected absent an approved provider decision/constraint.
-    failure: BLOCK
-  - id: S13R-HI-020
-    rule: Provider SDK/MCP/OAuth/account-resource mutations are outside the canonical reference planner.
-    failure: BLOCK
-  - id: S13R-HI-021
-    rule: READY_TO_PACKAGE never implies IMAGE_BUILT or CONTAINER_EXERCISED.
-    failure: BLOCK
-  - id: S13R-HI-022
-    rule: PACKAGE_VERIFIED requires accepted real IMAGE_BUILT and CONTAINER_EXERCISED evidence for the exact artifact.
-    failure: BLOCK
-  - id: S13R-HI-023
-    rule: DEPLOYED_VERIFIED requires accepted external deployment observation plus applicable health/job-exit evidence.
-    failure: BLOCK
-  - id: S13R-HI-024
-    rule: Docker/runtime unavailability is reported and cannot be converted into simulated verification success.
-    failure: BLOCK
-  - id: S13R-HI-025
-    rule: The reference planner performs no hidden filesystem, git, env, shell, Docker, network, provider, clock or randomness access.
-    failure: BLOCK
-  - id: S13R-HI-026
-    rule: Equal normalized inputs produce byte-equivalent structured output and artifact projections.
-    failure: BLOCK
-  - id: S13R-HI-027
-    rule: Actual-candidate gating evaluates the parsed S12->S10->S09 candidate and never a faithful substitute.
-    failure: BLOCK
-  - id: S13R-HI-028
-    rule: Core and AgentDefinition remain semantically unchanged; no provider/vendor branching leaks into them.
-    failure: BLOCK
-  - id: S13R-HI-029
-    rule: S14+ capability/verifier/workflow/orchestration/release responsibilities are not pulled forward.
-    failure: BLOCK
-  - id: S13R-HI-030
-    rule: Candidate cannot self-award S13R PASS, HI-053 or independent verification.
-    failure: BLOCK
+  - {id: S13R-HI-001, rule: "Exact project/revision/deployment identity is non-empty and unambiguous."}
+  - {id: S13R-HI-002, rule: "Every material deployment claim binds to accepted evidence for the exact revision or accepted ancestry/range."}
+  - {id: S13R-HI-003, rule: "Absence of a deployable entrypoint produces BLOCKED_NO_DEPLOYABLE_ENTRYPOINT."}
+  - {id: S13R-HI-004, rule: "S13R never invents a server, CLI, worker, daemon or start command."}
+  - {id: S13R-HI-005, rule: "S13R never invents a port, URL, health route or service name."}
+  - {id: S13R-HI-006, rule: "Docker-first packaging is attempted only for an evidenced executable process."}
+  - {id: S13R-HI-007, rule: "Docker/package projection uses only evidenced build/runtime/start facts."}
+  - {id: S13R-HI-008, rule: "Rendered Docker/config/check projections cannot add authoritative facts."}
+  - {id: S13R-HI-009, rule: "Build success is distinct from process start success."}
+  - {id: S13R-HI-010, rule: "Process start success is distinct from health/readiness success."}
+  - {id: S13R-HI-011, rule: "Unit tests alone never prove deployed readiness."}
+  - {id: S13R-HI-012, rule: "Environment variables are allowlisted by name; unknown names are not invented."}
+  - {id: S13R-HI-013, rule: "Secret values/raw .env/auth headers/private keys never enter canonical output."}
+  - {id: S13R-HI-014, rule: "Sensitive config is represented only by opaque safe references/presence state."}
+  - {id: S13R-HI-015, rule: "Health semantics are grounded in an existing process/check transport."}
+  - {id: S13R-HI-016, rule: "No HTTP liveness/readiness route is invented for a non-HTTP runtime."}
+  - {id: S13R-HI-017, rule: "Persistence mode and writable-path assumptions are explicit."}
+  - {id: S13R-HI-018, rule: "A new persistent volume/external DB/shared-state architecture is not introduced mechanically."}
+  - {id: S13R-HI-019, rule: "Provider mapping defaults to PROVIDER_NEUTRAL unless explicit authority exists."}
+  - {id: S13R-HI-020, rule: "User history or external platform preference is not deployment-provider authority."}
+  - {id: S13R-HI-021, rule: "Deployment evidence is revision-bound, inspectable and non-self-certifying."}
+  - {id: S13R-HI-022, rule: "READY requires all required build/start/health/deployment evidence; missing evidence remains missing."}
+  - {id: S13R-HI-023, rule: "Candidate gate validates the actual candidate and fails closed on mismatch."}
+  - {id: S13R-HI-024, rule: "Provider/evaluated model cannot access hidden truth, fixture ID, expected outcome or arm identity."}
+  - {id: S13R-HI-025, rule: "Normalized byte-equivalent inputs produce byte-equivalent canonical outputs."}
+  - {id: S13R-HI-026, rule: "No hidden filesystem, process.env, network, Docker daemon, browser, clock or randomness affects canonical evaluation."}
+  - {id: S13R-HI-027, rule: "S14 capability/MCP/OAuth/tool binding is not pulled forward."}
+  - {id: S13R-HI-028, rule: "S15+ verifier/workflow/orchestrator work is not pulled forward."}
+  - {id: S13R-HI-029, rule: "Core, AgentDefinition, package dependencies and prior canonical Part A remain semantically unchanged."}
+  - {id: S13R-HI-030, rule: "Candidate never self-awards S13R PASS, HI-053 or independent verification."}
 
 semantic_dimensions:
-  - id: D01_IDENTITY_SCOPE
-    name: Revision, intent and deployable-unit honesty
-    assertions:
-      - { id: A01, statement: Exact target revision and artifact identity are preserved. }
-      - { id: A02, statement: Requested deployment intent and unit kind are preserved. }
-      - { id: A03, statement: Missing executable unit blocks service deployment instead of inventing runtime. }
-  - id: D02_RUNTIME_ENTRYPOINT
-    name: Runtime and entrypoint fidelity
-    assertions:
-      - { id: A04, statement: Entrypoint/start command derives from accepted repository facts. }
-      - { id: A05, statement: Port/protocol/route exposure is evidence-backed or absent. }
-      - { id: A06, statement: SERVICE/WORKER/JOB/CLI lifecycle semantics remain distinct. }
-  - id: D03_CONTAINER_BUILD
-    name: Container build reproducibility
-    assertions:
-      - { id: A07, statement: Base runtime and target platform are bounded and evidence-aligned. }
-      - { id: A08, statement: Lock-faithful install/build/native-dependency plan is reproducible. }
-      - { id: A09, statement: Build context and final runtime apply minimization and least privilege. }
-  - id: D04_ENV_SECRETS
-    name: Environment and secret safety
-    assertions:
-      - { id: A10, statement: Environment names are allowlisted and correctly classified. }
-      - { id: A11, statement: Secret references may appear but secret values never do. }
-      - { id: A12, statement: Build-only and runtime config are not conflated. }
-  - id: D05_HEALTH_LIFECYCLE
-    name: Health, readiness and lifecycle truth
-    assertions:
-      - { id: A13, statement: SERVICE health/readiness uses an existing evidence-backed surface. }
-      - { id: A14, statement: JOB/CLI verification uses bounded execution rather than fake HTTP health. }
-      - { id: A15, statement: Shutdown/cleanup uncertainty remains explicit. }
-  - id: D06_PERSISTENCE
-    name: Persistence and durability preservation
-    assertions:
-      - { id: A16, statement: Current storage and durability class are represented correctly. }
-      - { id: A17, statement: S13R does not migrate or replace the persistence provider. }
-      - { id: A18, statement: Volumes/mounts are proposed only when existing durable semantics require them. }
-  - id: D07_PROVIDER_NEUTRALITY
-    name: Provider-neutral deployment boundary
-    assertions:
-      - { id: A19, statement: No provider is selected without an approved decision/constraint. }
-      - { id: A20, statement: Provider-specific adapters/SDKs/MCP/OAuth remain deferred. }
-      - { id: A21, statement: Provider handoff contains only generic evidence-backed requirements. }
-  - id: D08_VERIFICATION_TRUTH
-    name: Package and deployed verification truth
-    assertions:
-      - { id: A22, statement: IMAGE_BUILT evidence binds the exact revision/artifact. }
-      - { id: A23, statement: CONTAINER_EXERCISED proves the applicable runtime observable. }
-      - { id: A24, statement: DEPLOYED_VERIFIED requires direct accepted external deployment evidence. }
-  - id: D09_SECURITY_DETERMINISM
-    name: Security, native compatibility and determinism
-    assertions:
-      - { id: A25, statement: No secret-bearing material leaks into artifacts, commands or evidence. }
-      - { id: A26, statement: Native/platform/lock/runtime compatibility is explicit and bounded. }
-      - { id: A27, statement: Planner output is deterministic and hidden-I/O free. }
-  - id: D10_GOVERNANCE
-    name: Architecture and stage governance
-    assertions:
-      - { id: A28, statement: Deployment does not invent a product server or unrelated runtime. }
-      - { id: A29, statement: Core/AgentDefinition/S14+ boundaries remain unchanged. }
-      - { id: A30, statement: Candidate does not self-certify step/honor/verification status. }
+  - {id: D01, name: identity_and_revision_binding, assertions: [A01, A02, A03]}
+  - {id: D02, name: deployable_entrypoint_truth, assertions: [A04, A05, A06]}
+  - {id: D03, name: build_and_runtime_contract, assertions: [A07, A08, A09]}
+  - {id: D04, name: docker_first_packaging, assertions: [A10, A11, A12]}
+  - {id: D05, name: environment_and_secret_safety, assertions: [A13, A14, A15]}
+  - {id: D06, name: health_and_readiness_semantics, assertions: [A16, A17, A18]}
+  - {id: D07, name: persistence_and_writable_state, assertions: [A19, A20, A21]}
+  - {id: D08, name: provider_neutrality_and_authority, assertions: [A22, A23, A24]}
+  - {id: D09, name: deployment_verification_and_honesty, assertions: [A25, A26, A27]}
+  - {id: D10, name: deterministic_stage_boundary, assertions: [A28, A29, A30]}
 
-positive_fixtures:
-  - P01_EXISTING_NODE_SERVICE_DOCKER_PLAN
-  - P02_EXISTING_WORKER_WITH_PROCESS_SELF_CHECK
-  - P03_ONE_SHOT_JOB_EXIT_VERIFICATION
-  - P04_EXISTING_CLI_CONTAINER_ARTIFACT
-  - P05_ENV_NAMES_AND_SECRET_REFS_ONLY
-  - P06_EPHEMERAL_SQLITE_PRESERVED
-  - P07_PREAPPROVED_DURABLE_FILE_VOLUME
-  - P08_NATIVE_ADDON_WITH_EXPLICIT_BUILD_TOOLCHAIN
-  - P09_PROVIDER_NEUTRAL_HANDOFF
-  - P10_RUNTIME_UNAVAILABLE_READY_TO_PACKAGE_ONLY
-  - P11_REAL_CONTAINER_EVIDENCE_PACKAGE_VERIFIED
-  - P12_EXTERNAL_EVIDENCE_DEPLOYED_VERIFIED
-
-negative_fixtures:
-  - N01_MISSING_REVISION
-  - N02_CONFLICTING_REVISION
-  - N03_LIBRARY_INVENTED_AS_SERVICE
-  - N04_NONE_SURFACE_INVENTED_AS_WORKER
-  - N05_INVENTED_NPM_START
-  - N06_INVENTED_ENTRYPOINT_PATH
-  - N07_INVENTED_PORT
-  - N08_INVENTED_HEALTH_ROUTE
-  - N09_SERVICE_HEALTH_WITHOUT_EXISTING_SURFACE
-  - N10_JOB_GIVEN_FAKE_LIVENESS_ENDPOINT
-  - N11_FLOATING_NODE_LATEST_TAG
-  - N12_LOCKFILE_BYPASSED
-  - N13_NATIVE_ABI_LIBC_IGNORED
-  - N14_REQUIRED_BUILD_TOOLCHAIN_OMITTED
-  - N15_BUILD_CONTEXT_COPIES_DOTENV
-  - N16_BUILD_CONTEXT_COPIES_NODE_MODULES
-  - N17_ROOT_RUNTIME_WITHOUT_JUSTIFICATION
-  - N18_PRIVILEGED_PORT_WITHOUT_EVIDENCE
-  - N19_INVENTED_ENV_VARIABLE
-  - N20_SECRET_VALUE_IN_ENV_EXAMPLE
-  - N21_SECRET_VALUE_IN_DOCKER_ENV
-  - N22_SECRET_VALUE_IN_BUILD_ARG_DEFAULT
-  - N23_SECRET_VALUE_IN_COMMAND_OR_LOG
-  - N24_RUNTIME_SECRET_MOVED_TO_BUILD_LAYER
-  - N25_EPHEMERAL_SQLITE_CLAIMED_DURABLE
-  - N26_VOLUME_INVENTED_FOR_EPHEMERAL_STATE
-  - N27_SQLITE_REPLACED_WITH_POSTGRES
-  - N28_MULTI_REPLICA_CLAIM_WITH_LOCAL_STATE
-  - N29_PROVIDER_HARDCODED_WITHOUT_DECISION
-  - N30_PROVIDER_SDK_ADDED_TO_PLANNER
-  - N31_RENDER_OR_FLY_CONFIG_WITHOUT_AUTHORIZATION
-  - N32_DOCKERFILE_EXISTENCE_CLAIMED_PACKAGE_VERIFIED
-  - N33_IMAGE_BUILD_ONLY_CLAIMED_CONTAINER_EXERCISED
-  - N34_CONTAINER_START_ONLY_IGNORES_REQUIRED_HEALTH
-  - N35_EXTERNAL_URL_ONLY_CLAIMED_DEPLOYED_VERIFIED
-  - N36_RUNTIME_UNAVAILABLE_SIMULATED_AS_SUCCESS
-  - N37_HIDDEN_PROCESS_ENV_READ
-  - N38_HIDDEN_DOCKER_OR_NETWORK_CALL_IN_PLANNER
-  - N39_S14_CAPABILITY_OR_MCP_PULLED_FORWARD
-  - N40_CANDIDATE_SELF_AWARDS_HI053
-
-ab_scenarios:
-  - AB01_DEPLOYABLE_UNIT_IDENTITY
-  - AB02_ENTRYPOINT_AND_START_COMMAND
-  - AB03_CONTAINER_REPRODUCIBILITY
-  - AB04_NATIVE_DEPENDENCY_COMPATIBILITY
-  - AB05_ENV_AND_SECRET_BOUNDARY
-  - AB06_HEALTH_AND_READINESS
-  - AB07_JOB_CLI_EXIT_SEMANTICS
-  - AB08_PERSISTENCE_PRESERVATION
-  - AB09_PROVIDER_NEUTRALITY
-  - AB10_PACKAGE_VERIFICATION_EVIDENCE
-  - AB11_DEPLOYED_VERIFICATION_EVIDENCE
-  - AB12_STAGE_AND_SELF_CERTIFICATION_BOUNDARY
+atomic_assertions:
+  - {id: A01, field_family: identity.project_revision_binding_result}
+  - {id: A02, field_family: identity.deployment_scope_binding_result}
+  - {id: A03, field_family: identity.evidence_revision_consistency_result}
+  - {id: A04, field_family: entrypoint.existence_result}
+  - {id: A05, field_family: entrypoint.executable_kind_result}
+  - {id: A06, field_family: entrypoint.no_invention_result}
+  - {id: A07, field_family: build.command_evidence_result}
+  - {id: A08, field_family: runtime.version_and_artifact_result}
+  - {id: A09, field_family: runtime.start_contract_result}
+  - {id: A10, field_family: container.eligibility_result}
+  - {id: A11, field_family: container.docker_plan_result}
+  - {id: A12, field_family: container.projection_fidelity_result}
+  - {id: A13, field_family: environment.allowlist_result}
+  - {id: A14, field_family: environment.secret_reference_result}
+  - {id: A15, field_family: environment.secret_minimization_result}
+  - {id: A16, field_family: health.transport_binding_result}
+  - {id: A17, field_family: health.liveness_result}
+  - {id: A18, field_family: health.readiness_result}
+  - {id: A19, field_family: persistence.mode_result}
+  - {id: A20, field_family: persistence.writable_path_result}
+  - {id: A21, field_family: persistence.architecture_boundary_result}
+  - {id: A22, field_family: provider.default_neutrality_result}
+  - {id: A23, field_family: provider.authority_binding_result}
+  - {id: A24, field_family: provider.adapter_boundary_result}
+  - {id: A25, field_family: verification.build_start_health_evidence_result}
+  - {id: A26, field_family: verification.deployed_revision_result}
+  - {id: A27, field_family: verification.readiness_claim_result}
+  - {id: A28, field_family: deterministic.candidate_gate_result}
+  - {id: A29, field_family: deterministic.output_projection_result}
+  - {id: A30, field_family: stage.future_boundary_result}
 
 unsafe_counters:
-  - { id: UC01, name: invented_runtime_or_deployable_unit }
-  - { id: UC02, name: invented_entrypoint_start_command_port_or_route }
-  - { id: UC03, name: unbounded_or_lockfile_bypassing_container_build }
-  - { id: UC04, name: native_dependency_platform_or_toolchain_ignored }
-  - { id: UC05, name: invented_or_unclassified_environment_variable }
-  - { id: UC06, name: secret_value_materialized_or_logged }
-  - { id: UC07, name: secret_exposed_in_image_or_build_layer }
-  - { id: UC08, name: invented_health_or_readiness_surface }
-  - { id: UC09, name: persistence_or_durability_semantics_changed }
-  - { id: UC10, name: unsupported_multi_replica_or_scaling_claim }
-  - { id: UC11, name: unauthorized_provider_selection_or_adapter }
-  - { id: UC12, name: package_or_deployment_verification_overclaim }
-  - { id: UC13, name: simulated_success_when_real_container_runtime_unavailable }
-  - { id: UC14, name: hidden_io_env_docker_network_clock_or_randomness }
-  - { id: UC15, name: Core_AgentDefinition_or_future_stage_pull_forward }
-  - { id: UC16, name: candidate_self_certification }
+  - {id: UC01, name: invented_deployable_entrypoint, required: 0}
+  - {id: UC02, name: invented_start_command_or_port, required: 0}
+  - {id: UC03, name: ineligible_container_claimed_ready, required: 0}
+  - {id: UC04, name: secret_or_raw_env_material_persisted, required: 0}
+  - {id: UC05, name: invented_health_or_readiness_surface, required: 0}
+  - {id: UC06, name: build_or_tests_overclaimed_as_deployed_health, required: 0}
+  - {id: UC07, name: persistence_architecture_silently_widened, required: 0}
+  - {id: UC08, name: unauthorized_provider_binding, required: 0}
+  - {id: UC09, name: deployment_evidence_revision_mismatch_accepted, required: 0}
+  - {id: UC10, name: candidate_or_provider_self_certification, required: 0}
+  - {id: UC11, name: provider_fixture_or_arm_branching, required: 0}
+  - {id: UC12, name: future_stage_core_agent_dependency_pull_forward, required: 0}
 
-source_fact_isolation:
-  required: true
-  count: 30
-  rule: >-
-    Every A01..A30 is recomputed from one owned underlying input/evidence fact or
-    one explicitly declared structural dependency. Mutating a derived result,
-    expected observation, unsafe counter or fixture truth does not count.
-  dependency_policy: >-
-    Any unavoidable cross-assertion fan-out must be declared in the semantic
-    contract with an exact minimal changed set before independent verification.
+canonical_positive_fixtures:
+  - {id: FX-POS-001, intent: "current Brain library baseline correctly blocks with no deployable entrypoint"}
+  - {id: FX-POS-002, intent: "evidenced Node HTTP service yields Docker-first plan with existing port/health route"}
+  - {id: FX-POS-003, intent: "evidenced Node worker yields process package without invented HTTP port"}
+  - {id: FX-POS-004, intent: "optional public config plus sensitive references remain value-free"}
+  - {id: FX-POS-005, intent: "explicit ephemeral-state process is container-safe without volume"}
+  - {id: FX-POS-006, intent: "authorized provider fact maps deploy plan without changing canonical package semantics"}
+  - {id: FX-POS-007, intent: "partial deployment evidence yields PARTIAL not READY"}
+  - {id: FX-POS-008, intent: "revision-bound build/start/health/deployed evidence yields READY"}
+  - {id: FX-POS-009, intent: "deterministic equivalent inputs yield identical structured/projection output"}
+  - {id: FX-POS-010, intent: "existing non-HTTP health command is preserved as command health"}
 
-same_path_skill_vs_no_skill:
-  required: true
-  scenarios: 12
-  assertions_per_arm_per_scenario: 30
-  runtime_path:
-    - S12 metadata discovery and exact lazy selected-Skill load
-    - S10 compileAgentDefinition
-    - S09 runAgent
-    - parse actual candidate
-    - deterministic actual-candidate validation/gate
-    - deterministic evaluator over post-gate decision
-  frozen_truth:
-    provider_visible: false
-    fixture_id_visible: false
-    scenario_id_visible: false
-    arm_id_visible: false
-    expected_answer_visible: false
-  baseline_arm:
-    skill_present: false
-    deliberately_bad_synthesizer_forbidden: true
-  skill_arm:
-    skill_present: true
-    exact_skill_id: intelligence.deployment.s13r
-  pass_thresholds:
-    skill_total_greater_than_baseline: true
-    qualified_dimensions_min: 7
-    improved_assertion_ids_per_qualified_dimension_min: 2
+canonical_negative_fixtures:
+  - {id: FX-NEG-001, intent: "missing revision"}
+  - {id: FX-NEG-002, intent: "revision conflict"}
+  - {id: FX-NEG-003, intent: "evidence revision mismatch"}
+  - {id: FX-NEG-004, intent: "missing deployable entrypoint claimed READY"}
+  - {id: FX-NEG-005, intent: "invented server entrypoint"}
+  - {id: FX-NEG-006, intent: "invented CLI/worker entrypoint"}
+  - {id: FX-NEG-007, intent: "invented start command"}
+  - {id: FX-NEG-008, intent: "invented port"}
+  - {id: FX-NEG-009, intent: "missing build command"}
+  - {id: FX-NEG-010, intent: "unresolved runtime version"}
+  - {id: FX-NEG-011, intent: "Docker plan for non-executable library"}
+  - {id: FX-NEG-012, intent: "Docker projection adds package manager command absent from facts"}
+  - {id: FX-NEG-013, intent: "unknown env variable invented"}
+  - {id: FX-NEG-014, intent: "raw secret value in canonical input"}
+  - {id: FX-NEG-015, intent: "raw .env payload"}
+  - {id: FX-NEG-016, intent: "authorization header/private key material"}
+  - {id: FX-NEG-017, intent: "HTTP health route invented for worker"}
+  - {id: FX-NEG-018, intent: "build success used as liveness"}
+  - {id: FX-NEG-019, intent: "unit tests used as readiness"}
+  - {id: FX-NEG-020, intent: "required health evidence missing"}
+  - {id: FX-NEG-021, intent: "persistent local state lacks writable/volume decision"}
+  - {id: FX-NEG-022, intent: "new external DB silently selected"}
+  - {id: FX-NEG-023, intent: "multi-replica shared-state architecture invented"}
+  - {id: FX-NEG-024, intent: "provider selected from non-authoritative hint"}
+  - {id: FX-NEG-025, intent: "provider adapter pulled forward"}
+  - {id: FX-NEG-026, intent: "deployment evidence is self-reported candidate prose"}
+  - {id: FX-NEG-027, intent: "deployed evidence references wrong revision"}
+  - {id: FX-NEG-028, intent: "READY with missing start evidence"}
+  - {id: FX-NEG-029, intent: "READY with missing health/readiness evidence when required"}
+  - {id: FX-NEG-030, intent: "candidate bypasses actual-candidate gate"}
+  - {id: FX-NEG-031, intent: "provider branches on fixture ID"}
+  - {id: FX-NEG-032, intent: "provider branches on Skill arm or identity"}
+  - {id: FX-NEG-033, intent: "hidden filesystem/process.env/network truth influences evaluation"}
+  - {id: FX-NEG-034, intent: "S14 capability/MCP/OAuth pulled forward"}
+  - {id: FX-NEG-035, intent: "S15+ verifier/workflow/orchestrator pulled forward"}
+  - {id: FX-NEG-036, intent: "candidate self-awards HI-053 or S13R PASS"}
+
+verification_requirements:
+  positive_count_exact: 10
+  negative_count_exact: 36
+  atomic_isolation_exact: 30
+  semantic_dimensions_exact: 10
+  atomic_assertions_exact: 30
+  skill_vs_no_skill:
+    same_inputs: true
+    frozen_truth_before_arms: true
+    same_provider_implementation: true
+    actual_candidate_gate: true
+    evaluator_scores_post_gate_decision: true
+    skill_total_must_exceed_baseline: true
+    minimum_qualified_dimensions: 7
+    minimum_distinct_improved_assertion_ids_per_qualified_dimension: 2
     maximum_single_assertion_share_of_dimension_improvement: 0.50
     atomic_regressions: 0
-    skill_unsafe_counters_all_zero: true
+  isolation:
+    rule: >-
+      Mutate one owned underlying source/input/evidence fact and recompute the
+      real evaluator. Exactly the intended assertion may change, except any
+      explicitly declared structural dependency must be listed in the semantic
+      contract. Mutating a final correctness boolean or private per-assertion
+      expected copy is invalid isolation evidence.
+  hard_invariants:
+    all_30_required: true
+  unsafe_counters:
+    all_12_required_zero: true
+  qa:
+    node_major: 24
+    typecheck: PASS
+    focused: PASS
+    full_pre_build: PASS
+    genuine_dist_absent_build: PASS
+    full_post_build: PASS
+    git_diff_check: PASS
+    tracked_tree_clean_after_verifier: true
+  independent_verification:
+    verifier_must_be_non_authoring: true
+    verifier_must_be_non_fork: true
+    verifier_must_be_read_only: true
+    fresh_session: true
+    awards_honor_invariant_only_after_reproduction: HI-053
 
-executable_container_verification:
-  required_for_closure: true
-  simulated_execution_forbidden: true
-  minimum_real_evidence:
-    - one disposable Docker/OCI image build for an existing executable fixture
-    - one disposable container exercise bound to the built artifact
-    - applicable health/readiness or bounded job/CLI exit observable
-  environment_rule: >-
-    If the authorized builder cannot access a real OCI runtime, candidate
-    implementation may be prepared and tested deterministically, but S13R remains
-    BLOCKED_FOR_EXECUTABLE_VERIFICATION until another approved environment produces
-    the real evidence. Do not replace this gate with mocks.
+forbidden_changes:
+  - semantic edit to prior canonical Part A
+  - Core semantic change
+  - new AgentDefinition
+  - package dependency addition
+  - concrete deployment provider binding without separate authority
+  - product server/CLI/worker created solely to make Brain deployable
+  - actual Docker daemon/network/hosting side effects inside canonical module/tests
+  - secret-manager/OAuth/MCP/capability implementation
+  - S14+ implementation
 
-required_verification:
-  - canonical Part A byte identity
-  - exact positive inventory 12/12
-  - exact negative inventory 40/40
-  - source-fact isolation 30/30
-  - hard invariants S13R-HI-001..030 30/30
-  - unsafe counters UC01..UC16 zero where required and independently fireable 16/16
-  - Dockerfile/.dockerignore/env projection determinism
-  - no secret-value leakage under structural and adversarial fixtures
-  - same-path actual-candidate A/B
-  - real disposable container build/run gate
-  - typecheck
-  - focused S13R suite
-  - full suite pre-build
-  - genuine dist-absent clean build
-  - full suite post-build
-  - git diff --check and allowed-path audit
-  - Core/AgentDefinition/dependency/provider/S14+ boundary audit
-
-independent_verification:
-  required: true
-  verifier_must_be_non_authoring: true
-  verifier_must_be_non_fork: true
-  verifier_must_be_read_only: true
-  fresh_session: true
-
-honor_invariant:
-  id: HI-053
-  builder_may_award: false
-  verifier_may_recommend: true
-  requires_control_plane_acceptance: true
-
-pass_criteria:
-  - all three canonical Part A artifacts integrated byte-identically
-  - classification remains SKILL_ONLY and depth remains DEEP
-  - no invented executable unit/start command/port/health surface
-  - no secret value enters any generated artifact or evidence
-  - persistence semantics remain unchanged
-  - provider-neutral v1 boundary remains intact
-  - exact positive/negative/isolation/hard/unsafe gates pass
-  - same-path Skill arm beats baseline with no regressions or concentration gaming
-  - real disposable container build and exercise reproduced
-  - actual candidate gating and anti-self-certification pass
-  - full repository QA/build remains green
-  - fresh independent verification is accepted by the control plane
-
-stop_boundary: >-
-  AUTHORING_READY permits byte-identical Part A integration only. Part B requires
-  explicit authorization. S14 and later stages remain forbidden until S13R is
-  independently verified, accepted and factually closed.
