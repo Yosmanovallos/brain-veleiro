@@ -352,7 +352,7 @@ describe("FX-POS-010 — multiple implementations registered, one explicit selec
   it("only the selected provider is ever invoked, repeatedly", async () => {
     markPositive("FX-POS-010");
     const selected = makeEchoProvider("demo.multi", "selected");
-    const unselected = makeEchoProvider("demo.multi.alt", "unselected"); // different id: cannot collide with the same binding
+    const unselected = makeEchoProvider("demo.multi", "unselected");
 
     const registry = new CapabilityRegistryProvider({
       providers: [
@@ -364,8 +364,13 @@ describe("FX-POS-010 — multiple implementations registered, one explicit selec
 
     await registry.invoke(invocationRequest("demo.multi"));
     await registry.invoke(invocationRequest("demo.multi", { call_id: "call-2" }));
+    const reversed = new CapabilityRegistryProvider({
+      providers: [{ provider_id: "unselected-provider", provider: unselected }, { provider_id: "selected-provider", provider: selected }],
+      bindings: [{ capability_id: "demo.multi", selected_provider_id: "selected-provider" }],
+    });
+    expect(await reversed.invoke(invocationRequest("demo.multi"))).toMatchObject({ status: "SUCCESS", output: { via: "selected" } });
 
-    expect(selected.invokeCallCount).toBe(2);
+    expect(selected.invokeCallCount).toBe(3);
     expect(unselected.invokeCallCount).toBe(0);
   });
 });

@@ -6,7 +6,7 @@ export const LIMITS = { providers: 64, capabilities: 256, perProvider: 128, id: 
 // Arbitrary opaque strings cannot be classified as secrets; providers remain
 // responsible for keeping credential values outside their public contracts.
 export function sensitive(text: string): boolean {
-  return /authorization|bearer\s|password|api[_-]?key|credential[_-]?ref|auth[_-]?ref|connection[_-]?ref|\bsecret\b|\bsk-[a-z0-9]{10,}|\bgh[pousr]_[a-z0-9]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----/i.test(text);
+  return /\b(?:authorization|proxy-authorization|cookie|set-cookie|password|api[_-]?key|secret|credential[_-]?ref|auth[_-]?ref|connection[_-]?ref)["']?\s*[:=]\s*\S|\bbearer\s+\S+|\bsk-[a-z0-9]{10,}|\bgh[pousr]_[a-z0-9]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----/i.test(text);
 }
 
 export function safeId(value: unknown): value is string {
@@ -27,7 +27,11 @@ export function canonical(value: unknown): string {
   let nodes = 0;
   const visit = (v: unknown, depth: number): unknown => {
     if (++nodes > 10000 || depth > 32) throw new Error("INVALID_PUBLIC_CONTRACT");
-    if (v === null || typeof v === "boolean" || typeof v === "string") return v;
+    if (typeof v === "string") {
+      if (sensitive(v)) throw new Error("INVALID_PUBLIC_CONTRACT");
+      return v;
+    }
+    if (v === null || typeof v === "boolean") return v;
     if (typeof v === "number" && Number.isFinite(v)) return v;
     if (Array.isArray(v)) return v.map(x => visit(x, depth + 1));
     if (!record(v) || ![Object.prototype, null].includes(Object.getPrototypeOf(v))) throw new Error("INVALID_PUBLIC_CONTRACT");
@@ -35,6 +39,8 @@ export function canonical(value: unknown): string {
     for (const key of Object.keys(v).sort()) {
       const property = Object.getOwnPropertyDescriptor(v, key)!;
       if (!("value" in property)) throw new Error("INVALID_PUBLIC_CONTRACT");
+      // Optional Core fields may be explicitly undefined; JSON omits them.
+      if (property.value === undefined) continue;
       out[key] = visit(property.value, depth + 1);
     }
     return out;

@@ -50,6 +50,23 @@ fixture IDs to parsed canonical YAML and check aggregate catalog boundaries.
 8. Secret fixtures only scanned clean values. FX-NEG-017..020 and UC07 now drive
    adversarial configuration, descriptors and exceptions through the real registry.
 
+## Independent review correction round
+
+The fresh read-only verifier rejected intermediate commit
+`b6de2330eb748b80be2dc6ac9ae63acdf386ef41` despite reproducing its full green QA.
+It independently demonstrated cookie leakage in descriptors/FAIL/evidence,
+false rejection of benign authorization/password messages, and a mismatch between
+FX-POS-010's declared intent and its differently named unselected capability.
+
+The follow-up correction rejects Cookie/Set-Cookie/Proxy-Authorization material
+and credential assignments while preserving harmless diagnostic wording.
+FX-POS-010 now registers two implementations of the SAME capability and proves
+selection in both provider orders. Nine further regression cases cover these
+findings, evidence limits, preservation of explicit optional undefined fields,
+and snapshotting invocation inputs before any provider discovery await.
+A new exact committed candidate requires fresh independent verification; the
+rejected intermediate verifier relay remains historical evidence, not approval.
+
 ## Implementation decisions and limits
 
 - Production is four provider-layer files: types, validateConfig, validation and
@@ -64,7 +81,7 @@ fixture IDs to parsed canonical YAML and check aggregate catalog boundaries.
   compatible implementations; schemas, effects and timeout semantics may not.
 - JSON contract validation is bounded to depth 32, 10000 nodes and 100000 encoded
   characters. Accessors, non-JSON values and recognizable credential patterns are
-  rejected. Valid normalized results are preserved by value, not object identity.
+  rejected. Explicit optional undefined object fields are supported. Valid normalized results are preserved by value, not object identity.
 - Credential recognition cannot identify every arbitrary opaque string. Provider
   implementations remain responsible for not putting secrets in public content;
   S14A introduces no credential resolver, vault, real adapter or external execution.
@@ -106,12 +123,18 @@ npm test -- --reporter=default
 git -c core.autocrlf=true -c core.safecrlf=false diff --check
 ```
 
-Windows Node is 24.18.0, but the existing native dependencies are installed for
-Linux. QA uses WSL Node 24.19.0/npm 11.17.0, without reinstalling dependencies or
-changing the lockfile. Final measured counts are recorded in the completion
-handoff after the final checks. Earlier corrected run: 92 focused, 1473 full
-before/after clean build, 846 emitted files. Two later requirement-boundary tests
-bring the measured final counts to 94 focused / 1475 full. Final QA passed on 2026-09-05: typecheck, 94/94 focused, 1475/1475 pre-build, dist-absent build (846 files), 1475/1475 post-build, and native Git diff check. Logs: ../brain-s14a-evidence/{pre-build,post-build}.log.
+Windows Node is 24.18.0, but existing native dependencies are Linux installations.
+All QA uses WSL Node 24.19.0/npm 11.17.0 without reinstalling dependencies.
+
+Final correction-round measurements on 2026-09-05:
+- Typecheck: PASS.
+- Focused: 103/103 (56 canonical/structural tests plus 47 regressions).
+- Full before build: 1484/1484 in 27 files.
+- Build: PASS with repo-local dist genuinely absent; 846 emitted files.
+- Full after build: 1484/1484 in 27 files.
+- Native Git diff check: clean.
+- Raw logs: ../brain-s14a-evidence/round2-pre-build.log and round2-post-build.log.
+- Earlier rejected candidate's verifier report: ../brain-s14a-evidence/verifier-relay.md.
 
 ## Next gate
 

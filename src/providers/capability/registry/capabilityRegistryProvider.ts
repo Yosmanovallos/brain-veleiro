@@ -90,12 +90,15 @@ export class CapabilityRegistryProvider implements CapabilityProvider {
     if (!route) return blocked("REQUIRED_CAPABILITY_MISSING: no explicit selected provider binding.");
     if (route.status !== "RESOLVED") return blocked(route.finding.message);
     try {
-      const catalog = await this.catalog({ run_id: request.run_id });
+      const invocation = structuredClone(request);
+      const catalog = await this.catalog({ run_id: invocation.run_id });
       const descriptor = catalog.get(route.selected_provider_id)?.get(identity.capability_id);
       if (!descriptor) return blocked("PROVIDER_DOES_NOT_ADVERTISE_CAPABILITY: missing, incompatible or changed public descriptor.");
       this.published.set(identity.capability_id, semanticSignature(descriptor));
-      const raw: unknown = await this.providersById.get(route.selected_provider_id)!.invoke(structuredClone(request));
-      const result: unknown = JSON.parse(canonical(raw));
+      const raw: unknown = await this.providersById.get(route.selected_provider_id)!.invoke(invocation);
+      // Preserve legal optional undefined fields in the detached result.
+      const result: unknown = structuredClone(raw);
+      canonical(result);
       if (!validResult(result) || result.call_id !== identity.call_id || result.capability_id !== identity.capability_id) return fail();
       return result;
     } catch {

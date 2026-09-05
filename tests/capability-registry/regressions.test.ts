@@ -7,12 +7,61 @@ import { readFileSync } from "node:fs";
 import { load } from "js-yaml";
 import { LIMITS } from "../../src/providers/capability/registry/validation.js";
 import { NEGATIVE_FIXTURE_IDS, POSITIVE_FIXTURE_IDS } from "./fixtureTruth.js";
+import { scanForSecretLikeContent } from "./staticAudit.js";
 
 const request = (): ToolInvocationRequest => ({ run_id: "run", turn: 1, call_id: "call", capability_id: "demo.read", input: {}, timeout_ms: 1000 });
 const descriptor = (): ToolDescriptor => ({ capability_id: "demo.read", name: "read", description: "Read a reference value", input_schema: {}, side_effects: "NONE" });
 const config = (provider: CapabilityProvider): CapabilityRegistryConfig => ({ providers: [{ provider_id: "a", provider }], bindings: [{ capability_id: "demo.read", selected_provider_id: "a" }] });
 
 describe("registry boundary regressions", () => {
+  it.each(["Cookie: session=planted-value", "Set-Cookie: session=planted-value", "Proxy-Authorization: Basic planted-value", "Authorization: Bearer planted-value"])("rejects sensitive header material across public surfaces: %s", async material => {
+    expect(scanForSecretLikeContent("Cookie: session=planted-value")).not.toHaveLength(0);
+    const badDescriptor = new FakeCapabilityProvider([{ ...descriptor(), description: material }]);
+    expect(await new CapabilityRegistryProvider(config(badDescriptor)).list_capabilities()).toEqual([]);
+    for (const surface of ["message", "evidence", "output"]) {
+      const provider = new FakeCapabilityProvider([descriptor()], r => surface === "output"
+        ? { status: "SUCCESS", call_id: r.call_id, capability_id: r.capability_id, output: { headers: { Cookie: "session=planted-value" } }, duration_ms: 0 }
+        : { status: "FAIL", call_id: r.call_id, capability_id: r.capability_id, error: { code: "UNAVAILABLE", message: surface === "message" ? material : "Service unavailable", retryable: true },
+          evidence_refs: surface === "evidence" ? [material] : [], duration_ms: 0 });
+      const result = await new CapabilityRegistryProvider(config(provider)).invoke(request());
+      expect(result).toMatchObject({ status: "FAIL", error: { code: "INTERNAL_ERROR" } });
+      expect(JSON.stringify(result)).not.toContain("planted-value");
+    }
+  });
+  it.each(["authorization required", "password unavailable"])("preserves valid normalized diagnostics: %s", async message => {
+    const r = request();
+    for (const result of [
+      { status: "FAIL" as const, call_id: r.call_id, capability_id: r.capability_id, error: { code: "PERMISSION_DENIED" as const, message, retryable: false }, duration_ms: 3 },
+      { status: "BLOCKED" as const, call_id: r.call_id, capability_id: r.capability_id, reason: message, duration_ms: 4 },
+    ]) {
+      expect(await new CapabilityRegistryProvider(config(new FakeCapabilityProvider([descriptor()], () => result))).invoke(r)).toStrictEqual(result);
+    }
+  });
+  it("preserves explicit undefined optional Core fields", async () => {
+    const r = request();
+    const result = { status: "SUCCESS" as const, call_id: r.call_id, capability_id: r.capability_id,
+      output: { value: 1, optional: undefined }, evidence_refs: undefined, duration_ms: 0 };
+    const provider = new FakeCapabilityProvider([{ ...descriptor(), output_schema: undefined, timeout_ms: undefined }], () => result);
+    expect(await new CapabilityRegistryProvider(config(provider)).invoke(r)).toStrictEqual(result);
+  });
+  it("snapshots the request before awaiting provider discovery", async () => {
+    const r = request();
+    const provider = new FakeCapabilityProvider([descriptor()], received => {
+      expect(received).toEqual(request());
+      return { status: "SUCCESS", call_id: received.call_id, capability_id: received.capability_id, output: {}, duration_ms: 0 };
+    });
+    provider.list_capabilities = async () => { r.capability_id = "demo.other"; r.input.changed = true; return [descriptor()]; };
+    expect((await new CapabilityRegistryProvider(config(provider)).invoke(r)).status).toBe("SUCCESS");
+  });
+  it("rejects evidence overflow without changing valid evidence", async () => {
+    for (const count of [128, 129]) {
+      const provider = new FakeCapabilityProvider([descriptor()], r => ({ status: "SUCCESS", call_id: r.call_id, capability_id: r.capability_id,
+        output: {}, evidence_refs: Array.from({ length: count }, (_, i) => `evidence-${i}`), duration_ms: 0 }));
+      const result = await new CapabilityRegistryProvider(config(provider)).invoke(request());
+      expect(result.status).toBe(count === 128 ? "SUCCESS" : "FAIL");
+      if (result.status === "SUCCESS") expect(result.evidence_refs).toHaveLength(128);
+    }
+  });
   it("matches limits and exact fixture identities to the parsed canonical contract", () => {
     const quality = load(readFileSync("brain-bootstrap/quality-contracts/S14_CAPABILITY_REGISTRY_TOOLS_MCP_DEEP.yaml", "utf8")) as {
       limits: Record<string, number>; s14a_positive_fixtures: { id: string }[]; s14a_negative_fixtures: { id: string }[];
