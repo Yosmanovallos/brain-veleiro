@@ -1,0 +1,87 @@
+schema_version: "1.0"
+id: S14B_WRITE_CONCURRENCY_CLARIFICATION_DEEP
+parent_step: S14
+phase: S14B
+name: filesystem-write-concurrency-clarification
+status: AUTHORING_READY
+classification: RUNTIME_INFRASTRUCTURE
+depth: DEEP
+baseline_before_clarification: 28acc89f00d62d5cdb626f3eee2e93ade69b0227
+rejected_candidate: efff516b0bec42cef8acff3780fe9f0d70439ee8
+
+supersedes_interpretation:
+  - source: brain-bootstrap/specs/FILESYSTEM_CAPABILITY_CONTRACT_S14B.md
+    section: 12
+    clarification: >-
+      BLOCKED/NO TARGET MUTATION is mandatory for S14B-cooperative writers and
+      for external changes observed before the final pre-commit decision; S14B
+      v1 does not claim atomic compare-and-swap against a non-cooperating
+      external mutation in the final kernel-publication window.
+  - source: brain-bootstrap/skills/FILESYSTEM_CAPABILITY_SKILL_S14B.md
+    phrase: "No target may escape the configured root."
+    clarification: >-
+      S14B-controlled resolution/topology must remain contained and detected
+      drift fails closed. Hostile non-cooperating external directory-topology
+      mutation in the irreducible final publication window is an explicit v1
+      environmental residual, not an atomic containment claim.
+
+required_same_process_semantics:
+  target_write_serialization: true
+  cross_provider_instance_serialization: true
+  lock_scope: "canonical_workspace_identity + logical_target"
+  acquire_before_first_precondition: true
+  release_after_publish_and_cleanup: true
+  no_core_or_agent_fields: true
+
+concurrency_invariants:
+  - {id: S14B-CONC-HI-001, rule: "Two simultaneous same-target OVERWRITE_EXISTING calls with the same old expected_sha256 cannot both succeed."}
+  - {id: S14B-CONC-HI-002, rule: "Exactly one same-target concurrent S14B writer succeeds and every stale follower fails closed before mutation."}
+  - {id: S14B-CONC-HI-003, rule: "Serialization works across separate WorkspaceFilesystemCapabilityProvider instances bound to the same canonical workspace and target."}
+  - {id: S14B-CONC-HI-004, rule: "Different targets are not globally serialized merely because they share one workspace."}
+  - {id: S14B-CONC-HI-005, rule: "The per-target lock is provider-layer only and cannot appear in AgentDefinition, ToolDescriptor, evidence or model-visible output."}
+  - {id: S14B-CONC-HI-006, rule: "Lock acquisition occurs before CREATE_NEW/OVERWRITE_EXISTING target precondition evaluation."}
+  - {id: S14B-CONC-HI-007, rule: "Lock release is guaranteed on SUCCESS, BLOCKED, FAIL and TIMEOUT paths."}
+  - {id: S14B-CONC-HI-008, rule: "Observed external target change before final publication remains BLOCKED with no staged-content publication."}
+  - {id: S14B-CONC-HI-009, rule: "Observed parent-chain/topology drift before final publication remains BLOCKED with no staged-content publication."}
+  - {id: S14B-CONC-HI-010, rule: "No unrelated await or asynchronous work is inserted between final precondition completion and invocation of the publication syscall."}
+  - {id: S14B-CONC-HI-011, rule: "Builder/report does not claim atomic CAS against non-cooperating external mutation in the final syscall window."}
+  - {id: S14B-CONC-HI-012, rule: "S14 remains IN_PROGRESS, HI-054 NOT_AWARDED, and S14C NOT_AUTHORIZED."}
+
+required_regressions:
+  - id: CONC-POS-001
+    case: "two concurrent same-provider OVERWRITE_EXISTING calls share one stale expected_sha256"
+    expected: "exactly one SUCCESS, exactly one BLOCKED, final bytes equal winner"
+  - id: CONC-POS-002
+    case: "two provider instances on same canonical workspace concurrently overwrite same target"
+    expected: "exactly one SUCCESS, exactly one BLOCKED"
+  - id: CONC-POS-003
+    case: "two different targets write concurrently"
+    expected: "both may progress/succeed without one workspace-global lock"
+  - id: CONC-NEG-001
+    case: "external content change injected before final precondition"
+    expected: "BLOCKED, external bytes preserved"
+  - id: CONC-NEG-002
+    case: "parent chain moved/replaced before final containment check"
+    expected: "BLOCKED, no staged-content publication"
+  - id: CONC-NEG-003
+    case: "write fails while holding target lock"
+    expected: "lock released; next legitimate writer can proceed"
+
+explicit_v1_residuals:
+  - "No atomic CAS claim against a non-cooperating external target mutation after the final validated precondition and before/during kernel publication."
+  - "No atomic containment claim against a non-cooperating external directory/mount topology mutation in that same irreducible final publication window."
+
+forbidden:
+  - Core edits
+  - AgentDefinition edits
+  - RestrictedCapabilityProvider edits
+  - new dependency
+  - shell or native helper introduced without a new authoring gate
+  - weakening path/symlink/hardlink/secret/permission/bound rules
+  - S14C_plus_work
+
+phase_state:
+  S14B: REMEDIATION_REQUIRED_BEFORE_VERIFIER
+  S14: IN_PROGRESS
+  HI-054: NOT_AWARDED
+  S14C: NOT_AUTHORIZED
