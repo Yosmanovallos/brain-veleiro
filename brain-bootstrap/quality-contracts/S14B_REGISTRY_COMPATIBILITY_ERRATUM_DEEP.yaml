@@ -1,0 +1,104 @@
+schema_version: "1.0"
+id: S14B_REGISTRY_COMPATIBILITY_ERRATUM_DEEP
+parent_step: S14
+phase: S14B
+name: registry-filesystem-result-envelope-compatibility
+status: AUTHORING_READY
+classification: RUNTIME_INFRASTRUCTURE
+depth: DEEP
+baseline_before_erratum: 7239a98377111c8b67d7ab04acc0ba322bdce02b
+
+supersedes:
+  - source: brain-bootstrap/quality-contracts/S14B_FILESYSTEM_DEEP.yaml
+    field: verification_requirements.s14a_registry_byte_identity_required
+    old: true
+    new: "PARTIAL_BYTE_IDENTITY_WITH_EXACT_TWO_FILE_COMPATIBILITY_EXCEPTION"
+  - source: brain-bootstrap/specs/FILESYSTEM_CAPABILITY_CONTRACT_S14B.md
+    section: 22
+    old: "src/providers/capability/registry/** byte identity"
+    new: "types.ts and validateConfig.ts byte-identical; validation.ts and capabilityRegistryProvider.ts may change only for the authorized ToolInvocationResult envelope patch"
+
+authorized_registry_files:
+  - src/providers/capability/registry/validation.ts
+  - src/providers/capability/registry/capabilityRegistryProvider.ts
+
+protected_registry_files:
+  - src/providers/capability/registry/types.ts
+  - src/providers/capability/registry/validateConfig.ts
+
+result_envelope:
+  tool_result_max_serialized_chars: 8388608
+  tool_result_max_evidence_ref_chars: 8192
+
+descriptor_envelope:
+  preserve_existing_canonical_max_serialized_chars: 100000
+  preserve_existing_descriptor_description_limit: 2000
+  preserve_existing_semantics: true
+
+forbidden:
+  - Core edits
+  - AgentDefinition edits
+  - RestrictedCapabilityProvider edits
+  - registry routing changes
+  - provider-selection changes
+  - capability-identity changes
+  - registry descriptor-compatibility weakening
+  - registry diagnostics-limit changes
+  - dependency additions
+  - output truncation to satisfy registry
+  - registry bypass
+  - S14C_plus_work
+
+compatibility_invariants:
+  - {id: S14B-COMP-HI-001, rule: "A canonical 1048576-byte ASCII filesystem.read SUCCESS result passes through the actual registry unchanged."}
+  - {id: S14B-COMP-HI-002, rule: "A canonical filesystem.list SUCCESS result with exactly 1000 entries and 255-byte ASCII names passes through the actual registry unchanged."}
+  - {id: S14B-COMP-HI-003, rule: "A workspace evidence ref derived from a 4096-character logical path passes the registry result validator."}
+  - {id: S14B-COMP-HI-004, rule: "A ToolInvocationResult whose canonical serialized representation exceeds 8388608 characters fails closed."}
+  - {id: S14B-COMP-HI-005, rule: "An individual evidence_ref longer than 8192 characters fails closed."}
+  - {id: S14B-COMP-HI-006, rule: "Descriptor/public-contract canonical validation remains on the pre-erratum 100000-character envelope."}
+  - {id: S14B-COMP-HI-007, rule: "Secret-pattern rejection remains active across the enlarged result envelope."}
+  - {id: S14B-COMP-HI-008, rule: "call_id and capability_id mismatch still normalize to safe failure."}
+  - {id: S14B-COMP-HI-009, rule: "Registry routing and provider-selection behavior are byte/behaviorally unchanged except for the result-envelope call path."}
+  - {id: S14B-COMP-HI-010, rule: "No result truncation, compression, chunking, or registry bypass is introduced."}
+  - {id: S14B-COMP-HI-011, rule: "Core, RestrictedCapabilityProvider, AgentDefinition and dependency manifests remain byte-identical."}
+  - {id: S14B-COMP-HI-012, rule: "S14B remains a phase gate; S14 is not closed and HI-054 is not awarded."}
+
+required_tests:
+  synthetic_composed:
+    - id: COMP-POS-001
+      case: "small control result"
+      expected: SUCCESS
+    - id: COMP-POS-002
+      case: "filesystem.read output with exactly 1048576 ASCII content bytes"
+      expected: SUCCESS
+    - id: COMP-POS-003
+      case: "filesystem.list output with exactly 1000 entries and each entry name exactly 255 ASCII bytes"
+      expected: SUCCESS
+    - id: COMP-POS-004
+      case: "workspace:// evidence ref generated from exactly 4096-character logical path"
+      expected: SUCCESS
+    - id: COMP-NEG-001
+      case: "canonical ToolInvocationResult serialized size > 8388608"
+      expected: FAIL_CLOSED
+    - id: COMP-NEG-002
+      case: "evidence_ref length 8193"
+      expected: FAIL_CLOSED
+    - id: COMP-NEG-003
+      case: "secret-bearing content near upper result envelope"
+      expected: FAIL_CLOSED
+    - id: COMP-NEG-004
+      case: "descriptor/public-contract canonical payload > original descriptor envelope"
+      expected: FAIL_CLOSED
+
+regression_requirements:
+  - "All existing S14A focused tests pass after the compatibility patch."
+  - "The exact S14A canonical fixture/invariant contract remains passing."
+  - "The full repository suite passes before and after the genuine clean build."
+  - "The exact S14B filesystem fixture/invariant contract passes."
+  - "The fresh verifier must reproduce the compatibility probes independently."
+
+phase_state:
+  S14B: IMPLEMENTATION_MAY_RESUME_AFTER_ERRATUM_INTEGRATION
+  S14: IN_PROGRESS
+  HI-054: NOT_AWARDED
+  S14C: NOT_AUTHORIZED
