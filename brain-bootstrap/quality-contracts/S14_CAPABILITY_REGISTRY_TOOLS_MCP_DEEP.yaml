@@ -1,0 +1,251 @@
+schema_version: "1.0"
+id: S14_CAPABILITY_REGISTRY_TOOLS_MCP_DEEP
+step: S14
+name: capability-registry-tools-mcp
+version: "1.0.0"
+status: AUTHORING_READY
+depth: DEEP
+classification: RUNTIME_INFRASTRUCTURE
+honor_invariant_candidate: HI-054
+
+canonical_artifacts:
+  skill: brain-bootstrap/skills/CAPABILITY_REGISTRY_TOOLS_MCP_SKILL_S14.md
+  quality_contract: brain-bootstrap/quality-contracts/S14_CAPABILITY_REGISTRY_TOOLS_MCP_DEEP.yaml
+  semantic_contract: brain-bootstrap/specs/CAPABILITY_REGISTRY_TOOLS_MCP_CONTRACT_S14.md
+
+purpose: >-
+  Prove that Brain can resolve stable provider-neutral capability IDs to
+  explicitly selected replaceable CapabilityProvider implementations without
+  modifying AgentDefinition or Core contracts, without hidden provider
+  selection, and without weakening permission/side-effect enforcement.
+
+depth_selection:
+  result: DEEP
+  floors:
+    external_execution_boundary: true
+    permissions: true
+    secret_reference_boundary: true
+    architecture: true
+  ratings:
+    risk:
+      level: HIGH
+      reason: "S14 introduces the infrastructure through which later agents can reach filesystem, shell, git, remote APIs, browser and databases."
+    ambiguity:
+      level: HIGH
+      reason: "The repository has Core provider contracts but no canonical registry, routing or adapter-selection semantics."
+    novelty:
+      level: HIGH
+      reason: "This is the first provider-resolution/execution-capability infrastructure stage."
+    irreversibility:
+      level: HIGH
+      reason: "A permissive or vendor-coupled registry would contaminate every later workflow/agent integration."
+    downstream_impact:
+      level: HIGH
+      reason: "S15+ agents and workflows will depend on S14's capability boundary."
+
+repository_decisions:
+  - id: DEC-01
+    decision: "S14 is RUNTIME_INFRASTRUCTURE, not SKILL_ONLY."
+  - id: DEC-02
+    decision: "Existing Core CapabilityProvider/ToolDescriptor/ToolInvocation contracts remain canonical and unchanged during S14A."
+  - id: DEC-03
+    decision: "CapabilityRegistryProvider lives outside Core and implements the existing CapabilityProvider interface."
+  - id: DEC-04
+    decision: "AgentDefinition continues to name stable capability IDs only; provider/vendor/transport identity remains outside AgentDefinition."
+  - id: DEC-05
+    decision: "Provider resolution is explicit configuration. Hidden environment probing, first-provider-wins and model-selected vendor routing are forbidden."
+  - id: DEC-06
+    decision: "Exactly one selected provider is required for an invokable capability in registry v1."
+  - id: DEC-07
+    decision: "RestrictedCapabilityProvider remains the authorization boundary and wraps the registry."
+  - id: DEC-08
+    decision: "MCP is a provider-layer adapter mechanism, not a Core concept."
+  - id: DEC-09
+    decision: "Secret/auth values remain outside canonical artifacts; S14 may carry opaque safe references only."
+  - id: DEC-10
+    decision: "S14 is incremental; S14A authorizes only registry foundation and no real filesystem/shell/git/network/browser/database/MCP execution."
+  - id: DEC-11
+    decision: "No new runtime dependency is authorized by S14A."
+  - id: DEC-12
+    decision: "HI-054 can be awarded only after the complete S14 umbrella satisfies its final closure contract, not after S14A."
+
+phase_order:
+  - S14A_CAPABILITY_REGISTRY_FOUNDATION
+  - S14B_FILESYSTEM
+  - S14C_SHELL
+  - S14D_GIT
+  - S14E_DOCUMENTATION_SEARCH
+  - S14F_GITHUB
+  - S14G_BROWSER
+  - S14H_POSTGRESQL_INSPECT
+  - S14I_MCP_ADAPTER
+
+limits:
+  max_registry_providers: 64
+  max_registry_capabilities: 256
+  max_capabilities_per_provider: 128
+  max_safe_id_chars: 160
+  max_descriptor_description_chars: 2000
+  max_diagnostic_refs: 128
+
+s14a_scope:
+  allowed:
+    - provider-neutral registry configuration/types outside Core
+    - CapabilityRegistryProvider implementing existing CapabilityProvider
+    - explicit capability-to-provider routing
+    - descriptor validation
+    - deterministic provider swapping
+    - in-memory/reference test providers
+    - permission-composition tests with RestrictedCapabilityProvider
+    - safe registry diagnostics/evidence
+  forbidden:
+    - Core semantic edits
+    - AgentDefinition edits
+    - package dependency additions
+    - filesystem execution
+    - shell execution
+    - git process execution
+    - GitHub API execution
+    - browser automation
+    - PostgreSQL connection
+    - MCP network/client execution
+    - OAuth
+    - secret storage
+    - S15_plus_work
+
+s14a_hard_invariants:
+  - {id: S14A-HI-001, rule: "Capability identity is provider-neutral and non-empty."}
+  - {id: S14A-HI-002, rule: "Every invokable capability resolves to exactly one explicitly selected provider."}
+  - {id: S14A-HI-003, rule: "Zero selected providers fail closed."}
+  - {id: S14A-HI-004, rule: "Multiple conflicting selected providers fail closed."}
+  - {id: S14A-HI-005, rule: "No first-provider-wins behavior exists."}
+  - {id: S14A-HI-006, rule: "No hidden filesystem/process.env/network/runtime probing chooses a provider."}
+  - {id: S14A-HI-007, rule: "AgentDefinition contains capability identity but no required provider/vendor/transport identity."}
+  - {id: S14A-HI-008, rule: "Swapping selected provider leaves the AgentDefinition byte-identical."}
+  - {id: S14A-HI-009, rule: "Registry implements existing CapabilityProvider without modifying its Core contract."}
+  - {id: S14A-HI-010, rule: "Registry preserves call_id and capability_id on every invocation result."}
+  - {id: S14A-HI-011, rule: "Provider descriptor capability_id must match the routed capability."}
+  - {id: S14A-HI-012, rule: "Registry never downgrades ToolDescriptor.side_effects."}
+  - {id: S14A-HI-013, rule: "RestrictedCapabilityProvider can wrap the registry without special-case integration."}
+  - {id: S14A-HI-014, rule: "A capability denied by the Agent allowlist remains BLOCKED even when registered."}
+  - {id: S14A-HI-015, rule: "A side-effect class denied by Agent permissions remains BLOCKED even when registered."}
+  - {id: S14A-HI-016, rule: "Provider exceptions do not escape as unnormalized registry crashes."}
+  - {id: S14A-HI-017, rule: "Unknown capability invocation fails closed."}
+  - {id: S14A-HI-018, rule: "Duplicate provider IDs are rejected."}
+  - {id: S14A-HI-019, rule: "Duplicate incompatible capability descriptors are rejected."}
+  - {id: S14A-HI-020, rule: "Registry list_capabilities is deterministic for normalized equivalent configuration."}
+  - {id: S14A-HI-021, rule: "Registry invocation routing is deterministic for normalized equivalent configuration."}
+  - {id: S14A-HI-022, rule: "Provider selection cannot branch on fixture ID, expected result, model arm or Skill identity."}
+  - {id: S14A-HI-023, rule: "Secret values/raw tokens/auth headers/private keys are forbidden in registry diagnostics/config artifacts."}
+  - {id: S14A-HI-024, rule: "Opaque credential/auth references are not exposed as ToolDescriptor content."}
+  - {id: S14A-HI-025, rule: "S13G unbound ExecutionToolDeclaration semantics remain unchanged."}
+  - {id: S14A-HI-026, rule: "S13H repository-git decision semantics remain unchanged."}
+  - {id: S14A-HI-027, rule: "No filesystem/shell/git/network/browser/database/MCP side effect occurs in S14A canonical tests."}
+  - {id: S14A-HI-028, rule: "No new package dependency is added."}
+  - {id: S14A-HI-029, rule: "Core has no import of registry or concrete provider implementation."}
+  - {id: S14A-HI-030, rule: "S15+ agent/workflow/orchestrator behavior is not pulled forward."}
+  - {id: S14A-HI-031, rule: "S14A cannot self-award HI-054 or close S14."}
+  - {id: S14A-HI-032, rule: "Registry diagnostics/evidence are bounded and contain no provider-secret material."}
+
+s14a_unsafe_counters:
+  - {id: UC01, name: provider_identity_leaked_into_agent_definition, required: 0}
+  - {id: UC02, name: hidden_provider_autodetection, required: 0}
+  - {id: UC03, name: ambiguous_binding_accepted, required: 0}
+  - {id: UC04, name: first_provider_wins_resolution, required: 0}
+  - {id: UC05, name: side_effect_class_downgraded, required: 0}
+  - {id: UC06, name: restricted_provider_bypassed, required: 0}
+  - {id: UC07, name: secret_material_exposed, required: 0}
+  - {id: UC08, name: core_provider_contract_modified, required: 0}
+  - {id: UC09, name: agent_definition_contract_modified, required: 0}
+  - {id: UC10, name: external_execution_pulled_forward, required: 0}
+  - {id: UC11, name: new_dependency_added, required: 0}
+  - {id: UC12, name: s15_plus_pull_forward, required: 0}
+
+s14a_positive_fixtures:
+  - {id: FX-POS-001, intent: "single capability routes to one explicit provider"}
+  - {id: FX-POS-002, intent: "two capabilities route to two explicit providers"}
+  - {id: FX-POS-003, intent: "provider swap preserves AgentDefinition bytes"}
+  - {id: FX-POS-004, intent: "list_capabilities exposes selected routed descriptor"}
+  - {id: FX-POS-005, intent: "invoke preserves call_id and capability_id"}
+  - {id: FX-POS-006, intent: "NONE side-effect capability passes compatible restriction"}
+  - {id: FX-POS-007, intent: "LOCAL side-effect capability passes compatible restriction"}
+  - {id: FX-POS-008, intent: "EXTERNAL side-effect capability passes only when explicitly permitted"}
+  - {id: FX-POS-009, intent: "provider order change does not change normalized registry behavior"}
+  - {id: FX-POS-010, intent: "multiple implementations registered but one explicit selection resolves deterministically"}
+  - {id: FX-POS-011, intent: "provider normalized FAIL result is preserved"}
+  - {id: FX-POS-012, intent: "provider normalized BLOCKED result is preserved"}
+
+s14a_negative_fixtures:
+  - {id: FX-NEG-001, intent: "missing capability id"}
+  - {id: FX-NEG-002, intent: "unknown selected provider id"}
+  - {id: FX-NEG-003, intent: "no selected provider for required capability"}
+  - {id: FX-NEG-004, intent: "two selected providers for same capability"}
+  - {id: FX-NEG-005, intent: "duplicate provider id"}
+  - {id: FX-NEG-006, intent: "provider does not advertise routed capability"}
+  - {id: FX-NEG-007, intent: "provider descriptor advertises mismatched capability id"}
+  - {id: FX-NEG-008, intent: "provider-specific capability id required by AgentDefinition"}
+  - {id: FX-NEG-009, intent: "hidden process.env provider selection"}
+  - {id: FX-NEG-010, intent: "installed executable probing selects provider"}
+  - {id: FX-NEG-011, intent: "first registered provider silently wins ambiguity"}
+  - {id: FX-NEG-012, intent: "provider side-effect class downgraded"}
+  - {id: FX-NEG-013, intent: "RestrictedCapabilityProvider allowlist bypass"}
+  - {id: FX-NEG-014, intent: "RestrictedCapabilityProvider side-effect bypass"}
+  - {id: FX-NEG-015, intent: "unknown capability invocation forwarded"}
+  - {id: FX-NEG-016, intent: "provider throw escapes without normalization"}
+  - {id: FX-NEG-017, intent: "secret token appears in provider id"}
+  - {id: FX-NEG-018, intent: "secret value appears in diagnostic evidence"}
+  - {id: FX-NEG-019, intent: "authorization header appears in descriptor"}
+  - {id: FX-NEG-020, intent: "credential reference appears in model-visible descriptor"}
+  - {id: FX-NEG-021, intent: "registry changes AgentDefinition schema"}
+  - {id: FX-NEG-022, intent: "registry changes Core CapabilityProvider contract"}
+  - {id: FX-NEG-023, intent: "registry changes S13G ExecutionToolDeclaration provider-binding boundary"}
+  - {id: FX-NEG-024, intent: "real filesystem access occurs in S14A test path"}
+  - {id: FX-NEG-025, intent: "real shell/git process occurs in S14A test path"}
+  - {id: FX-NEG-026, intent: "network/MCP/GitHub/browser/Postgres execution occurs in S14A test path"}
+  - {id: FX-NEG-027, intent: "new runtime dependency added"}
+  - {id: FX-NEG-028, intent: "S14A claims S14 CLOSED or HI-054 AWARDED"}
+
+verification_requirements:
+  node_major: 24
+  s14a:
+    positive_count_exact: 12
+    negative_count_exact: 28
+    all_hard_invariants_required: true
+    all_unsafe_counters_required_zero: true
+    provider_swap_agent_definition_byte_identity: true
+    deterministic_provider_order_counterfactual: true
+    restricted_provider_composition: true
+    actual_registry_invocation_path: true
+    no_external_side_effects: true
+    no_new_dependencies: true
+    core_byte_identity_required:
+      - src/core/agent/types.ts
+      - src/core/agent/restrictedCapabilityProvider.ts
+    agent_definition_byte_identity_required: true
+    s13g_boundary_integrity_required: true
+    s13h_boundary_integrity_required: true
+    typecheck: PASS
+    focused: PASS
+    full_pre_build: PASS
+    genuine_dist_absent_build: PASS
+    full_post_build: PASS
+    git_diff_check: PASS
+  independent_verification:
+    verifier_must_be_non_authoring: true
+    verifier_must_be_non_fork: true
+    verifier_must_be_read_only: true
+    fresh_session: true
+    separate_control_plane_acceptance_required: true
+
+s14a_acceptance:
+  status_on_pass: PHASE_PASS
+  s14_status_after_pass: IN_PROGRESS
+  hi_054_after_pass: NOT_AWARDED
+  next_phase_requires_explicit_authorization: true
+
+final_s14_acceptance:
+  criterion: "Changing the implementation of a capability does not require changing AgentDefinition."
+  requires_all_authorized_phases_pass: true
+  requires_fresh_final_verification: true
+  requires_control_plane_acceptance: true
+  honor_invariant: HI-054
