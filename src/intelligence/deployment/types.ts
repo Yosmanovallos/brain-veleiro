@@ -26,7 +26,7 @@ export interface DeploymentDecision {
   entrypoint_assessment: { eligible: boolean; kind: RuntimeKind; entrypoint_ref?: string } | null;
   build_plan: BuildContract | null; container_plan: ContainerPlan | null;
   environment_plan: EnvironmentItem[]; health_plan: HealthContract | null; persistence_plan: PersistenceContract | null;
-  provider_mapping: string;
+  provider_mapping: string; provider_authority_ref: string | null;
   deployment_verification: { accepted_evidence_ids: string[]; missing_kinds: EvidenceKind[] };
   blockers: string[]; limitations: string[]; residual_unknowns: string[]; evidence_refs: string[];
 }

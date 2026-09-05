@@ -106,8 +106,20 @@ describe("S13R robustness and actual candidate path", () => {
     const byClass = Object.fromEntries(["STRICT", "STRUCTURAL_DEPENDENCY", "GATE_CLASS", "INVARIANT_STABLE"].map(c => [c, results.filter(r => r.classification === c).length]));
     console.log("S13R_ISOLATION_SUMMARY", JSON.stringify(byClass));
     expect(byClass.STRICT + byClass.STRUCTURAL_DEPENDENCY + byClass.GATE_CLASS + byClass.INVARIANT_STABLE).toBe(30);
-    // The two entrypoint/evidence gate-collapse atomics are the only ones expected to fully block.
-    expect(results.filter(r => r.classification === "GATE_CLASS").map(r => r.id).sort()).toEqual(["A06", "A25"]);
+    // Pin every classification bucket's exact id set, not just its count: a probe that silently drifts to the
+    // wrong bucket (e.g. mutates the wrong field and gets misclassified) must fail here even if the counts
+    // still happen to add up to 30.
+    const idsOf = (c: string) => results.filter(r => r.classification === c).map(r => r.id).sort();
+    expect(idsOf("STRICT")).toEqual(["A01", "A02", "A03", "A05", "A07", "A08", "A09", "A10", "A11", "A17", "A18", "A19", "A26", "A27", "A29"]);
+    expect(idsOf("STRUCTURAL_DEPENDENCY")).toEqual(["A04", "A12", "A13", "A14", "A15", "A16", "A20", "A21", "A22", "A23", "A28"]);
+    expect(idsOf("GATE_CLASS")).toEqual(["A06", "A25"]);
+    expect(idsOf("INVARIANT_STABLE")).toEqual(["A24", "A30"]);
+    // A22 (default neutrality) and A23 (authority binding) read genuinely distinct decision fields
+    // (provider_mapping vs provider_authority_ref) and are not mathematically forced to co-vary: A23's own
+    // probe (rename decision_ref only) must NOT move A22, even though A22's own probe (bind from scratch,
+    // setting both facts at once) does move A23.
+    expect(results.find(r => r.id === "A23")!.changed_assertions).not.toContain("A22");
+    expect(results.find(r => r.id === "A22")!.changed_assertions).toContain("A23");
     // The A28 blanket exemption is a narrow, measured carve-out, not amnesty: every STRICT entry's raw
     // (pre-exemption) changed_assertions set must be exactly {self, A28} -- nothing else was waved through.
     for (const r of results) if (r.classification === "STRICT") expect(r.changed_assertions.slice().sort()).toEqual([r.id, "A28"].sort());
