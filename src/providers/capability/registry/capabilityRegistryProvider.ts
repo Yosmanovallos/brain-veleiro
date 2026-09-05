@@ -1,7 +1,7 @@
 import type { CapabilityListRequest, CapabilityProvider, ToolDescriptor, ToolInvocationRequest, ToolInvocationResult } from "../../../core/agent/index.js";
 import type { CapabilityRegistryConfig, CapabilityRegistryDiagnostic, CapabilityRegistryRouteStatus } from "./types.js";
 import { validateCapabilityRegistryConfig } from "./validateConfig.js";
-import { canonical, LIMITS, semanticSignature, validatedDescriptor, validResult } from "./validation.js";
+import { canonicalToolResult, LIMITS, semanticSignature, validatedDescriptor, validResult } from "./validation.js";
 
 /** Explicit provider-layer routing, composed underneath RestrictedCapabilityProvider. */
 export class CapabilityRegistryProvider implements CapabilityProvider {
@@ -113,7 +113,7 @@ export class CapabilityRegistryProvider implements CapabilityProvider {
       this.published.set(identity.capability_id, semanticSignature(descriptor));
       const raw: unknown = await this.providersById.get(route.selected_provider_id)!.invoke(invocation);
       // Preserve legal optional undefined fields in the detached result.
-      canonical(raw);
+      canonicalToolResult(raw);
       const result: unknown = structuredClone(raw);
       if (!validResult(result) || result.call_id !== identity.call_id || result.capability_id !== identity.capability_id) return fail();
       return result;

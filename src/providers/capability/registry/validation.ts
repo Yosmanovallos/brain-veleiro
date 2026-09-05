@@ -24,6 +24,14 @@ export function record(value: unknown): value is Record<string, unknown> {
 // JSON contracts have finite traversal budgets and no accessors/prototypes.
 // Sorting object keys permits equivalent schemas with different key order.
 export function canonical(value: unknown): string {
+  return canonicalWithin(value, 100000);
+}
+
+export function canonicalToolResult(value: unknown): string {
+  return canonicalWithin(value, 8388608);
+}
+
+function canonicalWithin(value: unknown, maxChars: number): string {
   let nodes = 0;
   const visit = (v: unknown, depth: number): unknown => {
     if (++nodes > 10000 || depth > 32) throw new Error("INVALID_PUBLIC_CONTRACT");
@@ -46,7 +54,7 @@ export function canonical(value: unknown): string {
     return out;
   };
   const text = JSON.stringify(visit(value, 0));
-  if (text.length > 100000 || sensitive(text)) throw new Error("INVALID_PUBLIC_CONTRACT");
+  if (text.length > maxChars || sensitive(text)) throw new Error("INVALID_PUBLIC_CONTRACT");
   return text;
 }
 
@@ -73,7 +81,7 @@ export function validResult(value: unknown): value is ToolInvocationResult {
   if (!record(value) || typeof value.call_id !== "string" || typeof value.capability_id !== "string" ||
       typeof value.duration_ms !== "number" || !Number.isFinite(value.duration_ms) || value.duration_ms < 0) return false;
   if (value.evidence_refs !== undefined && (!Array.isArray(value.evidence_refs) || value.evidence_refs.length > LIMITS.diagnostics ||
-      value.evidence_refs.some(ref => typeof ref !== "string" || ref.length > LIMITS.description))) return false;
+      value.evidence_refs.some(ref => typeof ref !== "string" || ref.length > 8192))) return false;
   if (value.status === "SUCCESS") return record(value.output);
   if (value.status === "BLOCKED") return typeof value.reason === "string" && value.reason.length <= LIMITS.description;
   if (value.status !== "FAIL" || !record(value.error)) return false;
