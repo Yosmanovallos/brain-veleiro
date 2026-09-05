@@ -6,7 +6,7 @@ export const LIMITS = { providers: 64, capabilities: 256, perProvider: 128, id: 
 // Arbitrary opaque strings cannot be classified as secrets; providers remain
 // responsible for keeping credential values outside their public contracts.
 export function sensitive(text: string): boolean {
-  return /\b(?:authorization|proxy-authorization|cookie|set-cookie|password|api[_-]?key|secret|credential[_-]?ref|auth[_-]?ref|connection[_-]?ref)["']?\s*[:=]\s*\S|\bbearer\s+\S+|\bsk-[a-z0-9]{10,}|\bgh[pousr]_[a-z0-9]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----/i.test(text);
+  return /\b(?:authorization|proxy-authorization|cookie|set-cookie|password|passwd|passphrase|api[_-]?key|private[_-]?key|client[_-]?secret|secret|(?:access[_-]?|refresh[_-]?|id[_-]?|session[_-]?)?token(?:[_-]?value)?|credential[_-]?ref|auth[_-]?ref|connection[_-]?ref)["']?\s*[:=]\s*\S|\bbearer\s+\S+|\bsk-[a-z0-9]{10,}|\bgh[pousr]_[a-z0-9]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----/i.test(text);
 }
 
 export function safeId(value: unknown): value is string {

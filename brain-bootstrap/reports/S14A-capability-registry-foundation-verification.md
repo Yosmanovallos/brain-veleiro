@@ -8,7 +8,7 @@ HI-054: NOT_AWARDED
 
 Baseline Part A: `ed95a984b41a8ae5df1d494743ec01b11dcf2381`.
 Original Claude candidate: `0847d79a14e575da8ae4849fdef9b4a2316a631f`.
-Correction branch: `codex/s14a-registry-corrections`.
+Local correction branch: `codex/s14a-registry-corrections`. Publication target: `s14a-capability-registry-foundation-part-b` (the original dedicated remote branch).
 The user requested completion of the current S14A implementation and correction
 of errors left by the prior builder. This report supersedes that candidate's
 builder claims; its original report remains available in git history.
@@ -26,7 +26,7 @@ fixture IDs to parsed canonical YAML and check aggregate catalog boundaries.
 
 1. Raw thrown messages could expose credentials; list exceptions escaped through
    RestrictedCapabilityProvider. Failures now use constant safe messages, never
-   inspect thrown values, and discovery failures expose an empty list.
+   inspect thrown values, and discovery failures omit the failing provider while preserving healthy providers.
 2. Empty, oversized, credential-shaped and known vendor-qualified capability
    identifiers were accepted in configuration. Configuration now rejects those
    values and unexpected fields without echoing invalid input.
@@ -67,14 +67,34 @@ and snapshotting invocation inputs before any provider discovery await.
 A new exact committed candidate requires fresh independent verification; the
 rejected intermediate verifier relay remains historical evidence, not approval.
 
+## Control-plane addendum and completion review
+
+The actual control-plane source audit (issue #1 comments 5548987904 and
+5548992229) separately confirmed the original five defects and specified that
+healthy routes must survive an unrelated provider discovery failure. The next
+independent source review of `4a8d9d04ef90fc687a0ee82a8a241a7afc35a3d7`
+reproduced this isolation gap and explicit token/access_token/refresh_token
+assignment leakage. Both are now regression-tested and corrected.
+
+Catalog validation now stages each provider independently, discards its whole
+invalid catalog without committing partial descriptors, and normalizes invocation
+of its affected routes. Healthy providers remain routable in either registration
+order. Explicit credential assignments are rejected across descriptors and
+returned diagnostics/evidence; harmless diagnostic prose remains preserved.
+Result accessors are rejected before their getters can execute.
+
+Source authority:
+- https://github.com/Yosmanovallos/brain-veleiro/issues/1#issuecomment-5548987904
+- https://github.com/Yosmanovallos/brain-veleiro/issues/1#issuecomment-5548992229
+
 ## Implementation decisions and limits
 
 - Production is four provider-layer files: types, validateConfig, validation and
   capabilityRegistryProvider. No new Core abstraction or dependency exists.
 - Invalid configuration and duplicate provider identities reject construction.
   Ambiguous routes and unknown provider references block affected capabilities.
-- An invalid/throwing catalog fails discovery closed for the entire operation;
-  incompatible valid advertisements exclude only their colliding capability.
+- An invalid/throwing catalog fails discovery closed for that provider;
+  unrelated healthy providers stay available. Incompatible valid advertisements exclude only their colliding capability. Aggregate registry catalog overflow fails the whole operation closed.
   Unselected providers are inspected to enforce the canonical collision rule.
 - Schema compatibility is conservative structural equality with sorted object
   keys, not a JSON Schema theorem prover. Names/descriptions may differ between
@@ -128,12 +148,12 @@ All QA uses WSL Node 24.19.0/npm 11.17.0 without reinstalling dependencies.
 
 Final correction-round measurements on 2026-09-05:
 - Typecheck: PASS.
-- Focused: 103/103 (56 canonical/structural tests plus 47 regressions).
-- Full before build: 1484/1484 in 27 files.
+- Focused: 110/110 (56 canonical/structural tests plus 54 regressions).
+- Full before build: 1491/1491 in 27 files.
 - Build: PASS with repo-local dist genuinely absent; 846 emitted files.
-- Full after build: 1484/1484 in 27 files.
+- Full after build: 1491/1491 in 27 files.
 - Native Git diff check: clean.
-- Raw logs: ../brain-s14a-evidence/round2-pre-build.log and round2-post-build.log.
+- Raw logs: ../brain-s14a-evidence/round3-pre-build.log and round3-post-build.log.
 - Earlier rejected candidate's verifier report: ../brain-s14a-evidence/verifier-relay.md.
 
 ## Next gate

@@ -14,8 +14,41 @@ const descriptor = (): ToolDescriptor => ({ capability_id: "demo.read", name: "r
 const config = (provider: CapabilityProvider): CapabilityRegistryConfig => ({ providers: [{ provider_id: "a", provider }], bindings: [{ capability_id: "demo.read", selected_provider_id: "a" }] });
 
 describe("registry boundary regressions", () => {
-  it.each(["Cookie: session=planted-value", "Set-Cookie: session=planted-value", "Proxy-Authorization: Basic planted-value", "Authorization: Bearer planted-value"])("rejects sensitive header material across public surfaces: %s", async material => {
+  it.each(["throw", "invalid", "overflow"])("isolates a %s catalog while preserving unrelated healthy routes", async mode => {
+    const healthy = makeEchoProvider("demo.read", "healthy");
+    let invalidInvokes = 0;
+    const invalid: CapabilityProvider = {
+      async list_capabilities() {
+        if (mode === "throw") throw new Error("Cookie: session=planted-value");
+        if (mode === "overflow") return Array.from({ length: 129 }, (_, i) => ({ ...descriptor(), capability_id: `demo.bad${i}` }));
+        return [{ ...descriptor(), capability_id: "demo.bad", description: "Cookie: session=planted-value" }];
+      },
+      async invoke() { invalidInvokes++; throw new Error("must not invoke invalid provider"); },
+    };
+    const providers = [{ provider_id: "healthy", provider: healthy }, { provider_id: "invalid", provider: invalid }];
+    const bindings = [{ capability_id: "demo.read", selected_provider_id: "healthy" }, { capability_id: "demo.bad", selected_provider_id: "invalid" }];
+    for (const ordered of [providers, [...providers].reverse()]) {
+      const registry = new CapabilityRegistryProvider({ providers: ordered, bindings });
+      expect((await registry.list_capabilities()).map(d => d.capability_id)).toEqual(["demo.read"]);
+      expect(await registry.invoke(request())).toMatchObject({ status: "SUCCESS", output: { via: "healthy" } });
+      const denied = await registry.invoke({ ...request(), capability_id: "demo.bad" });
+      expect(denied.status).toBe("FAIL"); expect(JSON.stringify(denied)).not.toContain("planted-value");
+    }
+    expect(invalidInvokes).toBe(0);
+  });
+  it("rejects result accessors without executing their getters", async () => {
+    let getterCalls = 0;
+    const provider = new FakeCapabilityProvider([descriptor()], r => ({
+      status: "SUCCESS", call_id: r.call_id, capability_id: r.capability_id, duration_ms: 0,
+      get output() { getterCalls++; return {}; },
+    }));
+    expect((await new CapabilityRegistryProvider(config(provider)).invoke(request())).status).toBe("FAIL");
+    expect(getterCalls).toBe(0);
+  });
+  it.each(["Cookie: session=planted-value", "Set-Cookie: session=planted-value", "Proxy-Authorization: Basic planted-value", "Authorization: Bearer planted-value",
+    "token=planted-value", "access_token: planted-value", "refresh_token=planted-value"])("rejects credential material across public surfaces: %s", async material => {
     expect(scanForSecretLikeContent("Cookie: session=planted-value")).not.toHaveLength(0);
+    expect(scanForSecretLikeContent("access_token=planted-value")).not.toHaveLength(0);
     const badDescriptor = new FakeCapabilityProvider([{ ...descriptor(), description: material }]);
     expect(await new CapabilityRegistryProvider(config(badDescriptor)).list_capabilities()).toEqual([]);
     for (const surface of ["message", "evidence", "output"]) {

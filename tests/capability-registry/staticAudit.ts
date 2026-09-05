@@ -28,6 +28,7 @@ export function scanForHiddenProviderSelection(sourceText: string): string[] {
 /** Forbidden secret-shaped content (semantic contract section 19 / skill section "Secrets"). */
 const SECRET_LIKE_PATTERNS: RegExp[] = [
   /\b(?:set-)?cookie["']?\s*:/i,
+  /\b(?:access[_-]?|refresh[_-]?)?token["']?\s*[:=]/i,
   /authorization\s*:\s*bearer/i,
   /\bapi[_-]?key\b/i,
   /\bpassword\s*[:=]/i,

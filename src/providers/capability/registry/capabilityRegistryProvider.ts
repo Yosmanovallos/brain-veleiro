@@ -29,25 +29,40 @@ export class CapabilityRegistryProvider implements CapabilityProvider {
     }));
   }
 
-  private async catalog(request?: CapabilityListRequest): Promise<Map<string, Map<string, ToolDescriptor>>> {
+  private async catalog(request?: CapabilityListRequest): Promise<{
+    descriptorsByProvider: Map<string, Map<string, ToolDescriptor>>;
+    failedProviders: Set<string>;
+  }> {
     const catalog = new Map<string, Map<string, ToolDescriptor>>();
+    const failedProviders = new Set<string>();
     const signatures = new Map<string, string>();
     const collisions = new Set<string>();
     // Inspect every implementation: explicit selection does not authorize
     // incompatible implementations of one public capability contract.
     for (const id of [...this.providersById.keys()].sort()) {
-      const raw: unknown = await this.providersById.get(id)!.list_capabilities(request === undefined ? undefined : structuredClone(request));
-      if (!Array.isArray(raw) || raw.length > LIMITS.perProvider) throw new Error("INVALID_DESCRIPTOR_LIST");
       const descriptors = new Map<string, ToolDescriptor>();
-      for (const item of raw) {
-        const d = validatedDescriptor(item);
+      const duplicates = new Set<string>();
+      try {
+        const raw: unknown = await this.providersById.get(id)!.list_capabilities(request === undefined ? undefined : structuredClone(request));
+        if (!Array.isArray(raw) || raw.length > LIMITS.perProvider) throw new Error("INVALID_DESCRIPTOR_LIST");
+        for (const item of raw) {
+          const d = validatedDescriptor(item);
+          if (descriptors.has(d.capability_id)) duplicates.add(d.capability_id);
+          descriptors.set(d.capability_id, d);
+        }
+      } catch {
+        // One unavailable/invalid catalog cannot disable unrelated providers.
+        // Do not commit partial descriptors from a rejected catalog.
+        failedProviders.add(id);
+        continue;
+      }
+      for (const d of descriptors.values()) {
         const signature = semanticSignature(d);
         const previous = signatures.get(d.capability_id);
         if (previous !== undefined && previous !== signature) collisions.add(d.capability_id);
         signatures.set(d.capability_id, signature);
         if (signatures.size > LIMITS.capabilities) throw new Error("CAPABILITY_LIMIT");
-        if (descriptors.has(d.capability_id)) collisions.add(d.capability_id);
-        descriptors.set(d.capability_id, d);
+        if (duplicates.has(d.capability_id)) collisions.add(d.capability_id);
       }
       catalog.set(id, descriptors);
     }
@@ -57,12 +72,12 @@ export class CapabilityRegistryProvider implements CapabilityProvider {
         if (collisions.has(id) || (previous !== undefined && previous !== semanticSignature(d))) descriptors.delete(id);
       }
     }
-    return catalog;
+    return { descriptorsByProvider: catalog, failedProviders };
   }
 
   async list_capabilities(request?: CapabilityListRequest): Promise<ToolDescriptor[]> {
     try {
-      const catalog = await this.catalog(request);
+      const { descriptorsByProvider: catalog } = await this.catalog(request);
       const result: ToolDescriptor[] = [];
       for (const id of [...this.routing.keys()].sort()) {
         const route = this.routing.get(id)!;
@@ -91,14 +106,15 @@ export class CapabilityRegistryProvider implements CapabilityProvider {
     if (route.status !== "RESOLVED") return blocked(route.finding.message);
     try {
       const invocation = structuredClone(request);
-      const catalog = await this.catalog({ run_id: invocation.run_id });
+      const { descriptorsByProvider: catalog, failedProviders } = await this.catalog({ run_id: invocation.run_id });
+      if (failedProviders.has(route.selected_provider_id)) return fail();
       const descriptor = catalog.get(route.selected_provider_id)?.get(identity.capability_id);
       if (!descriptor) return blocked("PROVIDER_DOES_NOT_ADVERTISE_CAPABILITY: missing, incompatible or changed public descriptor.");
       this.published.set(identity.capability_id, semanticSignature(descriptor));
       const raw: unknown = await this.providersById.get(route.selected_provider_id)!.invoke(invocation);
       // Preserve legal optional undefined fields in the detached result.
+      canonical(raw);
       const result: unknown = structuredClone(raw);
-      canonical(result);
       if (!validResult(result) || result.call_id !== identity.call_id || result.capability_id !== identity.capability_id) return fail();
       return result;
     } catch {
