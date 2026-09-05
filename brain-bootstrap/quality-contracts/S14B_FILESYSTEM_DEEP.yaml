@@ -1,0 +1,219 @@
+schema_version: "1.0"
+id: S14B_FILESYSTEM_DEEP
+parent_step: S14
+phase: S14B
+name: filesystem
+version: "1.0.0"
+status: AUTHORING_READY
+classification: RUNTIME_INFRASTRUCTURE
+depth: DEEP
+honor_invariant: HI-054_NOT_AWARDED
+
+canonical_artifacts:
+  skill: brain-bootstrap/skills/FILESYSTEM_CAPABILITY_SKILL_S14B.md
+  quality_contract: brain-bootstrap/quality-contracts/S14B_FILESYSTEM_DEEP.yaml
+  semantic_contract: brain-bootstrap/specs/FILESYSTEM_CAPABILITY_CONTRACT_S14B.md
+
+baseline:
+  main: 07778e20f12dfc381ccf79f9de5cb7e5317a270f
+  s14a_verified_target: 62ef79faecfb0d949fce3dd748fc2ab21a8a05a8
+  s14a_phase_closure: 07778e20f12dfc381ccf79f9de5cb7e5317a270f
+
+capabilities:
+  - id: filesystem.read
+    side_effects: NONE
+  - id: filesystem.list
+    side_effects: NONE
+  - id: filesystem.write
+    side_effects: LOCAL
+
+limits:
+  max_path_chars: 4096
+  max_path_segments: 256
+  max_segment_utf8_bytes: 255
+  max_read_bytes: 1048576
+  max_write_bytes: 1048576
+  max_list_entries: 1000
+  max_allow_prefixes_per_mode: 64
+  max_evidence_refs: 8
+  max_safe_error_chars: 500
+
+scope:
+  allowed:
+    - provider-layer WorkspaceFilesystemCapabilityProvider
+    - explicit workspace root configuration
+    - explicit read/write allow prefixes
+    - filesystem.read
+    - filesystem.list
+    - filesystem.write
+    - real disposable temp-workspace tests
+    - Node 24 built-in fs/path/crypto/os APIs
+    - registry composition tests
+    - RestrictedCapabilityProvider composition tests
+    - bounded safe evidence refs
+  forbidden:
+    - Core semantic edits
+    - AgentDefinition edits
+    - S14A registry semantic edits
+    - dependency additions
+    - filesystem delete/rename/move/mkdir/chmod/watch
+    - binary filesystem capability
+    - shell
+    - git process execution
+    - GitHub API
+    - network documentation/search
+    - browser
+    - PostgreSQL
+    - MCP
+    - OAuth
+    - credential storage
+    - S15_plus_work
+
+hard_invariants:
+  - {id: S14B-HI-001, rule: "Exactly filesystem.read, filesystem.list and filesystem.write are exposed by the S14B provider."}
+  - {id: S14B-HI-002, rule: "Provider implements the existing CapabilityProvider contract without Core changes."}
+  - {id: S14B-HI-003, rule: "workspace_root is explicit; no cwd/env/home/repository inference exists."}
+  - {id: S14B-HI-004, rule: "Every requested logical path is provider-neutral, workspace-relative and validated before target filesystem access."}
+  - {id: S14B-HI-005, rule: "Absolute, drive-prefixed, UNC, backslash, NUL, dot-segment, dot-dot and empty-segment traversal forms fail closed."}
+  - {id: S14B-HI-006, rule: "Read/list require explicit read-allow coverage; write requires explicit write-allow coverage."}
+  - {id: S14B-HI-007, rule: "No implicit root-wide write permission exists."}
+  - {id: S14B-HI-008, rule: "Mandatory protected credential/control paths fail closed even when otherwise allowed."}
+  - {id: S14B-HI-009, rule: "Existing symlink components and symlink targets are never followed for read or write."}
+  - {id: S14B-HI-010, rule: "Write never mutates an existing target with link count greater than one."}
+  - {id: S14B-HI-011, rule: "Resolved host targets remain contained under the canonical explicit workspace root."}
+  - {id: S14B-HI-012, rule: "filesystem.read returns only a bounded UTF-8 regular file."}
+  - {id: S14B-HI-013, rule: "filesystem.list is non-recursive, bounded and deterministically sorted."}
+  - {id: S14B-HI-014, rule: "filesystem.write accepts bounded UTF-8 text only."}
+  - {id: S14B-HI-015, rule: "CREATE_NEW never clobbers an existing target."}
+  - {id: S14B-HI-016, rule: "OVERWRITE_EXISTING requires expected_sha256."}
+  - {id: S14B-HI-017, rule: "Hash mismatch fails closed without target mutation."}
+  - {id: S14B-HI-018, rule: "Ordinary write failure cannot leave partially replaced target content."}
+  - {id: S14B-HI-019, rule: "Write temporary artifacts are removed on failed pre-commit operations."}
+  - {id: S14B-HI-020, rule: "Recognizable secret material is not returned by read or accepted by write."}
+  - {id: S14B-HI-021, rule: "Tool outputs/errors/evidence never expose the absolute workspace root."}
+  - {id: S14B-HI-022, rule: "Evidence refs use bounded workspace:// logical references only."}
+  - {id: S14B-HI-023, rule: "filesystem.read and filesystem.list truthfully declare side_effects NONE."}
+  - {id: S14B-HI-024, rule: "filesystem.write truthfully declares side_effects LOCAL."}
+  - {id: S14B-HI-025, rule: "RestrictedCapabilityProvider capability denial prevents provider execution."}
+  - {id: S14B-HI-026, rule: "RestrictedCapabilityProvider side-effect denial prevents filesystem.write mutation."}
+  - {id: S14B-HI-027, rule: "The real provider operates through CapabilityRegistryProvider with no registry special case."}
+  - {id: S14B-HI-028, rule: "Same AgentDefinition remains valid across explicit filesystem provider configuration changes."}
+  - {id: S14B-HI-029, rule: "Timeout/error normalization does not leak raw paths, stacks or secret-bearing exception text."}
+  - {id: S14B-HI-030, rule: "Write timeout cannot report TIMEOUT after a successful committed target mutation."}
+  - {id: S14B-HI-031, rule: "All canonical path/content/list/evidence limits are enforced and not silently truncated."}
+  - {id: S14B-HI-032, rule: "S14A registry production files remain byte-identical."}
+  - {id: S14B-HI-033, rule: "Core, RestrictedCapabilityProvider and AgentDefinition remain byte-identical."}
+  - {id: S14B-HI-034, rule: "package.json and package-lock.json remain byte-identical; no new dependency is added."}
+  - {id: S14B-HI-035, rule: "No shell/git/network/browser/database/MCP/OAuth/S15+ implementation is pulled forward."}
+  - {id: S14B-HI-036, rule: "S14B cannot close S14 or award HI-054."}
+
+unsafe_counters:
+  - {id: UC01, name: path_escape_accepted, required: 0}
+  - {id: UC02, name: symlink_traversal_accepted, required: 0}
+  - {id: UC03, name: implicit_root_or_scope_inference, required: 0}
+  - {id: UC04, name: unauthorized_read_or_list, required: 0}
+  - {id: UC05, name: unauthorized_write_or_local_side_effect, required: 0}
+  - {id: UC06, name: create_new_clobber, required: 0}
+  - {id: UC07, name: overwrite_without_matching_precondition, required: 0}
+  - {id: UC08, name: secret_or_absolute_path_exposure, required: 0}
+  - {id: UC09, name: silent_truncation_or_limit_bypass, required: 0}
+  - {id: UC10, name: protected_boundary_modified, required: 0}
+  - {id: UC11, name: future_phase_execution_pulled_forward, required: 0}
+  - {id: UC12, name: s14_or_hi054_self_closure, required: 0}
+
+positive_fixtures:
+  - {id: FX-POS-001, intent: "filesystem.list lists workspace root deterministically"}
+  - {id: FX-POS-002, intent: "filesystem.read reads bounded UTF-8 regular file and returns sha256"}
+  - {id: FX-POS-003, intent: "filesystem.write CREATE_NEW creates a new file in an allowed existing parent"}
+  - {id: FX-POS-004, intent: "filesystem.write OVERWRITE_EXISTING succeeds with matching expected_sha256"}
+  - {id: FX-POS-005, intent: "read evidence uses workspace:// logical path and never absolute root"}
+  - {id: FX-POS-006, intent: "filesystem.list reports symlink metadata without following it"}
+  - {id: FX-POS-007, intent: "read/list descriptors are NONE and pass compatible RestrictedCapabilityProvider policy"}
+  - {id: FX-POS-008, intent: "write descriptor is LOCAL and passes only when LOCAL is explicitly permitted"}
+  - {id: FX-POS-009, intent: "real provider routes through CapabilityRegistryProvider without special-case integration"}
+  - {id: FX-POS-010, intent: "real runAgent path can read through RestrictedCapabilityProvider -> registry -> filesystem provider"}
+  - {id: FX-POS-011, intent: "same AgentDefinition bytes survive explicit filesystem provider/root swap"}
+  - {id: FX-POS-012, intent: "read then overwrite roundtrip uses returned sha256 precondition"}
+  - {id: FX-POS-013, intent: "boundary-size read/write values at exact configured maximum succeed"}
+  - {id: FX-POS-014, intent: "temporary test workspace is isolated from repository and cleaned after execution"}
+
+negative_fixtures:
+  - {id: FX-NEG-001, intent: "absolute POSIX path rejected"}
+  - {id: FX-NEG-002, intent: "Windows drive path rejected"}
+  - {id: FX-NEG-003, intent: "UNC path rejected"}
+  - {id: FX-NEG-004, intent: "backslash path rejected"}
+  - {id: FX-NEG-005, intent: "dot-dot traversal rejected"}
+  - {id: FX-NEG-006, intent: "dot/empty internal segments rejected"}
+  - {id: FX-NEG-007, intent: "NUL path rejected"}
+  - {id: FX-NEG-008, intent: "path/segment bound exceeded"}
+  - {id: FX-NEG-009, intent: "read path outside read allow prefixes blocked"}
+  - {id: FX-NEG-010, intent: "write path outside write allow prefixes blocked"}
+  - {id: FX-NEG-011, intent: "protected .git path blocked"}
+  - {id: FX-NEG-012, intent: "protected credential filename/path blocked"}
+  - {id: FX-NEG-013, intent: "symlink intermediate component blocked"}
+  - {id: FX-NEG-014, intent: "symlink target blocked"}
+  - {id: FX-NEG-015, intent: "multi-hardlink existing overwrite target blocked"}
+  - {id: FX-NEG-016, intent: "read missing file normalizes NOT_FOUND"}
+  - {id: FX-NEG-017, intent: "read directory as file fails closed"}
+  - {id: FX-NEG-018, intent: "list regular file as directory fails closed"}
+  - {id: FX-NEG-019, intent: "write with missing parent does not create parent"}
+  - {id: FX-NEG-020, intent: "CREATE_NEW existing target does not clobber"}
+  - {id: FX-NEG-021, intent: "OVERWRITE_EXISTING missing target fails closed"}
+  - {id: FX-NEG-022, intent: "OVERWRITE_EXISTING without expected_sha256 rejected"}
+  - {id: FX-NEG-023, intent: "OVERWRITE_EXISTING hash mismatch leaves original bytes unchanged"}
+  - {id: FX-NEG-024, intent: "read over max_read_bytes fails rather than truncates"}
+  - {id: FX-NEG-025, intent: "write over max_write_bytes fails before mutation"}
+  - {id: FX-NEG-026, intent: "directory over max_list_entries fails rather than truncates"}
+  - {id: FX-NEG-027, intent: "invalid UTF-8 read fails closed"}
+  - {id: FX-NEG-028, intent: "recognized secret content in read is not returned"}
+  - {id: FX-NEG-029, intent: "recognized secret content in write is rejected before mutation"}
+  - {id: FX-NEG-030, intent: "capability denial prevents real read/list provider call"}
+  - {id: FX-NEG-031, intent: "LOCAL side-effect denial prevents real write mutation"}
+  - {id: FX-NEG-032, intent: "safe errors/results/evidence contain no absolute workspace path"}
+  - {id: FX-NEG-033, intent: "provider does not infer workspace root from cwd/env/home/git"}
+  - {id: FX-NEG-034, intent: "no new runtime dependency and S14A/Core/AgentDefinition bytes unchanged"}
+  - {id: FX-NEG-035, intent: "no shell/git/network/browser/Postgres/MCP/OAuth/S15+ production surface"}
+  - {id: FX-NEG-036, intent: "builder/report cannot claim S14 CLOSED or HI-054 AWARDED"}
+
+verification_requirements:
+  node_major: 24
+  exact_positive_ids: 14
+  exact_negative_ids: 36
+  hard_invariants_required: 36
+  unsafe_counters_all_zero_on_legitimate_paths: true
+  unsafe_detectors_non_vacuous: true
+  real_disposable_filesystem_exercise: true
+  repository_worktree_must_not_be_test_sandbox: true
+  actual_registry_path: true
+  actual_restricted_provider_path: true
+  actual_run_agent_read_path: true
+  provider_swap_agent_definition_byte_identity: true
+  no_new_dependency: true
+  s14a_registry_byte_identity_required: true
+  core_byte_identity_required: true
+  agent_definition_byte_identity_required: true
+  part_a_byte_identity_required: true
+  s13g_boundary_integrity_required: true
+  s13h_boundary_integrity_required: true
+  typecheck: PASS
+  focused: PASS
+  full_pre_build: PASS
+  genuine_dist_absent_build: PASS
+  full_post_build: PASS
+  git_diff_check: PASS
+
+independent_verification:
+  fresh_session: true
+  verifier_must_be_non_authoring: true
+  verifier_must_be_non_fork: true
+  verifier_must_be_read_only: true
+  exact_committed_remote_candidate_required: true
+  standalone_verifier_relay_required: true
+  separate_control_plane_acceptance_required: true
+
+phase_acceptance:
+  on_pass:
+    S14B: PHASE_PASS
+    S14: IN_PROGRESS
+    HI-054: NOT_AWARDED
+    S14C: NOT_AUTHORIZED
