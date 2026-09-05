@@ -308,19 +308,24 @@ async function lockIdentityIsNotModelVisible(): Promise<void> {
     const key = writeLockKey(Number(rootStat.dev), Number(rootStat.ino), "t");
     expect(key).toMatch(/^\d+:\d+/);
 
+    // The exact key shape is `<dev>:<ino>` + NUL + `<target>`; it must never surface.
+    const keyPrefix = /\d+:\d+\u0000/;
+    expect(key).toMatch(keyPrefix);
+
     const composed = registry(provider);
     const result = await composed.invoke(overwrite("t", "B", sha("A")));
     expect(result.status).toBe("SUCCESS");
     const serialized = JSON.stringify(result);
-    // The provider-layer lock key, the raw dev:ino identity and the host path are all absent.
+    // The provider-layer lock key, its dev:ino\0 identity prefix and the host path are all absent.
     expect(serialized).not.toContain(key);
-    expect(serialized).not.toMatch(/"\d+:\d+/);
+    expect(serialized).not.toMatch(keyPrefix);
     expect(serialized).not.toContain(root);
     expect(result.evidence_refs).toEqual(["workspace://t"]);
 
     const descriptors = JSON.stringify(await provider.list_capabilities());
     expect(descriptors.toLowerCase()).not.toContain("lock");
-    expect(descriptors).not.toMatch(/\d+:\d+/);
+    expect(descriptors).not.toContain(key);
+    expect(descriptors).not.toMatch(keyPrefix);
     expect(descriptors).not.toContain(root);
   });
 }
