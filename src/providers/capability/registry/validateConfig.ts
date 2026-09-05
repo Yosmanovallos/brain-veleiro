@@ -1,4 +1,5 @@
 import type { CapabilityRegistryConfig, CapabilityRegistryFinding } from "./types.js";
+import { capabilityId, LIMITS, record, safeId } from "./validation.js";
 
 /**
  * Pure, side-effect-free structural validation of a CapabilityRegistryConfig.
@@ -16,6 +17,16 @@ export function validateCapabilityRegistryConfig(
   config: CapabilityRegistryConfig,
 ): CapabilityRegistryFinding[] {
   const findings: CapabilityRegistryFinding[] = [];
+  // Reject malformed configuration without interpolating untrusted values.
+  if (!record(config) || Object.keys(config).some(k => !["providers", "bindings"].includes(k)) ||
+      !Array.isArray(config.providers) || !Array.isArray(config.bindings) ||
+      config.providers.length > LIMITS.providers || config.bindings.length > LIMITS.capabilities ||
+      config.providers.some(p => !record(p) || Object.keys(p).some(k => !["provider_id", "provider"].includes(k)) ||
+        !safeId(p.provider_id) || !p.provider || typeof p.provider.list_capabilities !== "function" || typeof p.provider.invoke !== "function") ||
+      config.bindings.some(b => !record(b) || Object.keys(b).some(k => !["capability_id", "selected_provider_id"].includes(k)) ||
+        !capabilityId(b.capability_id) || !safeId(b.selected_provider_id))) {
+    return [{ code: "INVALID_CONFIG", fatal: true, message: "INVALID_CONFIG: invalid registry shape, identifier or size limit." }];
+  }
 
   const providerIdCounts = new Map<string, number>();
   for (const registered of config.providers) {

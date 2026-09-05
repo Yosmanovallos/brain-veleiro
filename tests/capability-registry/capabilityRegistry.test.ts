@@ -532,6 +532,10 @@ describe("FX-NEG-008 — provider-specific capability id required by AgentDefini
     }
     // Non-vacuous: the same check correctly flags a deliberately vendor-qualified id.
     expect(vendorPrefixed.test("github.repository.read")).toBe(true);
+    expect(() => new CapabilityRegistryProvider({
+      providers: [{ provider_id: "p", provider: makeEchoProvider("github.repository.read", "p") }],
+      bindings: [{ capability_id: "github.repository.read", selected_provider_id: "p" }],
+    })).toThrow(/INVALID_CONFIG/);
   });
 });
 
@@ -679,6 +683,26 @@ describe("FX-NEG-017/018/019/020 — no secret-shaped content anywhere model-vis
 
     expect(scanForSecretLikeContent("Authorization: Bearer sk-abcdef1234567890")).not.toHaveLength(0);
     expect(scanForSecretLikeContent("credential_ref: prov-normal-id")).toHaveLength(0);
+    const token = "sk-abcdef1234567890";
+    expect(() => new CapabilityRegistryProvider({
+      providers: [{ provider_id: token, provider: makeEchoProvider("demo.safe", "safe") }], bindings: [],
+    })).toThrow(/INVALID_CONFIG/);
+    const throwing = new CapabilityRegistryProvider({
+      providers: [{ provider_id: "p", provider: makeThrowingProvider("demo.safe", token) }],
+      bindings: [{ capability_id: "demo.safe", selected_provider_id: "p" }],
+    });
+    const failure = await throwing.invoke(invocationRequest("demo.safe"));
+    expect(failure.status).toBe("FAIL");
+    expect(JSON.stringify(failure)).not.toContain(token);
+    for (const injected of [{ description: "Authorization: Bearer " + token }, { credential_ref: "private-reference" }]) {
+      const base = (await makeEchoProvider("demo.safe", "safe").list_capabilities())[0];
+      const bad = new FakeCapabilityProvider([{ ...base, ...injected }]);
+      const badRegistry = new CapabilityRegistryProvider({ providers: [{ provider_id: "p", provider: bad }],
+        bindings: [{ capability_id: "demo.safe", selected_provider_id: "p" }] });
+      expect(await badRegistry.list_capabilities()).toEqual([]);
+      expect((await badRegistry.invoke(invocationRequest("demo.safe"))).status).toBe("FAIL");
+      expect(bad.invokeCallCount).toBe(0);
+    }
 
     const provider = makeEchoProvider("demo.safe", "safe-provider-id");
     const registry = new CapabilityRegistryProvider({
@@ -703,7 +727,7 @@ describe("FX-NEG-017/018/019/020 — no secret-shaped content anywhere model-vis
 });
 
 describe("S14A-HI-019 — duplicate incompatible capability descriptors do not collide", () => {
-  it("registers two providers claiming the same capability_id; only the selected one's descriptor is ever surfaced", async () => {
+  it("rejects incompatible implementations even with one explicit selection", async () => {
     const selected = new FakeCapabilityProvider([
       {
         capability_id: "demo.multi.schema",
@@ -733,9 +757,11 @@ describe("S14A-HI-019 — duplicate incompatible capability descriptors do not c
 
     const descriptors = await registry.list_capabilities();
     const matches = descriptors.filter((d) => d.capability_id === "demo.multi.schema");
-    expect(matches).toHaveLength(1);
-    expect(matches[0].side_effects).toBe("NONE");
-    expect(unselectedButAdvertisesSameId.listCallCount).toBe(0);
+    expect(matches).toHaveLength(0);
+    expect(unselectedButAdvertisesSameId.listCallCount).toBe(1);
+    expect((await registry.invoke(invocationRequest("demo.multi.schema"))).status).toBe("BLOCKED");
+    expect(selected.invokeCallCount).toBe(0);
+    expect(unselectedButAdvertisesSameId.invokeCallCount).toBe(0);
   });
 });
 
@@ -780,7 +806,8 @@ function registrySourceText(): string {
   return (
     readFileSync(join(process.cwd(), "src/providers/capability/registry/capabilityRegistryProvider.ts"), "utf8") +
     readFileSync(join(process.cwd(), "src/providers/capability/registry/validateConfig.ts"), "utf8") +
-    readFileSync(join(process.cwd(), "src/providers/capability/registry/types.ts"), "utf8")
+    readFileSync(join(process.cwd(), "src/providers/capability/registry/types.ts"), "utf8") +
+    readFileSync(join(process.cwd(), "src/providers/capability/registry/validation.ts"), "utf8")
   );
 }
 
@@ -1031,9 +1058,14 @@ describe("S14A unsafe counters (UC01..UC12)", () => {
     expect(provider.invokeCallCount).toBe(1); // unchanged: Restricted blocked it before reaching the provider again
   });
 
-  it("UC07 secret_material_exposed == 0", () => {
+  it("UC07 secret_material_exposed == 0", async () => {
     expect(scanForSecretLikeContent("Authorization: Bearer sk-abcdef1234567890").length).toBeGreaterThan(0);
     expect(scanForSecretLikeContent(registrySourceText())).toHaveLength(0);
+    const registry = new CapabilityRegistryProvider({
+      providers: [{ provider_id: "p", provider: makeThrowingProvider("demo.safe", "Authorization: Bearer sk-abcdef1234567890") }],
+      bindings: [{ capability_id: "demo.safe", selected_provider_id: "p" }],
+    });
+    expect(scanForSecretLikeContent(JSON.stringify(await registry.invoke(invocationRequest("demo.safe"))))).toHaveLength(0);
   });
 
   it("UC08 core_provider_contract_modified == 0", () => {

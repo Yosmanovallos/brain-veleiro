@@ -1,7 +1,8 @@
 /**
  * Static-analysis QA helpers for S14A negative fixtures that cannot be fired
- * by feeding input to the registry at runtime (FX-NEG-009, 010, 017-020,
- * 028) — see brain-bootstrap/quality-contracts/
+ * by feeding input to the registry at runtime (FX-NEG-009, 010, 028).
+ * Secret checks additionally exercise adversarial runtime inputs. See
+ * brain-bootstrap/quality-contracts/
  * S14_CAPABILITY_REGISTRY_TOOLS_MCP_DEEP.yaml.
  *
  * Each detector is proven non-vacuous in capabilityRegistry.test.ts by first

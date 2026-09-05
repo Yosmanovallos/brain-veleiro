@@ -31,8 +31,8 @@ export interface CapabilityRegistryConfig {
 }
 
 /**
- * DUPLICATE_PROVIDER_ID is fatal: two providers cannot share one identity,
- * so the whole config is unconstructible (rejected at construction).
+ * INVALID_CONFIG and DUPLICATE_PROVIDER_ID are fatal: malformed/oversized
+ * configurations and shared provider identities are rejected at construction.
  *
  * NO_BINDING, UNKNOWN_PROVIDER_REFERENCE and AMBIGUOUS_CAPABILITY_BINDING are
  * per-capability findings: they leave every other capability_id fully
@@ -44,6 +44,7 @@ export interface CapabilityRegistryConfig {
  * of the synchronous constructor-time findings list.
  */
 export type CapabilityRegistryFindingCode =
+  | "INVALID_CONFIG"
   | "DUPLICATE_PROVIDER_ID"
   | "NO_BINDING"
   | "UNKNOWN_PROVIDER_REFERENCE"

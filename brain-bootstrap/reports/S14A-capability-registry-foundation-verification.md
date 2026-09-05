@@ -1,271 +1,121 @@
-# S14A Capability Registry Foundation — Builder Verification
+# S14A Capability Registry Foundation — Corrected Builder Verification
 
-Status: `BUILDER_PASS / INDEPENDENT VERIFICATION REQUIRED`
+Status: BUILDER_PASS_AWAITING_INDEPENDENT_VERIFICATION
+S14: NOT_CLOSED
+HI-054: NOT_AWARDED
 
-Authorization: GitHub Issue #1 comment `5548820269` (control-plane
-`PART_B_AUTHORIZED`). Baseline: `ed95a984b41a8ae5df1d494743ec01b11dcf2381`
-(the S14 Part A integration commit on `main`). Branch:
-`s14a-capability-registry-foundation-part-b`, built in a dedicated,
-clean `git worktree` created directly from `ed95a98` so the pre-existing,
-unrelated, untouched S13N/S13O working-tree modifications and untracked
-scaffold files documented on `main` could not be staged or altered by this
-session.
+## Scope and lineage
 
-**S14A: BUILDER_PASS_AWAITING_INDEPENDENT_VERIFICATION**
-**S14: NOT_CLOSED**
-**HI-054: NOT_AWARDED**
+Baseline Part A: `ed95a984b41a8ae5df1d494743ec01b11dcf2381`.
+Original Claude candidate: `0847d79a14e575da8ae4849fdef9b4a2316a631f`.
+Correction branch: `codex/s14a-registry-corrections`.
+The user requested completion of the current S14A implementation and correction
+of errors left by the prior builder. This report supersedes that candidate's
+builder claims; its original report remains available in git history.
 
-This builder does not self-approve. A fresh, non-authoring, non-fork,
-read-only verifier must independently reproduce the evidence below against
-the exact committed candidate before any control-plane acceptance.
+Core, AgentDefinition, Part A, S13G, S13H, dependencies, STATE.yaml and CURRENT.md
+remain unchanged. S14B and later phases are outside this implementation.
 
-## What this candidate is
+## Findings reproduced and corrected
 
-A provider-neutral Capability Registry Foundation
-(`src/providers/capability/registry/**`) that resolves stable capability IDs
-to exactly one explicitly selected `CapabilityProvider` implementation, fails
-closed on missing/ambiguous/unknown-provider bindings, and itself implements
-the existing Core `CapabilityProvider` interface unchanged — so it composes
-underneath `RestrictedCapabilityProvider` with zero special-case integration:
+The original suite passed 1437/1437, but did not establish the claimed safety.
+The first 36 additional regression cases were run against the exact original
+candidate in a detached worktree: 32 failed, 4 passed. The same 36 passed on the
+corrected implementation. Two further tests bind the implementation limits and
+fixture IDs to parsed canonical YAML and check aggregate catalog boundaries.
 
+1. Raw thrown messages could expose credentials; list exceptions escaped through
+   RestrictedCapabilityProvider. Failures now use constant safe messages, never
+   inspect thrown values, and discovery failures expose an empty list.
+2. Empty, oversized, credential-shaped and known vendor-qualified capability
+   identifiers were accepted in configuration. Configuration now rejects those
+   values and unexpected fields without echoing invalid input.
+3. Diagnostics returned references to mutable internal routes. They now return
+   detached values, sorted and capped at 128 entries. Internal route validation
+   is not truncated, so capabilities beyond the diagnostic window still block.
+4. Incompatible public schemas/side effects were accepted. The old HI-019 test
+   explicitly expected that violation. It now requires rejection, with zero
+   provider invocations. All registered catalogs are checked in sorted provider
+   order, once per discovery/invocation operation. Only the selected provider is
+   invoked. Duplicate advertisements are rejected; equivalent object-key order
+   is accepted. Input/output schema, timeout and side-effect changes collide.
+5. Descriptor and result shapes were trusted at runtime. Invalid catalogs,
+   metadata, evidence and invocation results now fail closed. Returned objects
+   and forwarded requests are detached from provider/caller-owned mutable data.
+6. A descriptor could change after RestrictedCapabilityProvider authorized it.
+   The registry now remembers published semantic contracts and blocks drift for
+   its lifetime. Reconfiguration requires a new registry instance.
+7. Canonical limits were not enforced. Provider/binding/catalog sizes, identifier
+   and description lengths, and evidence/diagnostic counts are now bounded.
+8. Secret fixtures only scanned clean values. FX-NEG-017..020 and UC07 now drive
+   adversarial configuration, descriptors and exceptions through the real registry.
+
+## Implementation decisions and limits
+
+- Production is four provider-layer files: types, validateConfig, validation and
+  capabilityRegistryProvider. No new Core abstraction or dependency exists.
+- Invalid configuration and duplicate provider identities reject construction.
+  Ambiguous routes and unknown provider references block affected capabilities.
+- An invalid/throwing catalog fails discovery closed for the entire operation;
+  incompatible valid advertisements exclude only their colliding capability.
+  Unselected providers are inspected to enforce the canonical collision rule.
+- Schema compatibility is conservative structural equality with sorted object
+  keys, not a JSON Schema theorem prover. Names/descriptions may differ between
+  compatible implementations; schemas, effects and timeout semantics may not.
+- JSON contract validation is bounded to depth 32, 10000 nodes and 100000 encoded
+  characters. Accessors, non-JSON values and recognizable credential patterns are
+  rejected. Valid normalized results are preserved by value, not object identity.
+- Credential recognition cannot identify every arbitrary opaque string. Provider
+  implementations remain responsible for not putting secrets in public content;
+  S14A introduces no credential resolver, vault, real adapter or external execution.
+- Static scans complement runtime tests; they are not represented as proof about
+  arbitrary injected third-party code. Canonical providers used here are in-memory.
+
+## Contract evidence map
+
+| Invariants | Executable evidence |
+| --- | --- |
+| HI-001,007 | FX-NEG-001/008 and invalid binding regressions |
+| HI-002..006,017,018,020..022 | routing/ambiguity fixtures, explicit swap and order counterfactual, validation findings, static selectors |
+| HI-008..010 | real compileAgentDefinition/runAgent swap, baseline byte identities, mismatched and mutated request/result regressions |
+| HI-011,012,019 | missing/mismatched advertisements, collision matrix, duplicate and drift regressions |
+| HI-013..015 | real RestrictedCapabilityProvider NONE/LOCAL/EXTERNAL and allowlist cases |
+| HI-016 | throwing discovery/invoke, non-stringifiable thrown objects, malformed result regressions |
+| HI-023,024,032 | runtime secret injection cases, bounded diagnostics/evidence, detached route regression |
+| HI-025,026,028,029 | baseline blob checks, protected diff and Core import scan |
+| HI-027,030 | source execution/late-stage scans and in-memory actual invocation fixtures |
+| HI-031 | no S14 closure/HI-054 award claim; independent acceptance remains required |
+
+The canonical fixture IDs remain exactly 12 positives and 28 negatives. The
+additional regression cases are separate from those canonical ID sets. UC01..12
+remain zero on legitimate paths, with planted violations/naive controls proving
+the detectors fire. UC07 additionally checks actual exception output.
+
+## Reproducible QA
+
+Use WSL with the existing Node 24 installation and Linux node_modules:
+
+```sh
+export PATH=/home/yosman/.nvm/versions/node/v24.19.0/bin:$PATH
+npm run typecheck
+npm test -- tests/capability-registry --reporter=default
+npm test -- --reporter=default
+test ! -e dist
+npm run build
+npm test -- --reporter=default
+git -c core.autocrlf=true -c core.safecrlf=false diff --check
 ```
-concrete providers -> CapabilityRegistryProvider -> RestrictedCapabilityProvider -> runAgent()
-```
 
-Production files (all new, nothing existing modified):
+Windows Node is 24.18.0, but the existing native dependencies are installed for
+Linux. QA uses WSL Node 24.19.0/npm 11.17.0, without reinstalling dependencies or
+changing the lockfile. Final measured counts are recorded in the completion
+handoff after the final checks. Earlier corrected run: 92 focused, 1473 full
+before/after clean build, 846 emitted files. Two later requirement-boundary tests
+bring the measured final counts to 94 focused / 1475 full. Final QA passed on 2026-09-05: typecheck, 94/94 focused, 1475/1475 pre-build, dist-absent build (846 files), 1475/1475 post-build, and native Git diff check. Logs: ../brain-s14a-evidence/{pre-build,post-build}.log.
 
-- `src/providers/capability/registry/types.ts` — `RegisteredCapabilityProvider`,
-  `CapabilityRegistryBinding`, `CapabilityRegistryConfig`, finding/diagnostic
-  types. No credential/auth/connection-reference field exists anywhere in
-  this shape — S14A has no legitimate use for one, so none was added.
-- `src/providers/capability/registry/validateConfig.ts` — pure,
-  side-effect-free `validateCapabilityRegistryConfig()`: groups by id
-  (never by array position), returns `DUPLICATE_PROVIDER_ID` (fatal),
-  `UNKNOWN_PROVIDER_REFERENCE` and `AMBIGUOUS_CAPABILITY_BINDING`
-  (per-capability, non-fatal) findings.
-- `src/providers/capability/registry/capabilityRegistryProvider.ts` —
-  `CapabilityRegistryProvider implements CapabilityProvider`. Constructor
-  rejects (throws) only on fatal findings; every other finding is resolved
-  to a fail-closed `BLOCKED` result scoped to just that one capability_id,
-  leaving every other capability fully routable. `list_capabilities()`
-  sorts capability ids alphabetically (registration-order-independent) and
-  excludes any capability whose selected provider doesn't actually advertise
-  a matching descriptor. `invoke()` fails closed with the canonical reason
-  text `REQUIRED_CAPABILITY_MISSING` (no binding, or binding to an unknown
-  provider id) or `AMBIGUOUS_CAPABILITY_BINDING` (two bindings for one
-  capability), normalizes thrown provider errors into a bounded (500-char)
-  `FAIL`/`INTERNAL_ERROR` without ever forwarding the call, and normalizes a
-  provider that returns the wrong `call_id`/`capability_id` into `FAIL`
-  rather than silently passing through or silently patching over the
-  mismatch (this makes S14A-HI-010 non-vacuous — see "design decisions"
-  below). A legitimate provider `SUCCESS`/`FAIL`/`BLOCKED` result is
-  otherwise forwarded verbatim, unmodified.
+## Next gate
 
-Test files (all new): `tests/capability-registry/{fixtures,fixtureTruth,
-staticAudit,baseline,capabilityRegistry.test}.ts` — 56 focused tests.
-
-## Design decisions a verifier should know about (not assumptions to trust blindly — check them)
-
-1. **`call_id`/`capability_id` mismatch normalizes to `FAIL`, it is never
-   force-corrected.** An earlier draft of this candidate silently rewrote a
-   misbehaving provider's `call_id`/`capability_id` back to the request's
-   own values before returning — that would have made S14A-HI-010
-   ("registry preserves call_id and capability_id") vacuously true, since no
-   input could ever violate it. Rejected in favor of detect-and-normalize-to-FAIL
-   (proven by the `makeIdentityMismatchProvider` fixture and the
-   "HI-010 non-vacuous" test), consistent with contract §17: "a provider's
-   valid normalized FAIL/BLOCKED result is preserved" — a broken
-   `call_id`/`capability_id` is not a valid result to begin with.
-2. **`DUPLICATE_PROVIDER_ID` is the only *fatal* (constructor-throwing)
-   finding.** `UNKNOWN_PROVIDER_REFERENCE` and `AMBIGUOUS_CAPABILITY_BINDING`
-   are per-capability findings resolved to `BLOCKED` at list/invoke time
-   instead, so one bad binding does not make every other capability in the
-   same registry unconstructible. Semantic contract §17 describes both
-   "route references unknown provider" and "two selected implementations"
-   as "configuration invalid / fail closed" without mandating a specific
-   channel; this reading satisfies both senses of "fail closed" (nothing
-   ever silently resolves) while keeping the registry usable for its other,
-   unaffected capabilities. `FX-NEG-002` and `FX-NEG-004` exercise the
-   per-capability `BLOCKED` channel; `FX-NEG-005` exercises the fatal
-   constructor-throw channel.
-3. **`REQUIRED_CAPABILITY_MISSING` is used for three distinct causes**
-   (totally unbound capability_id, empty/missing capability_id, and a
-   binding to an unregistered provider id) — all three mean "no usable
-   provider resolves for this capability" from the caller's perspective.
-   `AMBIGUOUS_CAPABILITY_BINDING` is used only when more than one binding
-   targets the same capability_id. These are the exact two reason-code
-   tokens named in the Skill's fail-closed examples; both appear verbatim
-   inside the `reason` string of the returned `BLOCKED` result (`reason` has
-   no separate machine-readable code field in the existing Core
-   `ToolInvocationResult` type, so the token is embedded in the text).
-4. **The 6 numeric bounds in the quality contract's `limits:` block**
-   (`max_registry_providers`, `max_registry_capabilities`,
-   `max_capabilities_per_provider`, `max_safe_id_chars`,
-   `max_descriptor_description_chars`, `max_diagnostic_refs`) are not hard
-   invariants and are not enforced as runtime validation in this candidate —
-   none of the 32 `S14A-HI-*` hard invariants or 28 negative fixtures require
-   it, and adding unrequested bounds-checking would be speculative scope.
-   All test fixtures stay well within those numeric bounds regardless.
-5. **`PROVIDER_DOES_NOT_ADVERTISE_CAPABILITY`** is a third, non-canonical
-   reason token (not named verbatim anywhere in Part A) used for the one
-   remaining fail-closed case: a resolvable, unambiguous binding whose
-   selected provider's own `list_capabilities()` doesn't actually return a
-   descriptor for the routed capability_id.
-
-`FX-NEG-006` ("provider does not advertise routed capability") and
-`FX-NEG-007` ("provider descriptor advertises mismatched capability id")
-exercise **the same underlying guard** — `list_capabilities()`'s exact-string
-`find(d => d.capability_id === capabilityId)` — through two constructions
-(a provider advertising a totally unrelated id, and one advertising a
-near-miss string), not two independently implemented mechanisms. Recorded
-here explicitly so a verifier does not read the two fixture ids as proof of
-two different code paths.
-
-## Canonical Part A integrity
-
-Git blob hashes of the three canonical Part A artifacts, at this candidate,
-match the control-plane authorization comment `5548820269` exactly:
-
-| Artifact | Blob |
-|---|---|
-| `brain-bootstrap/skills/CAPABILITY_REGISTRY_TOOLS_MCP_SKILL_S14.md` | `55a855d8223129b5cc5378bd2ba54671b7c991f3` |
-| `brain-bootstrap/quality-contracts/S14_CAPABILITY_REGISTRY_TOOLS_MCP_DEEP.yaml` | `844ed67ff73b0f8f178407c2d7378135b3bc4045` |
-| `brain-bootstrap/specs/CAPABILITY_REGISTRY_TOOLS_MCP_CONTRACT_S14.md` | `78564d6ccc1369f692a68d942e17e268d90df855` |
-
-Verified twice: once via `git rev-parse HEAD:<path>` at branch construction
-(before any edit), once again inside the automated test suite via
-`tests/capability-registry/baseline.ts` (`gitBlobSha1()` — a from-scratch
-reimplementation of `git hash-object`, independently confirmed to reproduce
-`git`'s own hash for a real file before being trusted for anything else).
-
-## Protected-surface byte identity
-
-All confirmed byte-identical to baseline `ed95a98` via the same
-git-blob-hash mechanism (`FX-NEG-021/022/023/027`, `UC08/UC09/UC11`):
-
-- `src/core/agent/types.ts` (Core `CapabilityProvider` contract)
-- `src/core/agent/restrictedCapabilityProvider.ts`
-- `src/core/agent/definition.ts` (`AgentDefinition` schema)
-- `src/intelligence/task-prompt-compiler/types.ts` (`ExecutionToolDeclaration`,
-  S13G boundary)
-- `src/intelligence/skills/definitions/taskPromptCompilerS13G.ts`
-- `src/intelligence/skills/definitions/repositoryGitWorkflowS13H.ts`
-  (S13H boundary)
-- `package.json`, `package-lock.json` (no dependency change)
-
-`git status --porcelain=v1` on the candidate branch shows only new,
-untracked additions (`src/providers/capability/registry/`,
-`tests/capability-registry/`, this report) — no existing tracked file was
-modified, staged or deleted. `git diff --check`: clean.
-
-Static structural proof (not just "it happened not to" in this run):
-`src/providers/capability/registry/{capabilityRegistryProvider,
-validateConfig}.ts` contain zero `fs`/`child_process`/`net`/`http`/`https`/
-`fetch` import or call surface at all — verified by a regex scanner proven
-non-vacuous first against planted violating snippets, then applied for real
-(`FX-NEG-024/025/026`, `UC10`). The same scanner methodology (fire on a
-planted violation, then scan the real source) is used for hidden
-`process.env`/CLI-probing signals (`FX-NEG-009/010`, `UC02`), secret-shaped
-content in descriptors/diagnostics (`FX-NEG-017..020`, `UC07`), test-only
-branching (`S14A-HI-022`) and S15+ vocabulary (`S14A-HI-030`, `UC12`).
-`src/core/**` was separately grepped for any `from`/`require` import of a
-`providers/` path (`S14A-HI-029`) — none found (`src/core/agent/
-definition.ts`'s own pre-existing doc-comment prose mentions `src/providers/`
-descriptively; the check matches only real import/require statement shapes,
-not prose, and was proven to actually match a planted import statement
-first).
-
-## Quality contract coverage
-
-**Positives — exactly 12/12** (`FX-POS-001`..`FX-POS-012`), **negatives —
-exactly 28/28** (`FX-NEG-001`..`FX-NEG-028`), by exact id set (not just
-count) — enforced by a final assertion in `capabilityRegistry.test.ts`
-against the canonical id lists in `fixtureTruth.ts`.
-
-`FX-POS-003` (provider swap preserves `AgentDefinition` bytes) runs through
-the **real Core path**: `compileAgentDefinition()` → `runAgent()` →
-`RestrictedCapabilityProvider` → `CapabilityRegistryProvider` → selected
-provider, using the existing `tests/agent/` harness pattern (a
-`ModelProvider` fake issuing one real `TOOL_CALL` then `FINISH`). Two
-configurations (provider A selected, then provider B selected) route through
-the identical `AgentDefinition` fixture object; `JSON.stringify()` of that
-fixture is captured before, between and after both runs and asserted
-identical in all three snapshots ("byte identity" sense 1: the in-memory
-object). `src/core/agent/definition.ts`'s on-disk contract byte identity
-(sense 2) is checked separately and exhaustively above, not conflated with
-sense 1.
-
-All **32 S14A hard invariants** (`S14A-HI-001`..`S14A-HI-032`) and all **12
-unsafe counters** (`UC01`..`UC12`) are exercised. Each unsafe counter is
-proven non-vacuous by first running its detector/check against a
-deliberately bad adversarial input or a small test-only "wrong"
-mini-implementation (never touching production code) to show it can return
-non-zero, then applying the same detector to the real candidate and
-confirming exactly zero.
-
-`FX-POS-010` ("multiple implementations registered but one explicit
-selection resolves deterministically") uses two providers bound under two
-*different* capability ids to prove only the selected one is ever invoked;
-the same-id case (two providers both actually advertising one identical
-`capability_id`) is what `S14A-HI-019` ("duplicate incompatible capability
-descriptors are rejected") covers separately, proven by registering two
-providers that both independently advertise the same nominal
-`capability_id` with incompatible input schemas, binding only one of them,
-and confirming `list_capabilities()` returns exactly one descriptor (the
-selected provider's) with no merge/duplication attempt and the unselected
-provider's `list_capabilities()` never even called.
-
-`validateCapabilityRegistryConfig()` is also unit-tested directly (pure
-function, no registry construction) against a config containing all three
-finding types simultaneously, asserting the exact returned code set.
-
-## QA
-
-Node `v24.19.0` / npm `11.17.0` (`~/.local/bin/node` on this machine is a
-symlink to nvm's Node `v22.23.1` and shadows nvm's shim earlier in `PATH`;
-all commands below were run with nvm's `v24.19.0/bin` explicitly prepended
-to `PATH`). `npm ci --ignore-scripts` was required to install dependencies:
-this WSL environment has no `make`/`gcc` and no passwordless `sudo`, so
-`better-sqlite3`'s implicit `node-gyp rebuild` install-script fails; the
-package resolves at runtime through its own bundled N-API prebuild
-(`node_modules/better-sqlite3/prebuilds/linux-x64.node`, ABI-stable across
-Node versions), confirmed working under Node 24 (`require('better-sqlite3')`
-succeeds) before any test ran. This is a lockfile-exact install
-(`npm ci`) with zero dependency change.
-
-- `typecheck` (`tsc --noEmit`): PASS, before and after adding S14A.
-- `focused` (`tests/capability-registry/**`): **56/56 PASS**.
-- `full_pre_build`: **1437/1437 PASS** across 26 files (baseline was
-  1381/1381 across 25 files at this exact `ed95a98` baseline, confirmed
-  before writing any S14A code).
-- `dist_absent_before_build`: confirmed (`ls dist` → no such file).
-- `build` (`tsc -p tsconfig.json`): PASS. 840 emitted files = 280 `.js` +
-  280 `.d.ts` + 280 `.js.map` (272 baseline compiled units + 8 new S14A
-  `.ts` files = 280; matches exactly).
-- `full_post_build`: **1437/1437 PASS**, same count as pre-build.
-- `git diff --check`: clean.
-- `git status --porcelain=v1`: only new, untracked additions (listed
-  above) — no existing tracked file touched.
-
-## Boundaries respected
-
-No Core semantic edit. No `AgentDefinition` schema edit. No new package
-dependency. No filesystem/shell/git-process/GitHub/web/browser/PostgreSQL/
-MCP/OAuth execution anywhere in the S14A production or test path (proven
-structurally, not just by absence of observed side effects in this run). No
-S15+ concept (Verifier Agent, Architecture Challenger, Workflow Runtime,
-Delegation, Orchestrator, multi-agent routing, self-improvement, resource
-manager) referenced in production source. S13G's unbound
-`ExecutionToolDeclaration` shape (`{id, capability_ref}`) and S13H's
-repository/git decision skill are untouched (byte-identical). `STATE.yaml`
-and `CURRENT.md` were not touched by this candidate.
-
-## What this builder is explicitly NOT claiming
-
-This report does not claim `S14` is `CLOSED`, does not claim `HI-054` is
-`AWARDED`, and does not self-approve S14A. `S14A` is
-`BUILDER_PASS_AWAITING_INDEPENDENT_VERIFICATION`; `S14` remains `NOT_CLOSED`;
-`HI-054` remains `NOT_AWARDED`. Per contract §25, the next required step is a
-fresh, non-authoring, non-fork, read-only verifier independently reproducing
-this evidence against the exact committed candidate SHA, followed by a
-separate control-plane acceptance, before `S14B` may be authorized.
+A fresh non-authoring, non-fork, read-only verifier must inspect the exact
+committed corrected candidate. Its standalone relay must then receive separate
+control-plane acceptance before main integration or S14B authorization.
+This builder report is not an independent verifier approval.
