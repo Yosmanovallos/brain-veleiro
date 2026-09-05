@@ -369,14 +369,21 @@ proven fireable on an injected forbidden import / `process.cwd()` sample.
 
 ## 12. Commit and publication
 
-- Candidate committed on `s14b-filesystem-capability-part-b-round2` with parent
-  `990483118d623d4af5caf6b2d05cb79a4a3feb02` (1 commit ahead / 0 behind main).
-- `efff516…` is **not** a parent of the Round-2 candidate; the rejected Round-1
-  branch was not moved, rebased, force-updated or merged.
+- Candidate on branch `s14b-filesystem-capability-part-b-round2`,
+  HEAD `d34b2a23648d118b064cabc5fa528ba97a33d8c9`, 2 commits ahead of and 0 behind
+  `main`:
+  - `ea5a050` — filesystem capability round 2 (same-target write serialization);
+  - `d34b2a2` — tighten `S14B-CONC-HI-005` lock-visibility assertions (test only).
+  Linear ancestry: `d34b2a2 → ea5a050 → 990483118d… (main)`.
+- `git merge-base --is-ancestor efff516… HEAD` = false: `efff516…` is **not** in
+  the Round-2 ancestry. The rejected Round-1 branch was not moved, rebased,
+  force-updated or merged.
 - Pushed to `origin/s14b-filesystem-capability-part-b-round2`; the remote branch
-  SHA equals the exact local candidate SHA.
-- No merge to `main`; no `main` movement; no force push; no rewrite of `efff516…`
-  history. `main` remains `990483118d623d4af5caf6b2d05cb79a4a3feb02`.
+  SHA equals the exact local candidate SHA. Both pushes were fast-forward; no
+  branch was force-pushed.
+- No merge to `main`; no `main` movement; no rewrite of `efff516…` history.
+  `main` remains `990483118d623d4af5caf6b2d05cb79a4a3feb02`; the rejected Round-1
+  branch remains `efff516b0bec42cef8acff3780fe9f0d70439ee8`.
 
 ## 13. Limitations
 
