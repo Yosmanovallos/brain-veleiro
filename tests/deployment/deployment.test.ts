@@ -3,8 +3,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import type { AgentDefinition, CapabilityProvider } from "../../src/core/agent/index.js";
 import { LocalReferenceSkillProvider } from "../../src/providers/skill/localReferenceSkillProvider.js";
 import { referenceSkillCatalogEntries } from "../../src/intelligence/skills/index.js";
-import { ATOMIC_IDS, buildDeploymentDecision, canonical, compareDeploymentRuns, deploymentSkillS13R, DEPLOYMENT_SKILL_ID, deriveDeploymentInvariants, deriveDeploymentUnsafeCounters, evaluateDeploymentAtomic, evaluateDeploymentCandidateGate, planDeployment, probeDeploymentIsolation, validateDeploymentInput, type DeploymentDecision, type DeploymentInput } from "../../src/intelligence/deployment/index.js";
-import { addFact, audit, baseInput, libraryInput, positives, workerInput } from "./fixtures.js";
+import { ATOMIC_IDS, buildDeploymentIsolationRegistry, buildDeploymentDecision, canonical, compareDeploymentRuns, deploymentSkillS13R, DEPLOYMENT_SKILL_ID, deriveDeploymentInvariants, deriveDeploymentUnsafeCounters, evaluateDeploymentAtomic, evaluateDeploymentCandidateGate, planDeployment, runDeploymentIsolationMatrix, validateDeploymentInput, type DeploymentDecision, type DeploymentInput } from "../../src/intelligence/deployment/index.js";
+import { addFact, audit, baseInput, libraryInput, persistentLocalInput, positives, providerInput, readinessOptionalInput, workerInput } from "./fixtures.js";
 import { concepts, DeploymentProvider, synthesize } from "./deploymentProvider.js";
 const prose = deploymentSkillS13R.rules.map(r => r.statement).join("\n");
 const host: AgentDefinition = {
@@ -91,7 +91,33 @@ describe("S13R robustness and actual candidate path", () => {
     expect(comparison.skill).toBeGreaterThan(comparison.baseline); expect(comparison.regressions).toBe(0); expect(comparison.qualified_dimensions).toBeGreaterThanOrEqual(7);
   });
   it("gate blocks altered actual candidate without synthesizing a faithful replacement", () => { const i = baseInput(), d = buildDeploymentDecision(i); d.provider_mapping = "invented-platform"; const result = evaluateDeploymentCandidateGate(i, d); expect(result.decision.container_plan).toBeNull(); expect(result.validation.valid).toBe(false); expect(result.decision).not.toEqual(buildDeploymentDecision(i)); });
-  it("source isolation measures coupled assertions rather than silently declaring them independent", () => { const i = baseInput(), result = probeDeploymentIsolation(i, x => x.repository_facts.find(f => f.kind === "RUNTIME_VERSION")!.value = "25.0.0"); console.log("S13R_ISOLATION_RUNTIME_VERSION", JSON.stringify(result.changed_assertions)); expect(result.changed_assertions).toContain("A08"); expect(result.changed_assertions.length).toBeGreaterThan(1); });
+  it("30/30 one-owned-source-fact isolation, each classified from its measured cross-set", () => {
+    const registry = buildDeploymentIsolationRegistry({ baseInput, workerInput, providerInput, persistentLocalInput, readinessOptionalInput, addFact });
+    expect(registry.map(r => r.id)).toEqual(ATOMIC_IDS);
+    const results = runDeploymentIsolationMatrix(registry);
+    console.log("S13R_ISOLATION_30", JSON.stringify(results.map(r => ({ id: r.id, class: r.classification, cross: r.changed_assertions.filter(a => a !== r.id) }))));
+    expect(results).toHaveLength(30);
+    for (const r of results) {
+      // Every probe must move at least its own assertion, or be an explicitly-classified stable invariant.
+      expect(r.classification === "INVARIANT_STABLE" || r.changed_assertions.includes(r.id)).toBe(true);
+      // No probe may claim isolation while leaving the intended assertion itself unmoved and nothing else moved either (a no-op mutation).
+      expect(r.changed_assertions.length > 0 || r.classification === "INVARIANT_STABLE").toBe(true);
+    }
+    const byClass = Object.fromEntries(["STRICT", "STRUCTURAL_DEPENDENCY", "GATE_CLASS", "INVARIANT_STABLE"].map(c => [c, results.filter(r => r.classification === c).length]));
+    console.log("S13R_ISOLATION_SUMMARY", JSON.stringify(byClass));
+    expect(byClass.STRICT + byClass.STRUCTURAL_DEPENDENCY + byClass.GATE_CLASS + byClass.INVARIANT_STABLE).toBe(30);
+    // The two entrypoint/evidence gate-collapse atomics are the only ones expected to fully block.
+    expect(results.filter(r => r.classification === "GATE_CLASS").map(r => r.id).sort()).toEqual(["A06", "A25"]);
+    // The A28 blanket exemption is a narrow, measured carve-out, not amnesty: every STRICT entry's raw
+    // (pre-exemption) changed_assertions set must be exactly {self, A28} -- nothing else was waved through.
+    for (const r of results) if (r.classification === "STRICT") expect(r.changed_assertions.slice().sort()).toEqual([r.id, "A28"].sort());
+    // A28 (candidate/gate consistency) is, by construction, sensitive to every governed fact: every probe that
+    // actually changes decision content (i.e. is not the pure-reorder A30 no-op) flips it too.
+    for (const r of results) if (!["A28", "A30"].includes(r.id)) expect(r.changed_assertions.includes("A28")).toBe(true);
+    // A30's reorder-only mutation is a genuine no-op: fact/evidence lookups are order-independent and every
+    // order-sensitive projection is explicitly sorted, so it moves nothing at all, not even A28.
+    expect(results.find(r => r.id === "A30")!.changed_assertions).toEqual([]);
+  });
   it("all unsafe counters are behavior/audit derived and fire on adversarial observations", () => {
     const i = baseInput(), original = buildDeploymentDecision(i);
     const cases: [string, (d: DeploymentDecision, a: ReturnType<typeof audit>, source: DeploymentInput) => void][] = [

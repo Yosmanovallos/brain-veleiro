@@ -20,8 +20,24 @@ export function baseInput(): DeploymentInput {
 }
 export function libraryInput() { const i = baseInput(); i.runtime_surface = { kind: "LIBRARY_ONLY", health_transport: "NONE" }; i.health_contract = { transport: "NONE" }; i.environment_contract = []; i.policy.require_liveness = i.policy.require_readiness = false; i.repository_facts = i.repository_facts.filter(f => !["PORT", "START_COMMAND", "ENTRYPOINT", "ENV_NAME", "SECRET_REFERENCE", "HEALTH_TRANSPORT", "LIVENESS_CHECK", "READINESS_CHECK"].includes(f.kind)); i.repository_facts.find(f => f.kind === "RUNTIME_KIND")!.value = "LIBRARY_ONLY"; return i; }
 export function workerInput() { const i = baseInput(); i.runtime_surface.kind = "WORKER"; i.runtime_surface.health_transport = "COMMAND"; delete i.runtime_surface.port; delete i.runtime_surface.port_ref; i.health_contract.transport = "COMMAND"; i.health_contract.liveness_check = "node checks/live.js"; i.health_contract.readiness_check = "node checks/ready.js"; for (const f of i.repository_facts) { if (f.kind === "RUNTIME_KIND") f.value = "WORKER"; if (f.kind === "HEALTH_TRANSPORT") f.value = "COMMAND"; if (f.kind === "LIVENESS_CHECK") f.value = i.health_contract.liveness_check; if (f.kind === "READINESS_CHECK") f.value = i.health_contract.readiness_check; } for (const e of i.deployment_evidence) { if (e.kind === "LIVENESS_PASS") e.subject_ref = "liveness_check"; if (e.kind === "READINESS_PASS") e.subject_ref = "readiness_check"; } return i; }
+/** baseInput() with an authorized provider mapping already bound (isolation base for D08). */
+export function providerInput(): DeploymentInput { const i = baseInput(); i.provider_authority = { provider: "approved-platform", decision_ref: "provider-decision" }; addFact(i, "PROVIDER_DECISION", "approved-platform", "provider-decision"); return i; }
+/** baseInput() switched to a single-replica PERSISTENT_LOCAL contract (isolation base for A20/A21). */
+export function persistentLocalInput(): DeploymentInput {
+  const i = baseInput();
+  i.persistence_contract = { mode: "PERSISTENT_LOCAL", writable_path_ref: "path:data", volume_decision_ref: "volume:data" };
+  i.repository_facts.find(f => f.kind === "PERSISTENCE_MODE")!.value = "PERSISTENT_LOCAL";
+  addFact(i, "WRITABLE_PATH", "data", "path:data"); addFact(i, "VOLUME_DECISION", "path:data", "volume:data");
+  return i;
+}
+/** baseInput() with readiness made optional so READINESS_PASS is scoreable without gating BLOCKED (isolation base for A27). */
+export function readinessOptionalInput(): DeploymentInput { const i = baseInput(); i.policy.require_readiness = false; return i; }
 export function positives(): { id: string; input: DeploymentInput; status: string }[] {
   const inputs = [libraryInput(), baseInput(), workerInput(), baseInput(), baseInput(), baseInput(), baseInput(), baseInput(), baseInput(), workerInput()];
+  // FX-POS-004's intent is plural ("...plus sensitive references remain value-free"): a second, optional,
+  // not-yet-present secret reference stays value-free too, enriching the stated intent without weakening it.
+  addFact(inputs[3], "ENV_NAME", "OPTIONAL_TOKEN", "env-optional-token"); addFact(inputs[3], "SECRET_REFERENCE", "opaque:optional-token-ref", "secret-optional-token");
+  inputs[3].environment_contract.push({ name: "OPTIONAL_TOKEN", requirement: "OPTIONAL", classification: "SENSITIVE_REFERENCE", source_ref: "env-optional-token", secret_ref: "opaque:optional-token-ref", presence: "ABSENT" });
   inputs[4].persistence_contract.mode = "EPHEMERAL"; inputs[4].repository_facts.find(f => f.kind === "PERSISTENCE_MODE")!.value = "EPHEMERAL";
   inputs[5].provider_authority = { provider: "approved-platform", decision_ref: "provider-decision" }; addFact(inputs[5], "PROVIDER_DECISION", "approved-platform", "provider-decision");
   inputs[6].deployment_evidence = inputs[6].deployment_evidence.filter(e => !e.kind.startsWith("DEPLOYED"));
