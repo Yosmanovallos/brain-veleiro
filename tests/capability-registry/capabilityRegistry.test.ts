@@ -7,6 +7,7 @@ import {
   type ModelDecisionRequest,
   type ModelDecisionResult,
   type ModelProvider,
+  type ToolDescriptor,
 } from "../../src/core/agent/index.js";
 import { CapabilityRegistryProvider } from "../../src/providers/capability/registry/capabilityRegistryProvider.js";
 import { validateCapabilityRegistryConfig } from "../../src/providers/capability/registry/validateConfig.js";
@@ -954,10 +955,10 @@ describe("S14A unsafe counters (UC01..UC12)", () => {
     expect(realResult.status).toBe("BLOCKED"); // real candidate: 0 instances of ambiguity silently accepted
   });
 
-  it("UC04 first_provider_wins_resolution == 0 (checked via FX-NEG-011's call-count proof)", async () => {
+  it("UC04 first_provider_wins_resolution == 0 (real) vs a naive first-wins mini-implementation (bug present)", async () => {
     const providerA = makeEchoProvider("demo.uc04", "A");
     const providerB = makeEchoProvider("demo.uc04", "B");
-    const registry = new CapabilityRegistryProvider({
+    const config: CapabilityRegistryConfig = {
       providers: [
         { provider_id: "a", provider: providerA },
         { provider_id: "b", provider: providerB },
@@ -966,15 +967,43 @@ describe("S14A unsafe counters (UC01..UC12)", () => {
         { capability_id: "demo.uc04", selected_provider_id: "a" },
         { capability_id: "demo.uc04", selected_provider_id: "b" },
       ],
-    });
-    await registry.invoke(invocationRequest("demo.uc04"));
-    expect(providerA.invokeCallCount + providerB.invokeCallCount).toBe(0);
+    };
+
+    // Deliberately-wrong test-only helper: naively invokes whichever provider
+    // the FIRST matching binding selects, ignoring the ambiguity entirely.
+    async function naiveFirstWinsInvoke(cfg: CapabilityRegistryConfig, capabilityId: string) {
+      const binding = cfg.bindings.find((b) => b.capability_id === capabilityId)!;
+      const provider = cfg.providers.find((p) => p.provider_id === binding.selected_provider_id)!.provider;
+      return provider.invoke(invocationRequest(capabilityId));
+    }
+
+    await naiveFirstWinsInvoke(config, "demo.uc04");
+    expect(providerA.invokeCallCount).toBe(1); // proves the counter can detect first-provider-wins (non-vacuous)
+    expect(providerB.invokeCallCount).toBe(0);
+
+    // Real candidate, same ambiguous config and same provider instances:
+    // invoking through the real registry never reaches either provider again.
+    const registry = new CapabilityRegistryProvider(config);
+    await registry.invoke(invocationRequest("demo.uc04", { call_id: "uc04-real" }));
+    expect(providerA.invokeCallCount).toBe(1); // unchanged
+    expect(providerB.invokeCallCount).toBe(0); // unchanged
   });
 
   it("UC05 side_effect_class_downgraded == 0 (real) vs a naive downgrading mini-implementation (bug present)", async () => {
-    // Deliberately-wrong test-only helper: proves a downgrade would be detectable if it existed.
-    const naiveDowngrade = (sideEffects: string) => "NONE";
-    expect(naiveDowngrade("EXTERNAL")).not.toBe("EXTERNAL");
+    const originalDescriptor: ToolDescriptor = {
+      capability_id: "demo.uc05.naive",
+      name: "demo.uc05.naive",
+      description: "fixture descriptor for the naive-downgrade non-vacuity proof",
+      input_schema: {},
+      side_effects: "EXTERNAL",
+    };
+
+    // Deliberately-wrong test-only helper: silently coerces every descriptor to NONE.
+    function naiveDowngrade(descriptor: ToolDescriptor): ToolDescriptor {
+      return { ...descriptor, side_effects: "NONE" };
+    }
+    const naiveResult = naiveDowngrade(originalDescriptor);
+    expect(naiveResult.side_effects).not.toBe(originalDescriptor.side_effects); // proves detection is possible (non-vacuous)
 
     const provider = makeEchoProvider("demo.uc05", "U", "EXTERNAL");
     const registry = new CapabilityRegistryProvider({

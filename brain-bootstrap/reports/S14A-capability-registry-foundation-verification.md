@@ -98,17 +98,28 @@ staticAudit,baseline,capabilityRegistry.test}.ts` — 56 focused tests.
    inside the `reason` string of the returned `BLOCKED` result (`reason` has
    no separate machine-readable code field in the existing Core
    `ToolInvocationResult` type, so the token is embedded in the text).
-4. **The 12 hard-invariant limits in the quality contract's `limits:` block**
-   (`max_registry_providers`, `max_registry_capabilities`, etc.) are not
-   enforced as runtime validation in this candidate — none of the 32 hard
-   invariants or 28 negative fixtures require it, and adding unrequested
-   bounds-checking would be speculative scope. All test fixtures stay well
-   within those numeric bounds regardless.
+4. **The 6 numeric bounds in the quality contract's `limits:` block**
+   (`max_registry_providers`, `max_registry_capabilities`,
+   `max_capabilities_per_provider`, `max_safe_id_chars`,
+   `max_descriptor_description_chars`, `max_diagnostic_refs`) are not hard
+   invariants and are not enforced as runtime validation in this candidate —
+   none of the 32 `S14A-HI-*` hard invariants or 28 negative fixtures require
+   it, and adding unrequested bounds-checking would be speculative scope.
+   All test fixtures stay well within those numeric bounds regardless.
 5. **`PROVIDER_DOES_NOT_ADVERTISE_CAPABILITY`** is a third, non-canonical
    reason token (not named verbatim anywhere in Part A) used for the one
    remaining fail-closed case: a resolvable, unambiguous binding whose
    selected provider's own `list_capabilities()` doesn't actually return a
    descriptor for the routed capability_id.
+
+`FX-NEG-006` ("provider does not advertise routed capability") and
+`FX-NEG-007` ("provider descriptor advertises mismatched capability id")
+exercise **the same underlying guard** — `list_capabilities()`'s exact-string
+`find(d => d.capability_id === capabilityId)` — through two constructions
+(a provider advertising a totally unrelated id, and one advertising a
+near-miss string), not two independently implemented mechanisms. Recorded
+here explicitly so a verifier does not read the two fixture ids as proof of
+two different code paths.
 
 ## Canonical Part A integrity
 
@@ -192,13 +203,17 @@ mini-implementation (never touching production code) to show it can return
 non-zero, then applying the same detector to the real candidate and
 confirming exactly zero.
 
-`S14A-HI-019` ("duplicate incompatible capability descriptors are
-rejected") is proven by registering two providers that both independently
-advertise the same nominal `capability_id` with incompatible input schemas,
-binding only one of them, and confirming `list_capabilities()` returns
-exactly one descriptor (the selected provider's) with no merge/duplication
-attempt and the unselected provider's `list_capabilities()` never even
-called.
+`FX-POS-010` ("multiple implementations registered but one explicit
+selection resolves deterministically") uses two providers bound under two
+*different* capability ids to prove only the selected one is ever invoked;
+the same-id case (two providers both actually advertising one identical
+`capability_id`) is what `S14A-HI-019` ("duplicate incompatible capability
+descriptors are rejected") covers separately, proven by registering two
+providers that both independently advertise the same nominal
+`capability_id` with incompatible input schemas, binding only one of them,
+and confirming `list_capabilities()` returns exactly one descriptor (the
+selected provider's) with no merge/duplication attempt and the unselected
+provider's `list_capabilities()` never even called.
 
 `validateCapabilityRegistryConfig()` is also unit-tested directly (pure
 function, no registry construction) against a config containing all three
