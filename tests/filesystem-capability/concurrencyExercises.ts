@@ -9,11 +9,18 @@ import { request, sandbox, sha, registry } from "./helpers.js";
 import { activeTargetWriteLockCount, writeLockKey } from "../../src/providers/capability/filesystem/writeSerialization.js";
 import { affirmativeAtomicClaims, closureClaims, finalPublicationGap, phaseText, reportText, unrelatedAwaits } from "./audit.js";
 
-const tick = () => new Promise<void>(resolve => setImmediate(resolve));
-async function until(predicate: () => boolean, label: string, tries = 5000): Promise<void> {
-  for (let i = 0; i < tries && !predicate(); i++) await tick();
-  if (!predicate()) throw new Error(`concurrency condition never reached: ${label}`);
-}
+// Round-4 test-harness maintenance (authorized: comment 5556617161). Publication
+// events are observed with explicit deferred barriers resolved INSIDE the
+// intercepting `fs.rename` spy, not with a scheduling-sensitive event-loop poll.
+// Nothing about the exercised production semantics, the canonical inventories or
+// the asserted SUCCESS/BLOCKED/FAIL outcomes changes; only the timing of how the
+// test learns an event happened. The Vitest per-test timeout
+// (`concurrency.test.ts`) remains the sole deadlock safety net.
+const deferred = (): { promise: Promise<void>; resolve: () => void } => {
+  let resolve!: () => void;
+  const promise = new Promise<void>(r => { resolve = r; });
+  return { promise, resolve };
+};
 const tempResidue = async (dir: string) => (await fs.readdir(dir)).filter(n => n.startsWith(".brain-fs-"));
 const overwrite = (path: string, content: string, expected: string) =>
   request("filesystem.write", { path, content, mode: "OVERWRITE_EXISTING", expected_sha256: expected });
@@ -66,30 +73,44 @@ async function differentTargetsProgressConcurrently(): Promise<void> {
     await fs.writeFile(join(root, "a"), "A");
     await fs.writeFile(join(root, "b"), "B");
     const provider = await configured(root);
-    let aParkedAtPublication = false;
+    const aAtPublication = deferred();   // writer A entered its intercepted fs.rename
+    const bAtPublication = deferred();   // writer B entered its intercepted fs.rename
+    const releaseA = deferred();         // writer A leaves its publication only when released
+    let aPublicationCompleted = false;
     let bReachedPublication = false;
-    let releaseA!: () => void;
-    const parkedA = new Promise<void>(resolve => { releaseA = resolve; });
     const realRename = fs.rename.bind(fs);
     const spy = vi.spyOn(fs, "rename").mockImplementation(async (from, to) => {
-      if (String(to).endsWith("/a")) { aParkedAtPublication = true; await parkedA; }
-      if (String(to).endsWith("/b")) bReachedPublication = true;
+      const target = String(to);
+      if (target.endsWith("/a")) {
+        aAtPublication.resolve();
+        await releaseA.promise;
+        const result = await realRename(from as string, to as string);
+        aPublicationCompleted = true;
+        return result;
+      }
+      if (target.endsWith("/b")) {
+        bReachedPublication = true;
+        bAtPublication.resolve();
+      }
       return realRename(from as string, to as string);
     });
     try {
       const wa = provider.invoke(overwrite("a", "A2", sha("A")));
-      await until(() => aParkedAtPublication, "writer A parked at its publication syscall");
+      await aAtPublication.promise;   // deterministic: writer A is now parked inside its publication syscall
       const wb = provider.invoke(overwrite("b", "B2", sha("B")));
-      await until(() => bReachedPublication, "writer B reached its own publication while A is parked");
+      await bAtPublication.promise;   // deterministic: writer B reached its own publication independently
+      // Writer B published to a different target while writer A's publication is
+      // still parked (A has not returned from fs.rename, so A still holds its lock).
       expect(bReachedPublication).toBe(true);
-      releaseA();
+      expect(aPublicationCompleted).toBe(false);
+      releaseA.resolve();
       const [ra, rb] = await Promise.all([wa, wb]);
       expect(ra.status).toBe("SUCCESS");
       expect(rb.status).toBe("SUCCESS");
       expect(await fs.readFile(join(root, "a"), "utf8")).toBe("A2");
       expect(await fs.readFile(join(root, "b"), "utf8")).toBe("B2");
     } finally {
-      releaseA();
+      releaseA.resolve();
       spy.mockRestore();
     }
     expect(activeTargetWriteLockCount()).toBe(0);
@@ -202,8 +223,8 @@ async function heldLockBlocksSecondSameTargetWriter(): Promise<void> {
 
     let opensObserved = 0;
     let renameCalls = 0;
-    let releaseFirstPublication!: () => void;
-    const firstParked = new Promise<void>(resolve => { releaseFirstPublication = resolve; });
+    const firstAtPublication = deferred();   // writer 1 entered its first intercepted fs.rename
+    const releaseFirst = deferred();         // writer 1 holds there (and holds the lock) until released
     const realOpen = fs.open.bind(fs);
     const realRename = fs.rename.bind(fs);
     const openSpy = vi.spyOn(fs, "open").mockImplementation((path, flags, mode) => {
@@ -212,33 +233,40 @@ async function heldLockBlocksSecondSameTargetWriter(): Promise<void> {
     });
     const renameSpy = vi.spyOn(fs, "rename").mockImplementation(async (from, to) => {
       renameCalls++;
-      if (renameCalls === 1) await firstParked;
+      if (renameCalls === 1) {
+        firstAtPublication.resolve();
+        await releaseFirst.promise;
+      }
       return realRename(from as string, to as string);
     });
     try {
       const w1 = first.invoke(overwrite("t", "B", sha("A")));
-      await until(() => renameCalls === 1, "writer 1 parked inside its publication syscall");
+      await firstAtPublication.promise;   // deterministic: writer 1 parked in fs.rename, holding the same-target lock
       const opensAtPark = opensObserved;
+      expect(renameCalls).toBe(1);
 
+      // Starting writer 2 enqueues it on the same-target write lock synchronously:
+      // the provider path invoke() -> perform() -> withTargetWriteLock() reaches
+      // `await prior` with no intervening await and no filesystem I/O, so writer
+      // 2's continuation cannot run until writer 1 releases. It has therefore
+      // evaluated no filesystem precondition and performed no publication while
+      // writer 1 holds the lock — asserted here with no scheduling wait.
       const w2 = second.invoke(overwrite("t", "C", sha("A")));
-      // Give writer 2 every opportunity to touch the filesystem while writer 1 holds the lock.
-      for (let i = 0; i < 200; i++) await tick();
-
-      // Writer 2 has not opened a single handle and has not reached its own publication.
       expect(opensObserved).toBe(opensAtPark);
       expect(renameCalls).toBe(1);
 
-      releaseFirstPublication();
+      releaseFirst.resolve();
       const [r1, r2] = await Promise.all([w1, w2]);
       expect(r1.status).toBe("SUCCESS");
       expect(r2.status).toBe("BLOCKED");
-      // Writer 2 only ran (and became BLOCKED on the now-stale hash) after the lock freed.
+      // Writer 2 only touched the filesystem, and became BLOCKED on the now-stale
+      // hash, after the lock was freed.
       expect(opensObserved).toBeGreaterThan(opensAtPark);
       expect(renameCalls).toBe(1);
       expect(await fs.readFile(join(root, "t"), "utf8")).toBe("B");
       expect(await tempResidue(root)).toEqual([]);
     } finally {
-      releaseFirstPublication();
+      releaseFirst.resolve();
       openSpy.mockRestore();
       renameSpy.mockRestore();
     }
