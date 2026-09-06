@@ -1,0 +1,250 @@
+schema_version: "1.0"
+id: S14C_SHELL_DEEP
+parent_step: S14
+phase: S14C
+name: shell
+version: "1.0.0"
+status: AUTHORING_READY
+classification: RUNTIME_INFRASTRUCTURE
+depth: DEEP
+honor_invariant: HI-054_NOT_AWARDED
+
+canonical_artifacts:
+  skill: brain-bootstrap/skills/SHELL_CAPABILITY_SKILL_S14C.md
+  quality_contract: brain-bootstrap/quality-contracts/S14C_SHELL_DEEP.yaml
+  semantic_contract: brain-bootstrap/specs/SHELL_CAPABILITY_CONTRACT_S14C.md
+
+baseline:
+  main: a89deb76968684bf8d4c94f5e6e17986d2a9d517
+  s14b_verified_target: e49ba5c71767b2b45b0aec04e64027afe4aa5b7d
+  s14b_phase_closure: a89deb76968684bf8d4c94f5e6e17986d2a9d517
+
+capabilities:
+  - id: shell.execute
+    side_effects: LOCAL
+
+limits:
+  max_profile_id_chars: 160
+  max_profiles: 64
+  max_executable_path_chars: 4096
+  max_cwd_chars: 4096
+  max_cwd_segments: 256
+  max_cwd_segment_utf8_bytes: 255
+  max_fixed_args: 64
+  max_arg_utf8_bytes: 4096
+  max_total_argv_utf8_bytes: 32768
+  max_env_entries: 32
+  max_env_key_chars: 128
+  max_env_value_utf8_bytes: 4096
+  max_total_env_utf8_bytes: 32768
+  max_stdout_bytes: 524288
+  max_stderr_bytes: 524288
+  max_combined_output_bytes: 1048576
+  max_profile_timeout_ms: 300000
+  termination_grace_ms: 500
+  max_evidence_refs: 4
+  max_safe_error_chars: 500
+
+scope:
+  allowed:
+    - provider-layer WorkspaceShellCapabilityProvider
+    - shell.execute
+    - explicit workspace root
+    - explicit trusted fixed command profiles
+    - model input limited to profile_id and logical cwd
+    - explicit fixed executable path and argv in provider configuration
+    - explicit environment in provider configuration
+    - Node 24 built-in child_process/fs/path/os APIs
+    - Linux/WSL process-group timeout and overflow cleanup
+    - real disposable process/workspace fixtures outside repository
+    - CapabilityRegistryProvider composition
+    - RestrictedCapabilityProvider composition
+    - real runAgent shell.execute path
+    - bounded logical evidence
+  forbidden:
+    - Core semantic edits
+    - AgentDefinition edits
+    - S14A registry semantic edits
+    - S14B filesystem semantic edits
+    - dependency additions
+    - arbitrary model-provided command strings
+    - model-provided executable
+    - model-provided argv
+    - model-provided environment
+    - model-provided stdin
+    - shell_true
+    - interactive TTY or PTY
+    - background-job or daemon-manager API
+    - git capability implementation
+    - GitHub API
+    - documentation or web search
+    - browser automation
+    - PostgreSQL
+    - MCP
+    - OAuth
+    - credential storage
+    - S15_plus_work
+
+hard_invariants:
+  - {id: S14C-HI-001, rule: "Exactly shell.execute is exposed by the S14C provider."}
+  - {id: S14C-HI-002, rule: "WorkspaceShellCapabilityProvider implements the existing CapabilityProvider contract without Core changes."}
+  - {id: S14C-HI-003, rule: "shell.execute truthfully declares side_effects LOCAL for every configured profile."}
+  - {id: S14C-HI-004, rule: "workspace_root is explicit and no cwd/env/home/git-root/repository inference selects it."}
+  - {id: S14C-HI-005, rule: "Command profiles are explicit trusted provider configuration and cannot be created or modified by model input."}
+  - {id: S14C-HI-006, rule: "Model-visible invocation input is exactly profile_id plus cwd; executable/argv/env/stdin/shell/provider overrides are rejected."}
+  - {id: S14C-HI-007, rule: "profile_id is a bounded safe identifier and only a registered profile may execute."}
+  - {id: S14C-HI-008, rule: "cwd is a provider-neutral logical workspace-relative path validated before spawn."}
+  - {id: S14C-HI-009, rule: "cwd requires explicit selected-profile allow-prefix coverage with no implicit root-wide permission."}
+  - {id: S14C-HI-010, rule: "Resolved cwd remains under the canonical explicit workspace root and string-prefix checks alone are insufficient."}
+  - {id: S14C-HI-011, rule: "Symlink components/targets below the workspace root are not accepted as cwd."}
+  - {id: S14C-HI-012, rule: "Protected credential/control cwd paths fail closed even when otherwise prefix-allowed."}
+  - {id: S14C-HI-013, rule: "Each profile executable is explicit absolute provider configuration resolving to a regular executable file before the provider is invokable."}
+  - {id: S14C-HI-014, rule: "Observed executable identity drift before spawn fails closed; the provider does not claim atomic fexecve protection in the final kernel spawn window."}
+  - {id: S14C-HI-015, rule: "argv is fixed trusted profile configuration; model input cannot append, replace, interpolate or inject argv."}
+  - {id: S14C-HI-016, rule: "Execution uses child_process spawn semantics with shell:false and no command-string concatenation."}
+  - {id: S14C-HI-017, rule: "stdin is closed/ignored, no TTY/PTY exists, and S14C exposes no interactive shell."}
+  - {id: S14C-HI-018, rule: "Child environment is explicit profile configuration and process.env is not implicitly inherited."}
+  - {id: S14C-HI-019, rule: "Recognizable secret-bearing and dangerous loader/runtime-injection environment keys fail configuration validation."}
+  - {id: S14C-HI-020, rule: "Profile count, executable, argv, environment, cwd, timeout, output, evidence and safe-error limits are enforced."}
+  - {id: S14C-HI-021, rule: "Effective timeout is min(request.timeout_ms, profile.max_timeout_ms) and both are positive/bounded."}
+  - {id: S14C-HI-022, rule: "stdout and stderr are captured as bounded pipes; successful results are never silently truncated."}
+  - {id: S14C-HI-023, rule: "Model-visible stdout/stderr are strict UTF-8; invalid UTF-8 fails closed."}
+  - {id: S14C-HI-024, rule: "Output overflow terminates the provider-created process group and returns a normalized failure rather than truncated SUCCESS."}
+  - {id: S14C-HI-025, rule: "Recognizable secret material in captured process output is not returned to the model."}
+  - {id: S14C-HI-026, rule: "Known canonical workspace/executable absolute paths are deterministically normalized and never returned raw."}
+  - {id: S14C-HI-027, rule: "Natural process completion is SUCCESS observation even for nonzero exit status, with truthful exit_code/signal output."}
+  - {id: S14C-HI-028, rule: "Timeout performs bounded process-group termination/cleanup before returning TIMEOUT and never claims rollback of already-completed LOCAL side effects."}
+  - {id: S14C-HI-029, rule: "Canonical timeout/overflow fixtures leave no ordinary child/grandchild alive in the provider-created POSIX process group."}
+  - {id: S14C-HI-030, rule: "Launch/OS/cleanup errors are safely normalized without raw stacks, secrets, executable paths or workspace-root leakage."}
+  - {id: S14C-HI-031, rule: "RestrictedCapabilityProvider capability denial prevents shell provider execution."}
+  - {id: S14C-HI-032, rule: "RestrictedCapabilityProvider LOCAL side-effect denial prevents child process spawn."}
+  - {id: S14C-HI-033, rule: "The real shell provider operates through CapabilityRegistryProvider with no registry special case."}
+  - {id: S14C-HI-034, rule: "A real runAgent path can invoke shell.execute through RestrictedCapabilityProvider and the registry."}
+  - {id: S14C-HI-035, rule: "Changing the explicit shell provider/profile executable implementation does not change AgentDefinition bytes."}
+  - {id: S14C-HI-036, rule: "Every legal maximum shell ToolInvocationResult remains transportable through the accepted 8388608-character registry result envelope."}
+  - {id: S14C-HI-037, rule: "Core, AgentDefinition, RestrictedCapabilityProvider, accepted registry and S14B filesystem production surfaces remain byte-identical."}
+  - {id: S14C-HI-038, rule: "package.json and package-lock.json remain byte-identical and no dependency is added."}
+  - {id: S14C-HI-039, rule: "Canonical S14C profiles do not intentionally pull forward git/GitHub/network/docs/browser/PostgreSQL/MCP/OAuth/S15+ behavior, and the v1 trusted-profile/no-OS-sandbox limitation is documented without overclaiming."}
+  - {id: S14C-HI-040, rule: "S14C cannot close S14, award HI-054 or authorize S14D."}
+
+unsafe_counters:
+  - {id: UC01, name: model_controlled_executable_argv_or_env, required: 0}
+  - {id: UC02, name: shell_command_string_or_shell_true_execution, required: 0}
+  - {id: UC03, name: cwd_escape_symlink_or_protected_path_accepted, required: 0}
+  - {id: UC04, name: unregistered_profile_execution, required: 0}
+  - {id: UC05, name: inherited_secret_or_dangerous_environment, required: 0}
+  - {id: UC06, name: unauthorized_spawn_or_local_side_effect, required: 0}
+  - {id: UC07, name: output_limit_bypass_or_silent_truncation, required: 0}
+  - {id: UC08, name: timeout_overflow_or_process_group_cleanup_failure, required: 0}
+  - {id: UC09, name: secret_or_provider_local_path_exposure, required: 0}
+  - {id: UC10, name: protected_boundary_or_dependency_modified, required: 0}
+  - {id: UC11, name: future_phase_execution_pulled_forward, required: 0}
+  - {id: UC12, name: s14_or_hi054_self_closure, required: 0}
+
+positive_fixtures:
+  - {id: FX-POS-001, intent: "list_capabilities exposes exactly shell.execute with side_effects LOCAL"}
+  - {id: FX-POS-002, intent: "registered fixed profile launches a real zero-exit process and captures bounded stdout/stderr"}
+  - {id: FX-POS-003, intent: "natural nonzero process exit remains truthful SUCCESS observation with nonzero exit_code and captured stderr"}
+  - {id: FX-POS-004, intent: "profile executes from an explicitly allowed nested logical cwd"}
+  - {id: FX-POS-005, intent: "trusted fixed argv containing shell metacharacters is passed literally because shell:false is used"}
+  - {id: FX-POS-006, intent: "explicit safe profile environment reaches the child while an unrelated host process.env sentinel is absent"}
+  - {id: FX-POS-007, intent: "exact stdout/stderr/combined output maxima succeed and remain transportable through the real registry without truncation"}
+  - {id: FX-POS-008, intent: "effective timeout uses the smaller request/profile bound while a command finishing before the bound succeeds"}
+  - {id: FX-POS-009, intent: "LOCAL permission explicitly allowed through RestrictedCapabilityProvider permits shell.execute"}
+  - {id: FX-POS-010, intent: "real shell provider routes through CapabilityRegistryProvider without shell-specific registry logic"}
+  - {id: FX-POS-011, intent: "real runAgent invokes shell.execute through RestrictedCapabilityProvider -> registry -> shell provider"}
+  - {id: FX-POS-012, intent: "same AgentDefinition bytes survive explicit provider/profile executable implementation swap for the same profile_id"}
+  - {id: FX-POS-013, intent: "timeout of a real parent+grandchild process group terminates the ordinary group and a later legitimate invocation still succeeds"}
+  - {id: FX-POS-014, intent: "real shell fixtures use disposable workspace/process state outside repository and are cleaned after execution"}
+
+negative_fixtures:
+  - {id: FX-NEG-001, intent: "unknown profile_id is blocked and no process is spawned"}
+  - {id: FX-NEG-002, intent: "empty, malformed or overlong model profile_id is rejected"}
+  - {id: FX-NEG-003, intent: "model-supplied executable field is rejected"}
+  - {id: FX-NEG-004, intent: "model-supplied argv/args field is rejected"}
+  - {id: FX-NEG-005, intent: "model-supplied env/environment field is rejected"}
+  - {id: FX-NEG-006, intent: "model-supplied stdin/shell/provider override field is rejected"}
+  - {id: FX-NEG-007, intent: "absolute POSIX cwd is rejected"}
+  - {id: FX-NEG-008, intent: "Windows drive cwd is rejected"}
+  - {id: FX-NEG-009, intent: "UNC or backslash cwd is rejected"}
+  - {id: FX-NEG-010, intent: "dot-dot traversal cwd is rejected"}
+  - {id: FX-NEG-011, intent: "dot/empty internal cwd segment or NUL cwd is rejected"}
+  - {id: FX-NEG-012, intent: "cwd path/segment bound exceeded is rejected"}
+  - {id: FX-NEG-013, intent: "cwd outside selected-profile allow prefixes is blocked"}
+  - {id: FX-NEG-014, intent: "protected credential/control cwd is blocked"}
+  - {id: FX-NEG-015, intent: "symlink intermediate cwd component is blocked"}
+  - {id: FX-NEG-016, intent: "symlink cwd target is blocked"}
+  - {id: FX-NEG-017, intent: "missing cwd normalizes NOT_FOUND without spawn"}
+  - {id: FX-NEG-018, intent: "regular file used as cwd fails closed"}
+  - {id: FX-NEG-019, intent: "relative configured executable path is invalid"}
+  - {id: FX-NEG-020, intent: "missing configured executable fails provider/profile validation or later availability recheck safely"}
+  - {id: FX-NEG-021, intent: "configured executable resolving to a directory/non-regular target is invalid"}
+  - {id: FX-NEG-022, intent: "configured executable without executable access/permission is invalid"}
+  - {id: FX-NEG-023, intent: "duplicate profile_id configuration fails closed deterministically"}
+  - {id: FX-NEG-024, intent: "profile count above max_profiles is rejected"}
+  - {id: FX-NEG-025, intent: "unsafe or overlong configured profile_id is rejected"}
+  - {id: FX-NEG-026, intent: "fixed argv count above max_fixed_args is rejected"}
+  - {id: FX-NEG-027, intent: "individual or aggregate fixed argv byte bound exceeded is rejected"}
+  - {id: FX-NEG-028, intent: "NUL in fixed argv is rejected"}
+  - {id: FX-NEG-029, intent: "environment count/key/value/aggregate bounds are enforced"}
+  - {id: FX-NEG-030, intent: "recognizable credential-bearing environment key is rejected"}
+  - {id: FX-NEG-031, intent: "dangerous loader/runtime-injection environment key is rejected"}
+  - {id: FX-NEG-032, intent: "host process.env sentinel is not inherited when absent from explicit profile env"}
+  - {id: FX-NEG-033, intent: "stdout above max_stdout_bytes terminates execution and never returns truncated SUCCESS"}
+  - {id: FX-NEG-034, intent: "stderr above max_stderr_bytes terminates execution and never returns truncated SUCCESS"}
+  - {id: FX-NEG-035, intent: "combined output above max_combined_output_bytes terminates execution and never returns truncated SUCCESS"}
+  - {id: FX-NEG-036, intent: "invalid UTF-8 child output fails closed"}
+  - {id: FX-NEG-037, intent: "recognized secret material in child stdout/stderr is not returned"}
+  - {id: FX-NEG-038, intent: "raw canonical workspace root or executable realpath is not exposed in successful output/error/evidence"}
+  - {id: FX-NEG-039, intent: "timeout/output-overflow cleanup kills canonical parent+grandchild group and leaves no ordinary orphan"}
+  - {id: FX-NEG-040, intent: "capability denial prevents real process spawn"}
+  - {id: FX-NEG-041, intent: "LOCAL side-effect denial prevents real process spawn"}
+  - {id: FX-NEG-042, intent: "candidate cannot modify protected S14A/S14B/Core/dependency surfaces, pull forward future phases, claim OS-level arbitrary-executable/network sandboxing, close S14, award HI-054 or authorize S14D"}
+
+verification_requirements:
+  node_major: 24
+  canonical_platform: linux_wsl
+  exact_positive_ids: 14
+  exact_negative_ids: 42
+  hard_invariants_required: 40
+  unsafe_counters_all_zero_on_legitimate_paths: true
+  unsafe_detectors_non_vacuous: true
+  real_disposable_process_exercise: true
+  repository_worktree_must_not_be_process_fixture: true
+  actual_registry_path: true
+  actual_restricted_provider_path: true
+  actual_run_agent_shell_path: true
+  provider_swap_agent_definition_byte_identity: true
+  legal_max_result_must_pass_registry_envelope: true
+  process_group_timeout_cleanup_required: true
+  output_overflow_process_group_cleanup_required: true
+  no_new_dependency: true
+  current_registry_byte_identity_required: true
+  s14b_filesystem_byte_identity_required: true
+  core_byte_identity_required: true
+  agent_definition_byte_identity_required: true
+  part_a_byte_identity_required: true
+  s13g_boundary_integrity_required: true
+  s13h_boundary_integrity_required: true
+  typecheck: PASS
+  focused: PASS
+  full_pre_build: PASS
+  genuine_dist_absent_build: PASS
+  full_post_build: PASS
+  git_diff_check: PASS
+
+independent_verification:
+  fresh_session: true
+  verifier_must_be_non_authoring: true
+  verifier_must_be_non_fork: true
+  verifier_must_be_read_only: true
+  exact_committed_remote_candidate_required: true
+  standalone_verifier_relay_required: true
+  separate_control_plane_acceptance_required: true
+
+phase_acceptance:
+  on_pass:
+    S14C: PHASE_PASS
+    S14: IN_PROGRESS
+    HI-054: NOT_AWARDED
+    S14D: NOT_AUTHORIZED
