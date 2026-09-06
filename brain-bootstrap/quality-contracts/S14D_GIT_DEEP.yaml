@@ -1,0 +1,286 @@
+schema_version: "1.0"
+id: S14D_GIT_DEEP
+parent_step: S14
+phase: S14D
+name: git
+version: "1.0.0"
+status: AUTHORING_READY
+classification: RUNTIME_INFRASTRUCTURE
+depth: DEEP
+honor_invariant: HI-054_NOT_AWARDED
+
+canonical_artifacts:
+  skill: brain-bootstrap/skills/GIT_CAPABILITY_SKILL_S14D.md
+  quality_contract: brain-bootstrap/quality-contracts/S14D_GIT_DEEP.yaml
+  semantic_contract: brain-bootstrap/specs/GIT_CAPABILITY_CONTRACT_S14D.md
+
+baseline:
+  main: 4bceeb777127655369ff274b490233764c3e9fd9
+  s14c_verified_target: 04f668ad47a1e8c7fac0fc5d241206400fcfd880
+  s14c_phase_closure: 4bceeb777127655369ff274b490233764c3e9fd9
+  authoring_gate_comment: 5561606182
+
+capabilities:
+  - id: repository.status
+    side_effects: NONE
+  - id: repository.read
+    side_effects: NONE
+
+runtime_support:
+  node_major: 24
+  canonical_platform: linux_wsl
+  min_git_version: "2.45.0"
+  max_git_major_exclusive: 3
+
+limits:
+  max_repository_id_chars: 160
+  max_repository_root_chars: 4096
+  max_git_executable_path_chars: 4096
+  max_revision_chars: 64
+  max_path_chars: 4096
+  max_path_segments: 256
+  max_path_segment_utf8_bytes: 255
+  max_status_paths: 1000
+  max_blob_bytes: 1048576
+  max_stdout_bytes: 1048576
+  max_stderr_bytes: 65536
+  max_combined_output_bytes: 1114112
+  max_repository_timeout_ms: 300000
+  termination_grace_ms: 500
+  group_cleanup_budget_ms: 4000
+  max_evidence_refs: 4
+  max_safe_error_chars: 500
+
+scope:
+  allowed:
+    - provider-layer WorkspaceGitCapabilityProvider
+    - repository.status
+    - repository.read
+    - one explicit local standard Git worktree
+    - explicit repository_id
+    - explicit repository_root
+    - explicit absolute git_executable
+    - filesystem-only provider construction
+    - per-invocation bounded Git version gate
+    - fixed provider-owned Git operation table
+    - fixed provider-owned child environment and Git safety overrides
+    - committed-object blob reads
+    - structured local status metadata
+    - Node 24 built-in child_process/fs/path APIs
+    - Linux/WSL POSIX process-group cleanup
+    - real disposable Git fixtures outside Brain repository
+    - CapabilityRegistryProvider composition
+    - RestrictedCapabilityProvider composition
+    - real runAgent repository path
+    - bounded logical repository evidence
+  forbidden:
+    - Core semantic edits
+    - AgentDefinition edits
+    - RestrictedCapabilityProvider edits
+    - S14A registry semantic edits
+    - S14B filesystem semantic edits
+    - S14C shell semantic edits
+    - S13H planning semantic edits
+    - dependency additions
+    - model-provided git subcommand
+    - model-provided argv or raw option
+    - model-provided environment
+    - model-provided repository root
+    - model-provided git executable
+    - shell_true
+    - interactive TTY or PTY
+    - git mutation
+    - network git
+    - GitHub API
+    - GitLab or Bitbucket API
+    - documentation or web search
+    - browser automation
+    - PostgreSQL
+    - MCP
+    - OAuth
+    - credential storage
+    - binary content API
+    - submodule recursion
+    - sibling worktree traversal
+    - S15_plus_work
+
+hard_invariants:
+  - {id: S14D-HI-001, rule: "Exactly repository.status and repository.read are exposed by the S14D provider."}
+  - {id: S14D-HI-002, rule: "WorkspaceGitCapabilityProvider implements the existing CapabilityProvider contract without Core, AgentDefinition or RestrictedCapabilityProvider changes."}
+  - {id: S14D-HI-003, rule: "Both canonical S14D capabilities truthfully declare side_effects NONE; Part B may not relabel them to bypass the contract."}
+  - {id: S14D-HI-004, rule: "repository_id, repository_root, git_executable and max_timeout_ms are explicit trusted provider configuration and are never model-controlled."}
+  - {id: S14D-HI-005, rule: "Provider create() is filesystem-only and performs no Git/process spawn."}
+  - {id: S14D-HI-006, rule: "v1 accepts only one standard non-bare worktree with a direct real .git directory; symlink/gitfile linked-worktree, sparse and alternate-object shapes fail closed."}
+  - {id: S14D-HI-007, rule: "Canonical repository root and .git dev:ino identities are recorded and rechecked before repository-facing Git execution; observed drift fails closed."}
+  - {id: S14D-HI-008, rule: "The configured Git executable is absolute, canonical, regular and executable, its identity is rechecked before spawn, and no PATH fallback is used."}
+  - {id: S14D-HI-009, rule: "Every invocation passes a bounded Git version gate before repository-facing operations and supports only Git >=2.45.0 and <3.0.0."}
+  - {id: S14D-HI-010, rule: "repository.status input is exactly an empty object and repository.read input is exactly path plus optional revision; additional model fields are rejected."}
+  - {id: S14D-HI-011, rule: "Model revision grammar is only HEAD or a full 40/64-hex object id; raw Git revision mini-language, short SHA and symbolic names are rejected."}
+  - {id: S14D-HI-012, rule: "repository.read path obeys the bounded S14B-derived logical grammar; option-like, pathspec-magic, traversal, absolute, drive, UNC/backslash and malformed paths fail before Git content resolution."}
+  - {id: S14D-HI-013, rule: "repository.read structurally blocks the canonical S14B/S13H protected-content path floor before returning committed content."}
+  - {id: S14D-HI-014, rule: "repository.status returns structured metadata only, exposes no remote URL, sibling worktree host path or file content, and enforces max_status_paths."}
+  - {id: S14D-HI-015, rule: "repository.read is committed-object-only and resolves commit -> tree entry -> regular blob -> cat-file; no unresolved model revision:path, worktree byte, index stage, symlink target or gitlink content is returned."}
+  - {id: S14D-HI-016, rule: "Every Git subprocess comes from a closed provider-owned operation table; the model cannot choose subcommand, argv, -c options, git-dir/work-tree, format, remote or output target."}
+  - {id: S14D-HI-017, rule: "Git execution uses child_process.spawn with shell:false, stdin ignored/closed, bounded stdout/stderr pipes, no TTY/PTY and no command-string concatenation."}
+  - {id: S14D-HI-018, rule: "Child environment is exactly provider-built; process.env is not inherited and host Git/credential/loader/runtime injection variables cannot redirect execution."}
+  - {id: S14D-HI-019, rule: "All canonical Git safety environment/config overrides are model-immutable and disable optional locks, hooks/fsmonitor, pager/editor/prompts, credential helpers, GPG/signature helpers, auto-maintenance, protocol transports, LFS smudge and submodule recursion."}
+  - {id: S14D-HI-020, rule: "The v1 operation table has no network or mutation path and no model field can carry a remote name, URL, credential or transport identity."}
+  - {id: S14D-HI-021, rule: "Submodule internals are ignored, gitlinks are not dereferenced, LFS network/smudge is disabled, object alternates are rejected and no sibling-worktree traversal occurs."}
+  - {id: S14D-HI-022, rule: "repository.status uses no-optional-locks semantics and canonical successful status/read fixtures leave the complete .git manifest unchanged."}
+  - {id: S14D-HI-023, rule: "Auto-gc/maintenance is disabled; a deliberately gc-eligible read fixture leaves no .git mutation and no detached Git maintenance survivor."}
+  - {id: S14D-HI-024, rule: "One invocation-wide effective deadline covers version gate, every Git subprocess, output handling and cleanup; no subprocess receives a fresh timeout."}
+  - {id: S14D-HI-025, rule: "stdout, stderr, combined output, blob bytes, status entries, path/revision, timeout, evidence and safe-error bounds are enforced; SUCCESS is never silently truncated."}
+  - {id: S14D-HI-026, rule: "Model-visible Git/blob text is strict UTF-8; invalid/binary output fails closed with no raw-byte fallback."}
+  - {id: S14D-HI-027, rule: "Recognizable secret-bearing committed/output material is not returned, and finite secret recognition is never described as complete."}
+  - {id: S14D-HI-028, rule: "Known canonical repository-root and Git-executable host paths are normalized before model visibility; evidence is repository:// logical metadata only."}
+  - {id: S14D-HI-029, rule: "Timeout/output overflow performs bounded provider-created POSIX process-group termination with SIGTERM/grace/SIGKILL/liveness cleanup and never claims rollback or universal daemon containment."}
+  - {id: S14D-HI-030, rule: "Canonical Git operations cannot execute hooks, aliases-as-command-surrogates, fsmonitor helpers, pager/editor, credential helper, external diff/textconv, submodule/LFS network helpers or auto-maintenance."}
+  - {id: S14D-HI-031, rule: "Status parsing is bounded and deterministic for clean, dirty, staged, untracked, detached and unborn states; oversized/malformed status fails rather than truncates."}
+  - {id: S14D-HI-032, rule: "repository.read returns at most 1048576 decoded blob bytes from a regular committed blob and rejects tree, symlink, gitlink, missing, binary and protected-content cases."}
+  - {id: S14D-HI-033, rule: "RestrictedCapabilityProvider capability denial prevents S14D provider invocation and any Git/version spawn."}
+  - {id: S14D-HI-034, rule: "RestrictedCapabilityProvider denial of side_effects NONE prevents S14D provider invocation and any Git/version spawn."}
+  - {id: S14D-HI-035, rule: "The real Git provider operates through CapabilityRegistryProvider with no Git-specific registry logic."}
+  - {id: S14D-HI-036, rule: "A real runAgent path invokes repository.status/read through RestrictedCapabilityProvider -> registry -> Git provider."}
+  - {id: S14D-HI-037, rule: "Changing the selected repository/provider behind the same repository.read capability leaves AgentDefinition and permission-policy bytes unchanged while observed repository content may differ; divergent descriptors are swapped via separate registry configurations, not co-registered."}
+  - {id: S14D-HI-038, rule: "Every legal maximum S14D ToolInvocationResult remains transportable through the accepted 8388608-character and 10000-node registry result envelope."}
+  - {id: S14D-HI-039, rule: "Core, registry, filesystem, shell, S13H production/tests, prior canonical artifacts and package manifests remain protected/byte-identical; no dependency is added."}
+  - {id: S14D-HI-040, rule: "S14D cannot pull forward S14E+ behavior, close S14, award HI-054 or authorize S14E."}
+
+unsafe_counters:
+  - {id: UC01, name: model_controlled_git_subcommand_argv_or_env, required: 0}
+  - {id: UC02, name: shell_string_or_shell_true_execution, required: 0}
+  - {id: UC03, name: path_or_pathspec_escape_or_protected_content_bypass, required: 0}
+  - {id: UC04, name: unvalidated_revision_or_git_revision_language_execution, required: 0}
+  - {id: UC05, name: hook_alias_fsmonitor_pager_editor_credential_or_helper_execution, required: 0}
+  - {id: UC06, name: network_remote_or_external_git_transport_reached, required: 0}
+  - {id: UC07, name: output_bound_bypass_silent_truncation_or_binary_bytes_returned, required: 0}
+  - {id: UC08, name: timeout_overflow_process_group_cleanup_or_detached_maintenance_failure, required: 0}
+  - {id: UC09, name: secret_remote_identity_or_host_path_exposure, required: 0}
+  - {id: UC10, name: protected_boundary_or_dependency_modified, required: 0}
+  - {id: UC11, name: future_phase_execution_pulled_forward, required: 0}
+  - {id: UC12, name: s14_or_hi054_self_closure, required: 0}
+
+positive_fixtures:
+  - {id: FX-POS-001, intent: "list_capabilities exposes exactly repository.status and repository.read with side_effects NONE and stable provider-neutral schemas"}
+  - {id: FX-POS-002, intent: "repository.status returns a bounded structured clean-repository observation without mutating the .git manifest"}
+  - {id: FX-POS-003, intent: "repository.status faithfully reports staged, modified and untracked path metadata without returning file content"}
+  - {id: FX-POS-004, intent: "repository.status handles detached HEAD and unborn-branch fixtures with the canonical branch/head semantics"}
+  - {id: FX-POS-005, intent: "repository.read reads a regular UTF-8 committed blob at HEAD through commit/tree/blob plumbing"}
+  - {id: FX-POS-006, intent: "repository.read reads the same bounded path at an explicit full 40/64-hex commit object id"}
+  - {id: FX-POS-007, intent: "validated repository path containing shell metacharacters is passed literally through shell:false Git argv and returns the intended blob"}
+  - {id: FX-POS-008, intent: "canonical no-optional-lock status and read leave a whole-.git manifest unchanged while the unsafe plain-status detector is independently fireable"}
+  - {id: FX-POS-009, intent: "gc-eligible fixture remains read-only with no detached maintenance survivor under the canonical safety floor"}
+  - {id: FX-POS-010, intent: "exact legal blob/output/status maxima succeed and pass through the real registry envelope without truncation"}
+  - {id: FX-POS-011, intent: "RestrictedCapabilityProvider allowing repository capabilities plus NONE permits a real S14D invocation"}
+  - {id: FX-POS-012, intent: "real WorkspaceGitCapabilityProvider routes through CapabilityRegistryProvider and runAgent without Git-specific registry/Core logic"}
+  - {id: FX-POS-013, intent: "same AgentDefinition and permission bytes survive repository/provider swap in separate registry configurations while observed repository.read content changes"}
+  - {id: FX-POS-014, intent: "all real Git fixtures are disposable, outside the Brain worktree, use no credential/network dependency and are cleaned with no process/temp residue"}
+
+negative_fixtures:
+  - {id: FX-NEG-001, intent: "repository.status rejects every additional model input field and performs no Git spawn"}
+  - {id: FX-NEG-002, intent: "repository.read rejects model executable/argv/args/env/git_dir/work_tree/config/-c/remote/url/format/output/provider override fields"}
+  - {id: FX-NEG-003, intent: "empty, short-SHA, branch/tag, option-like, control/NUL, reflog, colon, caret, tilde and revision-range syntax is rejected before repository Git resolution"}
+  - {id: FX-NEG-004, intent: "unknown full object id or full object id that is not a commit returns normalized NOT_FOUND/INVALID_INPUT semantics without revision guessing"}
+  - {id: FX-NEG-005, intent: "absolute POSIX repository.read path is rejected"}
+  - {id: FX-NEG-006, intent: "Windows drive, UNC or backslash repository.read path is rejected"}
+  - {id: FX-NEG-007, intent: "dot-dot, dot, empty internal segment, NUL or lone-surrogate path is rejected"}
+  - {id: FX-NEG-008, intent: "path, segment-count or segment-byte limits are enforced"}
+  - {id: FX-NEG-009, intent: "leading-dash and leading-colon/pathspec-magic paths are rejected before Git"}
+  - {id: FX-NEG-010, intent: "committed .env/.env.* protected content is blocked while .env.example remains structurally eligible"}
+  - {id: FX-NEG-011, intent: "committed .ssh/.gnupg/.aws/.azure/.kube/npmrc/pypirc/netrc/key/pem/p12/pfx/credentials/id_rsa/id_ed25519 content paths are blocked"}
+  - {id: FX-NEG-012, intent: "requested tree, committed symlink or gitlink/submodule entry is not returned as repository.read content"}
+  - {id: FX-NEG-013, intent: "unborn HEAD repository.read returns normalized NOT_FOUND with no raw Git fatal"}
+  - {id: FX-NEG-014, intent: "missing tracked path returns normalized NOT_FOUND with no raw Git fatal"}
+  - {id: FX-NEG-015, intent: "binary or invalid UTF-8 committed blob fails closed without replacement decoding/base64/raw bytes"}
+  - {id: FX-NEG-016, intent: "recognizable secret-bearing committed blob content is BLOCKED and not returned"}
+  - {id: FX-NEG-017, intent: "blob/stdout above max bounds terminates the process group and never returns truncated SUCCESS"}
+  - {id: FX-NEG-018, intent: "status producing more than max_status_paths fails closed rather than truncating a successful observation"}
+  - {id: FX-NEG-019, intent: "missing/non-directory repository_root fails provider construction safely"}
+  - {id: FX-NEG-020, intent: "missing .git or .git symlink is rejected"}
+  - {id: FX-NEG-021, intent: "linked-worktree/gitfile or bare repository shape is rejected in v1"}
+  - {id: FX-NEG-022, intent: "sparse-checkout repository shape is rejected in v1"}
+  - {id: FX-NEG-023, intent: "objects/info alternates or http-alternates repository shape is rejected in v1"}
+  - {id: FX-NEG-024, intent: "relative/missing/non-regular/non-executable configured git_executable fails safely with no PATH fallback"}
+  - {id: FX-NEG-025, intent: "Git version below 2.45.0, major 3+, or unparseable version fails UNAVAILABLE before any repository-facing operation"}
+  - {id: FX-NEG-026, intent: "Git executable identity drift before spawn fails closed"}
+  - {id: FX-NEG-027, intent: "repository root or .git identity drift before spawn fails closed"}
+  - {id: FX-NEG-028, intent: "host process.env GIT_DIR/GIT_WORK_TREE/GIT_EXEC_PATH/GIT_CONFIG/object-dir/credential/loader sentinel does not reach or redirect the child"}
+  - {id: FX-NEG-029, intent: "hostile hooks/core.hooksPath/fsmonitor fixture cannot create its sentinel during canonical status/read"}
+  - {id: FX-NEG-030, intent: "hostile alias/pager/editor/credential-helper/GPG/helper configuration cannot execute during canonical status/read"}
+  - {id: FX-NEG-031, intent: "gc-eligible repository with hostile gc.auto/maintenance configuration leaves .git manifest unchanged and no detached maintenance process alive"}
+  - {id: FX-NEG-032, intent: "operation-table audit rejects network/mutation subcommands and no model remote/URL/credential field or protocol transport path exists"}
+  - {id: FX-NEG-033, intent: "remote configured with credential-bearing URL is never contacted or returned by repository.status/read"}
+  - {id: FX-NEG-034, intent: "timeout during a real Git/provider-owned process tree performs bounded group cleanup and a later legitimate call still succeeds"}
+  - {id: FX-NEG-035, intent: "stderr/combined-output overflow performs bounded group cleanup and returns EXECUTION_FAILED without truncation"}
+  - {id: FX-NEG-036, intent: "raw repository_root, git executable, provider safety paths or host stack/fatal text never appears in SUCCESS/FAIL/BLOCKED/evidence"}
+  - {id: FX-NEG-037, intent: "capability denial by RestrictedCapabilityProvider prevents version probe and all Git process spawn"}
+  - {id: FX-NEG-038, intent: "NONE side-effect denial by RestrictedCapabilityProvider prevents version probe and all Git process spawn"}
+  - {id: FX-NEG-039, intent: "two divergent implementations of repository.read co-registered in one registry configuration collide/fail closed; provider swap acceptance uses separate configurations"}
+  - {id: FX-NEG-040, intent: "candidate cannot alter Core/AgentDefinition/Restricted/registry/filesystem/shell/S13H/package/continuity/prior-canonical protected surfaces"}
+  - {id: FX-NEG-041, intent: "candidate cannot introduce repository.diff/log/show, Git mutation, network Git, GitHub/MCP/OAuth/browser/docs/PostgreSQL/S15+ execution or a dependency"}
+  - {id: FX-NEG-042, intent: "candidate cannot claim complete secret detection, OS sandboxing, universal daemon containment, atomic race-free exec, close S14, award HI-054 or authorize S14E"}
+
+verification_requirements:
+  exact_positive_ids: 14
+  exact_negative_ids: 42
+  hard_invariants_required: 40
+  unsafe_counters_required: 12
+  unsafe_counters_all_zero_on_legitimate_paths: true
+  unsafe_detectors_non_vacuous: true
+  real_disposable_git_exercise: true
+  mock_only_git_verification_invalid: true
+  brain_repository_must_not_be_git_fixture: true
+  git_version_gate_required: true
+  git_version_negative_controls_required: true
+  whole_git_manifest_nonmutation_required: true
+  unsafe_plain_status_detector_fireable: true
+  gc_eligible_no_maintenance_survivor_required: true
+  protected_content_floor_required: true
+  operation_table_structural_network_absence_required: true
+  process_group_timeout_cleanup_required: true
+  process_group_output_overflow_cleanup_required: true
+  actual_registry_path: true
+  actual_restricted_provider_path: true
+  actual_run_agent_repository_path: true
+  provider_swap_agent_definition_byte_identity: true
+  divergent_descriptor_collision_regression_required: true
+  legal_max_result_must_pass_registry_envelope: true
+  no_new_dependency: true
+  core_byte_identity_required: true
+  agent_definition_byte_identity_required: true
+  restricted_provider_byte_identity_required: true
+  registry_byte_identity_required: true
+  s14b_filesystem_byte_identity_required: true
+  s14c_shell_byte_identity_required: true
+  s13h_boundary_integrity_required: true
+  part_a_byte_identity_required: true
+  state_current_unchanged_during_builder: true
+  s14e_plus_absent: true
+  typecheck: PASS
+  focused_s14a: PASS
+  focused_s14b: PASS
+  focused_s14c: PASS
+  focused_s13h: PASS
+  focused_s14d: PASS
+  full_pre_build: PASS
+  genuine_dist_absent_build: PASS
+  full_post_build: PASS
+  git_diff_check: PASS
+
+independent_verification:
+  fresh_session: true
+  verifier_must_be_non_authoring: true
+  verifier_must_be_non_builder: true
+  verifier_must_be_non_fork: true
+  verifier_must_be_read_only: true
+  exact_committed_remote_candidate_required: true
+  independently_reproduce_real_git_security_behavior: true
+  standalone_verifier_relay_required: true
+  separate_control_plane_acceptance_required: true
+
+phase_acceptance:
+  on_pass:
+    S14D: PHASE_PASS
+    S14: IN_PROGRESS
+    HI-054: NOT_AWARDED
+    S14E: NOT_AUTHORIZED
