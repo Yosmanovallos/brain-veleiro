@@ -392,17 +392,22 @@ retry.
 baseline `3cd344d…`** (blobs `0284f1000ec97360e8657d16aa32a642c723e3c1` and
 `6805f66ece64505fb0a17ee199764d9b550ae125`, verified with `git hash-object`);
 Round 3 does not touch them, and `assertBoundaries()` proves it. The fragility is
-in the tests' `until()`-poll timing design. It becomes observable once the S14C
-process-exercise suite (real `child_process` spawns, timeouts, SIGKILL escalation
-with a 4 s cleanup budget) is present and adds parallel load, and it reproduces on
-the **already source-audited Round-2 candidate `774f2bf…`**. On the pristine
-baseline `3cd344d…` — which has no shell suite and far less parallel load — it did
-**not** flake across 12 full-suite runs (there the only failures are the 5
-deterministic Blocker-C boundary tests that the authorized `audit.ts` maintenance
-fixes). Round 3 adds only two lightweight exercises
-(`executableInsideWorkspace`: two trivial spawns; `timeoutMessageBounded`: one
-400 ms `spin` that dies on SIGTERM with no escalation) and does not measurably
-change the rate versus Round 2.
+in the tests' wall-clock `until()`-poll timing design. Observed rates by
+configuration (no mechanism claimed beyond "larger suite + real process spawns +
+default parallel pool"):
+
+- pristine baseline `3cd344d…` full suite (1660 tests, no shell suite): **0 / 12**
+  runs — the concurrency flake never occurred (the only failures there are the 5
+  deterministic Blocker-C boundary tests the authorized `audit.ts` maintenance
+  fixes);
+- Round-2 candidate `774f2bf…` full suite (1784 tests, with the shell suite):
+  **2 / 8** runs — same `concurrency.test.ts` flake. This shows it is **not
+  introduced by Round 3**; it is not implied that the Round-2 source audit
+  observed or blessed it.
+- Round-3 candidate full suite: **≈ 20–25 %** of default-parallel runs; not
+  measurably different from Round 2. Round 3 adds only two lightweight exercises
+  (`executableInsideWorkspace`: two trivial spawns; `timeoutMessageBounded`: one
+  150 ms `spin` that dies on SIGTERM with no escalation).
 
 **Evidence.**
 

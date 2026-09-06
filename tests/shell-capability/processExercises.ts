@@ -198,16 +198,20 @@ export async function remainingBudgetNotReset(): Promise<void> {
  * never becomes `<executable>`. The executable-specific replacements must run
  * before the root replacement.
  *
- * The fixture executable is written under `<root>/tools/` and prints its own
- * launch path (`process.argv[1]`, i.e. the realpath the provider passed to
- * spawn), so the normalized stdout must be exactly `<executable>`.
+ * The fixture executable is written under `<root>/tools/` and prints both its own
+ * launch path (`process.argv[1]`, i.e. the realpath the provider passed to spawn)
+ * and its `process.cwd()` (which resolves to the workspace root). The normalized
+ * `exe` must be exactly `<executable>` (executable token wins over the overlapping
+ * root prefix) AND the normalized `cwd` must still be `workspace://` (a
+ * non-executable path under the root is NOT collapsed to `<executable>` and the
+ * raw root never leaks) — the two directions together pin the replacement order.
  */
 export async function executableInsideWorkspace(): Promise<void> {
   await withShellSandbox(async sb => {
     const dir = join(sb.root, "tools");
     await fs.mkdir(dir);
     const exe = join(dir, "inside-exe");
-    await fs.writeFile(exe, `#!${process.execPath}\nprocess.stdout.write(process.argv[1]);\n`, { mode: 0o755 });
+    await fs.writeFile(exe, `#!${process.execPath}\nprocess.stdout.write(JSON.stringify({ exe: process.argv[1], cwd: process.cwd() }));\n`, { mode: 0o755 });
     await fs.chmod(exe, 0o755);
     const rootReal = await fs.realpath(sb.root);
     const exeReal = await fs.realpath(exe);
@@ -221,12 +225,14 @@ export async function executableInsideWorkspace(): Promise<void> {
         ? await run(p, { profile_id: "qa.inside", cwd: "." })
         : await registry(p).invoke(request({ profile_id: "qa.inside", cwd: "." }));
       const o = output(r);
-      // The executable token wins over the workspace-root token.
-      expect(o.stdout).toBe("<executable>");
-      expect(String(o.stdout)).not.toContain("workspace://");
-      // `workspace:///tools/inside-exe` must never appear as a stand-in.
+      const emitted = JSON.parse(o.stdout as string) as { exe: string; cwd: string };
+      // The executable token wins over the overlapping workspace-root prefix...
+      expect(emitted.exe).toBe("<executable>");
+      // ...and a non-executable path under the root is still `workspace://`,
+      // never `<executable>` and never the raw root.
+      expect(emitted.cwd).toBe("workspace://");
+      expect(String(o.stdout)).not.toContain("workspace:///tools/inside-exe");
       const serialized = JSON.stringify(r);
-      expect(serialized).not.toContain("workspace:///tools/inside-exe");
       expect(serialized).not.toContain(exeReal);
       expect(serialized).not.toContain(rootReal);
       if (via === "provider") expect(r.evidence_refs).toEqual(["shell://qa.inside@workspace/."]);
