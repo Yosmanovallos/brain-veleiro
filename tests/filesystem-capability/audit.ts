@@ -6,6 +6,10 @@ import { expect } from "vitest";
 
 export const baseline = "990483118d623d4af5caf6b2d05cb79a4a3feb02";
 export const registryFiles = ["src/providers/capability/registry/validation.ts", "src/providers/capability/registry/capabilityRegistryProvider.ts"];
+// Continuity metadata the ACCEPTED S14B phase-closure intentionally rewrote after
+// `baseline`. These two paths only are exempt from the byte-for-byte protected
+// comparison; every other tracked file at `baseline` stays fully protected.
+export const acceptedContinuityFiles = ["brain-bootstrap/STATE.yaml", "brain/context/CURRENT.md"];
 export const text = (path: string) => readFileSync(path, "utf8");
 export const prior = (path: string) => execFileSync("git", ["show", `${baseline}:${path}`], { maxBuffer: 8 * 1024 * 1024 });
 export function productionSources(): string {
@@ -17,7 +21,7 @@ export function protectedDifferences(): string[] {
   const tracked = execFileSync("git", ["ls-tree", "-r", "--format=%(objectname) %(path)", baseline], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 }).trim().split("\n");
   return tracked.flatMap(line => {
     const hash = line.slice(0, 40); const p = line.slice(41);
-    if (registryFiles.includes(p)) return [];
+    if (registryFiles.includes(p) || acceptedContinuityFiles.includes(p)) return [];
     if (!existsSync(p)) return [p];
     return blob(readFileSync(p)) === hash ? [] : [p];
   });
