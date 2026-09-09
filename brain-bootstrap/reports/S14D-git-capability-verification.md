@@ -1,6 +1,6 @@
 # S14D — Git Capability Part B: Builder Verification Report
 
-**Builder status:** S14D BUILDER PASS AWAITING CONTROL-PLANE SOURCE AUDIT  
+**Builder status:** S14D BUILDER PASS AWAITING CONTROL-PLANE SOURCE AUDIT
 **Control-plane status:** REMEDIATED CANDIDATE AWAITING FRESH INDEPENDENT VERIFICATION
 
 The original body records the fresh primary builder's evidence for S14D Git
