@@ -147,9 +147,16 @@ function boundedStatusPath(path: string): boolean {
  * with an explicit cursor rather than a naive split-and-iterate.
  */
 export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
-  const records = stdout.split("\0");
-  // A well-formed `-z` stream ends with a trailing NUL -> last element "".
-  if (records.length && records[records.length - 1] === "") records.pop();
+  if (!stdout.endsWith("\0")) return { ok: false, reason: "MALFORMED" };
+  const records = stdout.slice(0, -1).split("\0");
+  const oid = "(?:[0-9a-f]{40}|[0-9a-f]{64})";
+  const xy = "[.MADRCU]{2}";
+  const sub = "(?:N\\.\\.\\.|S[.C][.M][.U])";
+  const mode = "[0-7]{6}";
+  const ordinary = new RegExp(`^1 (${xy}) ${sub} ${mode} ${mode} ${mode} ${oid} ${oid} ([\\s\\S]+)$`);
+  const renamed = new RegExp(`^2 (${xy}) ${sub} ${mode} ${mode} ${mode} ${oid} ${oid} [RC](?:100|[0-9]{1,2}) ([\\s\\S]+)$`);
+  const unmerged = new RegExp(`^u (DD|AU|UD|UA|DU|AA|UU) ${sub} ${mode} ${mode} ${mode} ${mode} ${oid} ${oid} ${oid} ([\\s\\S]+)$`);
+  const validRef = (value: string): boolean => value.length > 0 && value.length <= LIMITS.pathChars && wellFormed(value) && !/[\x00-\x20\x7f]/u.test(value);
 
   let branch: string | null = null;
   let detached_head = false;
@@ -157,73 +164,82 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
   let upstream_ref: string | undefined;
   let ahead = 0;
   let behind = 0;
+  let sawOid = false;
+  let sawHead = false;
+  let sawUpstream = false;
+  let sawAb = false;
+  let sawEntry = false;
   const paths: RepositoryStatusPath[] = [];
 
   for (let i = 0; i < records.length; i++) {
     const rec = records[i];
-    if (rec.length === 0) continue;
+    if (rec.length === 0) return { ok: false, reason: "MALFORMED" };
 
     if (rec.startsWith("# ")) {
+      if (sawEntry) return { ok: false, reason: "MALFORMED" };
       const body = rec.slice(2);
       if (body.startsWith("branch.oid ")) {
-        const oid = body.slice("branch.oid ".length);
-        head = oid === "(initial)" ? "" : oid;
+        if (sawOid) return { ok: false, reason: "MALFORMED" };
+        const value = body.slice("branch.oid ".length);
+        if (value !== "(initial)" && !FULL_OID.test(value)) return { ok: false, reason: "MALFORMED" };
+        head = value === "(initial)" ? "" : value;
+        sawOid = true;
       } else if (body.startsWith("branch.head ")) {
-        const name = body.slice("branch.head ".length);
-        if (name === "(detached)") { branch = null; detached_head = true; }
-        else { branch = name; detached_head = false; }
+        if (sawHead) return { ok: false, reason: "MALFORMED" };
+        const value = body.slice("branch.head ".length);
+        if (value === "(detached)") { branch = null; detached_head = true; }
+        else {
+          if (!validRef(value)) return { ok: false, reason: "MALFORMED" };
+          branch = value;
+          detached_head = false;
+        }
+        sawHead = true;
       } else if (body.startsWith("branch.upstream ")) {
-        upstream_ref = body.slice("branch.upstream ".length);
+        if (sawUpstream) return { ok: false, reason: "MALFORMED" };
+        const value = body.slice("branch.upstream ".length);
+        if (!validRef(value)) return { ok: false, reason: "MALFORMED" };
+        upstream_ref = value;
+        sawUpstream = true;
       } else if (body.startsWith("branch.ab ")) {
-        const m = /^\+(\d+) -(\d+)$/.exec(body.slice("branch.ab ".length));
-        if (m) { ahead = Number(m[1]); behind = Number(m[2]); }
-      }
+        if (sawAb) return { ok: false, reason: "MALFORMED" };
+        const match = /^\+(\d+) -(\d+)$/.exec(body.slice("branch.ab ".length));
+        if (!match) return { ok: false, reason: "MALFORMED" };
+        ahead = Number(match[1]);
+        behind = Number(match[2]);
+        if (!Number.isSafeInteger(ahead) || !Number.isSafeInteger(behind)) return { ok: false, reason: "MALFORMED" };
+        sawAb = true;
+      } else return { ok: false, reason: "MALFORMED" };
       continue;
     }
 
-    const kind = rec[0];
-    if (kind === "1") {
-      // 1 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <path>
-      const fields = rec.split(" ");
-      if (fields.length < 9) return { ok: false, reason: "MALFORMED" };
-      const xy = fields[1];
-      const path = fields.slice(8).join(" ");
-      if (!boundedStatusPath(path)) return { ok: false, reason: "MALFORMED" };
-      paths.push(classify(path, xy, false));
-    } else if (kind === "2") {
-      // 2 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <Xscore> <path> \0 <origPath>
-      const fields = rec.split(" ");
-      if (fields.length < 10) return { ok: false, reason: "MALFORMED" };
-      const xy = fields[1];
-      const path = fields.slice(9).join(" ");
-      // Consume the original-path field that follows this record.
-      if (i + 1 >= records.length) return { ok: false, reason: "MALFORMED" };
+    sawEntry = true;
+    const ordinaryMatch = ordinary.exec(rec);
+    const renamedMatch = renamed.exec(rec);
+    const unmergedMatch = unmerged.exec(rec);
+    if (ordinaryMatch) {
+      if (!boundedStatusPath(ordinaryMatch[2])) return { ok: false, reason: "MALFORMED" };
+      paths.push(classify(ordinaryMatch[2], ordinaryMatch[1], false));
+    } else if (renamedMatch) {
+      if (i + 1 >= records.length || !boundedStatusPath(renamedMatch[2]) || !boundedStatusPath(records[i + 1])) {
+        return { ok: false, reason: "MALFORMED" };
+      }
       i += 1;
-      if (!boundedStatusPath(path) || !boundedStatusPath(records[i])) return { ok: false, reason: "MALFORMED" };
-      paths.push(classify(path, xy, false));
-    } else if (kind === "u") {
-      // u <XY> <sub> <m1> <m2> <m3> <mW> <h1> <h2> <h3> <path>
-      const fields = rec.split(" ");
-      if (fields.length < 11) return { ok: false, reason: "MALFORMED" };
-      const xy = fields[1];
-      const path = fields.slice(10).join(" ");
-      if (!boundedStatusPath(path)) return { ok: false, reason: "MALFORMED" };
-      paths.push(classify(path, xy, false, true));
-    } else if (kind === "?") {
-      // ? <path>
+      paths.push(classify(renamedMatch[2], renamedMatch[1], false));
+    } else if (unmergedMatch) {
+      if (!boundedStatusPath(unmergedMatch[2])) return { ok: false, reason: "MALFORMED" };
+      paths.push(classify(unmergedMatch[2], unmergedMatch[1], false, true));
+    } else if (rec.startsWith("? ")) {
       const path = rec.slice(2);
       if (!boundedStatusPath(path)) return { ok: false, reason: "MALFORMED" };
       paths.push({ path, tracked: false, staged: false, modified: false, deleted: false, untracked: true });
-    } else if (kind === "!") {
-      // ! <path> — not requested (no --ignored); ignore defensively.
-      continue;
-    } else {
-      return { ok: false, reason: "MALFORMED" };
-    }
+    } else if (rec.startsWith("! ")) {
+      if (!boundedStatusPath(rec.slice(2))) return { ok: false, reason: "MALFORMED" };
+    } else return { ok: false, reason: "MALFORMED" };
 
     if (paths.length > LIMITS.statusPaths) return { ok: false, reason: "TOO_MANY_PATHS" };
   }
 
+  if (!sawOid || !sawHead || sawAb !== sawUpstream) return { ok: false, reason: "MALFORMED" };
   const value: ParsedStatus = { branch, detached_head, head, ahead, behind, paths };
   if (upstream_ref !== undefined) value.upstream_ref = upstream_ref;
   return { ok: true, value };

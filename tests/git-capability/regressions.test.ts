@@ -6,6 +6,7 @@ import { withSimpleRepo, providerConfig, createProvider } from "./repoFixtures.j
 import { request, registry, output, STATUS, READ } from "./helpers.js";
 import { assertBoundaries, assertPreExistingS14CFailureCause, PRE_EXISTING_S14C_FAILURES } from "./audit.js";
 import { parseStatusPorcelainV2 } from "../../src/providers/capability/git/parsing.js";
+import { withGitBin } from "./fixtures.js";
 
 const run = (p: Awaited<ReturnType<typeof createProvider>>, cap: string, input: Record<string, unknown>, timeout_ms = 20000) =>
   p.invoke(request(cap, input, timeout_ms));
@@ -46,6 +47,27 @@ it("fails closed when any returned porcelain status path is outside the bounded 
     "2 R. N... 100644 100644 100644 a b R100 ../escape\0source.txt\0",
     "2 R. N... 100644 100644 100644 a b R100 current.txt\0../escape\0",
   ]) expect(parseStatusPorcelainV2(status)).toEqual(malformed);
+});
+
+it("rejects structurally malformed porcelain metadata and records before public success", async () => {
+  const malformedStatus = `# branch.oid ${"a".repeat(40)}\0# branch.head main\0${"1x Z N... BAD BAD BAD BAD BAD ok.txt"}\0`;
+  for (const status of [
+    malformedStatus,
+    `# branch.oid ${"a".repeat(40)}\0# branch.head main\0# branch.ab malformed\0`,
+    `# branch.oid ${"a".repeat(40)}\0# branch.head main\0${"2 R. N... BAD BAD BAD BAD BAD RX ok.txt"}\0old.txt\0`,
+    `# branch.oid ${"a".repeat(40)}\0# branch.head main`,
+  ]) expect(parseStatusPorcelainV2(status)).toEqual({ ok: false, reason: "MALFORMED" });
+
+  await withSimpleRepo(async fx => {
+    await withGitBin(async bin => {
+      const executable = await bin.script("git-malformed-status", [
+        "if(process.argv[2]==='--version'){process.stdout.write('git version 2.50.0\\n');process.exit(0);}",
+        `process.stdout.write(${JSON.stringify(malformedStatus)});`,
+      ].join("\n"));
+      const p = await createProvider(providerConfig(fx, { git_executable: executable }));
+      expect(await run(p, STATUS, {})).toMatchObject({ status: "FAIL", error: { code: "EXECUTION_FAILED" } });
+    });
+  });
 });
 
 it("accepts a full uppercase commit id and canonicalizes it for Git", async () => {
