@@ -697,3 +697,43 @@ Fresh detached WSL/Node 24 verification of that code candidate:
 The next report commit requires the same exact-SHA reverification and remote
 publication before a new independent relay. S14D and S14 remain open, HI-054
 remains not awarded, and S14E remains unauthorized.
+
+---
+
+## 26. Cross-field status and standalone cleanup remediation
+
+The next fresh verifier rejected remote candidate
+`08a3d3f4d8348d4634c5520cabb83a37a5c2905f` after confirming all previous
+remediations. It independently demonstrated two remaining failures: impossible
+cross-field porcelain combinations could still parse, and unreferenced cleanup
+timers allowed an otherwise idle standalone Node host to exit after the process
+leader closed but before a stubborn same-group descendant was killed.
+
+The remediation at `fcad0f86506c60b49850782a3279c15ea2bac7a8`:
+
+- enforces canonical branch-header order and dependency;
+- separates ordinary and rename/copy XY grammars, requires the rename/copy score
+  kind to occur in XY, and rejects noncanonical leading-zero scores;
+- preserves valid type-change, detached, unborn and upstream-without-AB states;
+- keeps timeout, TERM grace, SIGKILL and liveness-poll timers referenced until
+  the cleanup-owned promise settles;
+- adds a standalone Node subprocess regression where the leader closes while a
+  same-group descendant ignores SIGTERM, proving the host remains alive through
+  SIGKILL and returns `TIMEOUT` with no survivor.
+
+A fresh Claude Code Sonnet read-only precheck found no remaining concrete defect
+in either corrected area. Fresh detached WSL/Node 24 execution produced:
+
+- `npm ci`: **PASS** (54 packages, zero vulnerabilities).
+- `npm run typecheck`: **PASS**.
+- Focused S14D suite: **130 / 130 PASS**.
+- Full suite before and after build: **1908 passed / the same 8 inherited S14C
+  failures (1916 total)** in both runs.
+- `npm run build`: **PASS**.
+- Canonical `gitCapability.test.ts`: **12 / 12 consecutive complete passes**,
+  98 / 98 tests per run, with no hidden retry.
+- `git diff --check` and tracked status: **clean**.
+
+The report commit above this code candidate must be reverified and published as
+one exact SHA before the final independent relay. S14D and S14 remain open,
+HI-054 remains not awarded, and S14E remains unauthorized.
