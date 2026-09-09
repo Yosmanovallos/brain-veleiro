@@ -611,3 +611,48 @@ commit before a remote candidate and verifier relay are accepted.
 State remains unchanged: S14D and S14 are not closed, HI-054 is not awarded,
 and S14E is not authorized pending a fresh independent-verifier relay and
 separate control-plane acceptance.
+
+---
+
+## 24. Independent deadline finding and remediation
+
+The fresh independent verifier rejected remote candidate
+`2b4bd6646063bd886914a5df7f2432385a2779ab`. Functional gates matched the
+control-plane evidence, but source audit found that `runGitProcess()` rebuilt a
+wall-clock deadline from a sampled remaining duration. That added the
+sample-to-runner gap back to the budget, made cleanup sensitive to wall-clock
+adjustment, and omitted a final monotonic check after output processing. The
+same verifier also identified that the committed status-path regression covered
+only untracked records even though production validated every record family.
+
+The remediation at `40db93f5cf91a7acf336111618e6259f3c707dd8`:
+
+- passes the invocation's original absolute `performance.now()` deadline into
+  the process runner;
+- constructs argv and the fixed environment before the final identity checks,
+  so the required final check -> absolute-deadline capture -> immediate spawn
+  window contains no unrelated work or `await`;
+- uses the same monotonic clock for execution reserve, TERM grace, SIGKILL and
+  bounded group-liveness polling;
+- rechecks the original deadline after every natural process exit, after
+  decode/parse/normalization/serialization, and immediately before returning a
+  successful public result;
+- extends the regression to malformed ordinary, unmerged, rename-current and
+  rename-source status paths in addition to untracked and over-limit paths.
+
+Fresh detached WSL/Node 24 verification of that code candidate:
+
+- `npm ci`: **PASS** (54 packages, zero vulnerabilities).
+- `npm run typecheck`: **PASS**.
+- Focused S14D suite: **128 / 128 PASS**.
+- Full suite before and after build: **1906 passed / the same 8 inherited S14C
+  failures (1914 total)** in both runs.
+- `npm run build`: **PASS**.
+- Canonical `gitCapability.test.ts`: **12 / 12 consecutive complete passes**,
+  98 / 98 tests per run, with no hidden retry.
+- `git diff --check` and tracked status: **clean**.
+
+The report commit layered above this code candidate still requires exact-SHA
+reverification and publication before another fresh independent verifier may
+issue an acceptance relay. S14D and S14 remain open, HI-054 remains not awarded,
+and S14E remains unauthorized.
