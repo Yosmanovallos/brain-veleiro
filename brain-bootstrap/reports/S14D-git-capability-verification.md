@@ -568,13 +568,22 @@ Remediation test surface:
 The original builder counts elsewhere in this report remain historical evidence
 for `b7f9dc943d9b30a64cfc4db646f56ccc89e34bf8`; they are not claims about the
 final remediated HEAD. Final remediated counts are recorded here after running
-the exact final candidate:
+the remediated code/test candidate
+`7aa0699b9e5c5971b707b3a27c367b52ec4b9ba1`:
 
-- `npm ci`: pending final candidate run.
-- `npm run typecheck`: pending final candidate run.
-- Focused S14D suite: pending final candidate run.
-- `npm run build`: pending final candidate run.
-- Full suite: pending final candidate run.
+- `npm ci`: **PASS** (clean dependency install).
+- `npm run typecheck`: **PASS** (`tsc --noEmit`, zero diagnostics).
+- Focused S14D suite: **PASS** — 4 files, 127 / 127 tests.
+- `npm run build`: **PASS** (`tsc -p tsconfig.json`, exit 0).
+- Full suite: **1905 passed / 8 inherited S14C failures (1913 total)**.
+  The eight names and cause are exactly those classified in section 18: the
+  closed S14C boundary harness sees the already-authorized continuity changes
+  in `brain-bootstrap/STATE.yaml` and `brain/context/CURRENT.md`; no S14D test
+  failed and remediation added two passing regressions with zero new failures.
+
+The report-only commit that records these results is intentionally layered on
+top of that code/test candidate. All gates below must be repeated on that exact
+report commit before the remote candidate and verifier relay are accepted.
 
 State remains unchanged: S14D and S14 are not closed, HI-054 is not awarded,
 and S14E is not authorized pending a fresh independent-verifier relay and
