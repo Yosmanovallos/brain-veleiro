@@ -195,6 +195,11 @@ export class WorkspaceGitCapabilityProvider implements CapabilityProvider {
       if (typeof max_timeout_ms !== "number" || !Number.isInteger(max_timeout_ms) ||
           max_timeout_ms < 1 || max_timeout_ms > LIMITS.repositoryTimeoutMs) reject("INVALID_INPUT");
 
+      // The configured root itself must be a direct directory. Calling
+      // realpath() first would silently accept a symlinked configuration path,
+      // contrary to the v1 repository-shape contract.
+      const configuredRoot = await fs.lstat(repository_root);
+      if (configuredRoot.isSymbolicLink() || !configuredRoot.isDirectory()) reject("UNAVAILABLE");
       const root = await fs.realpath(repository_root);
       const rootHandle = await fs.open(root, dirFlags);
       let rootDevIno: { dev: number; ino: number };

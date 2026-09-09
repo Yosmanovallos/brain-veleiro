@@ -1,4 +1,6 @@
 import { expect, it, vi } from "vitest";
+import { symlinkSync } from "node:fs";
+import { join } from "node:path";
 import * as gitProcess from "../../src/providers/capability/git/process.js";
 import { withSimpleRepo, providerConfig, createProvider } from "./repoFixtures.js";
 import { request, registry, output, STATUS, READ } from "./helpers.js";
@@ -18,6 +20,16 @@ it("the 8 failing tests/shell-capability tests are PRE-EXISTING inherited S14C-h
   // afterwards. tests/shell-capability/** is a protected surface S14D may not modify.
   assertPreExistingS14CFailureCause();
   expect(PRE_EXISTING_S14C_FAILURES).toHaveLength(8);
+});
+
+it("rejects a configured repository root that is itself a symlink", async () => {
+  await withSimpleRepo(async fx => {
+    const linkedRoot = join(fx.base, "configured-root-link");
+    symlinkSync(fx.root, linkedRoot, "dir");
+    await expect(createProvider(providerConfig(fx, { repository_root: linkedRoot }))).rejects.toThrow(
+      "Invalid or unavailable explicit Git repository configuration.",
+    );
+  });
 });
 
 it("input accessors are rejected without evaluation", async () => {

@@ -114,12 +114,15 @@ export async function stubbornSameGroupDescendantReaped(): Promise<void> {
     await withGitBin(async bin => {
       const marker = join(bin.dir, "stubborn.pid");
       const stubborn = await bin.fakeGit("git-stubborn", { version: "2.50.0", behavior: "stubborn-grandchild", marker });
-      const p = await createProvider(providerConfig(fx, { git_executable: stubborn, max_timeout_ms: 700 }));
+      const p = await createProvider(providerConfig(fx, { git_executable: stubborn, max_timeout_ms: 1500 }));
       const started = Date.now();
       const r = await run(p, "repository.status", {}, 8000);
+      const elapsed = Date.now() - started;
       expect(r).toMatchObject({ status: "FAIL", error: { code: "TIMEOUT" } });
-      // resolution waited for the escalation lifecycle (>= grace beyond the deadline).
-      expect(Date.now() - started).toBeGreaterThanOrEqual(700);
+      // TERM/grace/KILL/liveness cleanup is reserved inside the one invocation
+      // deadline. The old implementation consumed the full 1500ms operation
+      // budget and then added the 500ms grace, violating the contract.
+      expect(elapsed).toBeLessThan(1900);
       const gcPid = await readPidFile(marker);
       expect(await pidGone(gcPid)).toBe(true);
       // later legitimate call still works

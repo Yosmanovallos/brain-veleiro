@@ -83,6 +83,17 @@ export function startGitProcess(launch: GitProcessLaunch): ChildProcess {
  * - A spawn failure (no group was created) resolves `SPAWN_ERROR`.
  */
 export async function runGitProcess(child: ChildProcess, bounds: GitProcessBounds): Promise<GitProcessOutcome> {
+  const totalBudgetMs = Math.min(Math.max(1, bounds.timeoutMs), 2147483647);
+  const hardDeadline = Date.now() + totalBudgetMs;
+  // Cleanup is part of the invocation deadline. Reserve as much of the
+  // remaining budget as possible for TERM/grace/KILL/liveness instead of
+  // starting cleanup only after the full operation budget has expired.
+  const cleanupReserveMs = Math.min(
+    Math.max(0, totalBudgetMs - 1),
+    Math.max(0, bounds.terminationGraceMs) + Math.max(0, bounds.groupCleanupBudgetMs),
+    Math.floor(totalBudgetMs / 2),
+  );
+  const executionBudgetMs = Math.max(1, totalBudgetMs - cleanupReserveMs);
   const pgid = typeof child.pid === "number" ? child.pid : undefined;
   const stdoutChunks: Buffer[] = [];
   const stderrChunks: Buffer[] = [];
@@ -128,15 +139,19 @@ export async function runGitProcess(child: ChildProcess, bounds: GitProcessBound
     // leader's close event cannot cancel it.
     const escalate = (): void => {
       signalGroup("SIGTERM");
-      const cleanupDeadline = Date.now() + bounds.terminationGraceMs + bounds.groupCleanupBudgetMs;
+      const graceMs = Math.min(Math.max(0, bounds.terminationGraceMs), Math.max(0, hardDeadline - Date.now()));
       arm(() => {
         if (groupAlive()) signalGroup("SIGKILL");
+        const cleanupDeadline = Math.min(
+          hardDeadline,
+          Date.now() + Math.max(0, bounds.groupCleanupBudgetMs),
+        );
         const poll = (): void => {
           if (!groupAlive() || Date.now() >= cleanupDeadline) return finishTermination();
-          arm(poll, 25);
+          arm(poll, Math.min(25, Math.max(1, cleanupDeadline - Date.now())));
         };
         poll();
-      }, bounds.terminationGraceMs);
+      }, graceMs);
     };
 
     const beginTermination = (reason: "TIMEOUT" | "OUTPUT_OVERFLOW"): void => {
@@ -164,7 +179,7 @@ export async function runGitProcess(child: ChildProcess, bounds: GitProcessBound
       }
     });
 
-    arm(() => beginTermination("TIMEOUT"), Math.min(Math.max(1, bounds.timeoutMs), 2147483647));
+    arm(() => beginTermination("TIMEOUT"), executionBudgetMs);
 
     child.on("close", (code, signal) => {
       leaderClosed = true;
