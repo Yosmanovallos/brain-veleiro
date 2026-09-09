@@ -20,6 +20,7 @@
 // protection are claimed.
 
 import { spawn, type ChildProcess } from "node:child_process";
+import { performance } from "node:perf_hooks";
 
 export interface GitProcessLaunch {
   /** Canonical resolved git executable realpath (provider-private). */
@@ -36,12 +37,8 @@ export interface GitProcessBounds {
   maxStdoutBytes: number;
   maxStderrBytes: number;
   maxCombinedBytes: number;
-  /**
-   * Remaining time on the one invocation-wide effective deadline
-   * (min(request.timeout_ms, config.max_timeout_ms) minus elapsed), not a fresh
-   * full timeout.
-   */
-  timeoutMs: number;
+  /** Absolute deadline from the invocation's monotonic performance clock. */
+  deadlineMs: number;
   /** Grace between SIGTERM and SIGKILL for the process group. */
   terminationGraceMs: number;
   /** Bounded budget, after the SIGKILL, to poll the group to extinction. */
@@ -83,17 +80,17 @@ export function startGitProcess(launch: GitProcessLaunch): ChildProcess {
  * - A spawn failure (no group was created) resolves `SPAWN_ERROR`.
  */
 export async function runGitProcess(child: ChildProcess, bounds: GitProcessBounds): Promise<GitProcessOutcome> {
-  const totalBudgetMs = Math.min(Math.max(1, bounds.timeoutMs), 2147483647);
-  const hardDeadline = Date.now() + totalBudgetMs;
+  const hardDeadline = bounds.deadlineMs;
+  const remainingBudgetMs = Math.min(Math.max(0, hardDeadline - performance.now()), 2147483647);
   // Cleanup is part of the invocation deadline. Reserve as much of the
   // remaining budget as possible for TERM/grace/KILL/liveness instead of
   // starting cleanup only after the full operation budget has expired.
   const cleanupReserveMs = Math.min(
-    Math.max(0, totalBudgetMs - 1),
+    Math.max(0, remainingBudgetMs - 1),
     Math.max(0, bounds.terminationGraceMs) + Math.max(0, bounds.groupCleanupBudgetMs),
-    Math.floor(totalBudgetMs / 2),
+    Math.floor(remainingBudgetMs / 2),
   );
-  const executionBudgetMs = Math.max(1, totalBudgetMs - cleanupReserveMs);
+  const executionBudgetMs = Math.max(0, remainingBudgetMs - cleanupReserveMs);
   const pgid = typeof child.pid === "number" ? child.pid : undefined;
   const stdoutChunks: Buffer[] = [];
   const stderrChunks: Buffer[] = [];
@@ -139,16 +136,16 @@ export async function runGitProcess(child: ChildProcess, bounds: GitProcessBound
     // leader's close event cannot cancel it.
     const escalate = (): void => {
       signalGroup("SIGTERM");
-      const graceMs = Math.min(Math.max(0, bounds.terminationGraceMs), Math.max(0, hardDeadline - Date.now()));
+      const graceMs = Math.min(Math.max(0, bounds.terminationGraceMs), Math.max(0, hardDeadline - performance.now()));
       arm(() => {
         if (groupAlive()) signalGroup("SIGKILL");
         const cleanupDeadline = Math.min(
           hardDeadline,
-          Date.now() + Math.max(0, bounds.groupCleanupBudgetMs),
+          performance.now() + Math.max(0, bounds.groupCleanupBudgetMs),
         );
         const poll = (): void => {
-          if (!groupAlive() || Date.now() >= cleanupDeadline) return finishTermination();
-          arm(poll, Math.min(25, Math.max(1, cleanupDeadline - Date.now())));
+          if (!groupAlive() || performance.now() >= cleanupDeadline) return finishTermination();
+          arm(poll, Math.min(25, Math.max(1, cleanupDeadline - performance.now())));
         };
         poll();
       }, graceMs);

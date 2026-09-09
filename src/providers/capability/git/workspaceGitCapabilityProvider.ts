@@ -80,7 +80,8 @@ class Deadline {
   private budget: number;
   constructor(timeout: number) { this.budget = timeout; }
   tighten(timeout: number): void { this.budget = Math.min(this.budget, timeout); }
-  remaining(): number { return this.budget - (performance.now() - this.start); }
+  remaining(): number { return this.deadline() - performance.now(); }
+  deadline(): number { return this.start + this.budget; }
   check(): void { if (this.remaining() <= 0) reject("TIMEOUT"); }
   duration(): number { return Math.max(0, performance.now() - this.start); }
 }
@@ -416,6 +417,8 @@ export class WorkspaceGitCapabilityProvider implements CapabilityProvider {
     bounds: { stdout: number; stderr: number; combined: number },
   ): Promise<{ outcome: GitProcessOutcome }> {
     deadline.check();
+    const argv = buildArgv(family, { canonicalRoot: this.canonicalRoot, ...opInput });
+    const env = buildGitEnv();
     // Final pre-spawn window: repository identity recheck, then executable
     // identity recheck, then a synchronous remaining-deadline calculation, then
     // the immediate spawn. No unrelated await sits between the executable
@@ -423,14 +426,13 @@ export class WorkspaceGitCapabilityProvider implements CapabilityProvider {
     if (family !== "VERSION") await this.recheckRepositoryIdentity(cwd);
     const executable = await this.recheckExecutable();
     deadline.check();
-    const remainingMs = deadline.remaining();
-    const argv = buildArgv(family, { canonicalRoot: this.canonicalRoot, ...opInput });
-    const child = startGitProcess({ executable, argv, cwd, env: buildGitEnv() });
+    const absoluteDeadline = deadline.deadline();
+    const child = startGitProcess({ executable, argv, cwd, env });
     const outcome = await runGitProcess(child, {
       maxStdoutBytes: bounds.stdout,
       maxStderrBytes: bounds.stderr,
       maxCombinedBytes: bounds.combined,
-      timeoutMs: Math.max(1, remainingMs),
+      deadlineMs: absoluteDeadline,
       terminationGraceMs: LIMITS.terminationGraceMs,
       groupCleanupBudgetMs: LIMITS.groupCleanupBudgetMs,
     });
@@ -441,6 +443,7 @@ export class WorkspaceGitCapabilityProvider implements CapabilityProvider {
       if (outcome.errno === "ENOENT") reject("UNAVAILABLE");
       reject("EXECUTION_FAILED");
     }
+    deadline.check();
     return { outcome };
   }
 
@@ -457,6 +460,7 @@ export class WorkspaceGitCapabilityProvider implements CapabilityProvider {
     if (outcome.kind !== "EXIT" || outcome.exit_code !== 0) reject("UNAVAILABLE");
     const version = parseGitVersion(this.decodeUtf8(outcome.stdout, "UNAVAILABLE"));
     if (!version || !isSupportedGitVersion(version)) reject("UNAVAILABLE");
+    deadline.check();
   }
 
   // --- repository.status -------------------------------------------------
@@ -490,6 +494,7 @@ export class WorkspaceGitCapabilityProvider implements CapabilityProvider {
     if (serialized.includes(this.canonicalRoot) || serialized.includes(this.executable.realpath) ||
         serialized.includes(this.executable.configured) || serialized.includes(NONEXISTENT_HOOKS_PATH) ||
         sensitive(serialized)) reject("BLOCKED");
+    deadline.check();
     return observation as unknown as Record<string, unknown>;
   }
 
@@ -560,6 +565,7 @@ export class WorkspaceGitCapabilityProvider implements CapabilityProvider {
     const serialized = JSON.stringify(observation);
     if (serialized.includes(this.canonicalRoot) || serialized.includes(this.executable.realpath) ||
         serialized.includes(this.executable.configured) || serialized.includes(NONEXISTENT_HOOKS_PATH)) reject("BLOCKED");
+    deadline.check();
     return observation;
   }
 

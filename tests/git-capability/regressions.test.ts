@@ -35,10 +35,17 @@ it("rejects a configured repository root that is itself a symlink, including tra
   });
 });
 
-it("fails closed when porcelain status contains a path outside the bounded logical grammar", () => {
-  expect(parseStatusPorcelainV2(`? ${"x".repeat(256)}\0`)).toEqual({ ok: false, reason: "MALFORMED" });
-  expect(parseStatusPorcelainV2(`? ${"x".repeat(4097)}\0`)).toEqual({ ok: false, reason: "MALFORMED" });
-  expect(parseStatusPorcelainV2("? ../escape\0")).toEqual({ ok: false, reason: "MALFORMED" });
+it("fails closed when any returned porcelain status path is outside the bounded logical grammar", () => {
+  const malformed = { ok: false, reason: "MALFORMED" };
+  for (const status of [
+    `? ${"x".repeat(256)}\0`,
+    `? ${"x".repeat(4097)}\0`,
+    "? ../escape\0",
+    "1 M. N... 100644 100644 100644 a b ../escape\0",
+    "u UU N... 100644 100644 100644 100644 a b c ../escape\0",
+    "2 R. N... 100644 100644 100644 a b R100 ../escape\0source.txt\0",
+    "2 R. N... 100644 100644 100644 a b R100 current.txt\0../escape\0",
+  ]) expect(parseStatusPorcelainV2(status)).toEqual(malformed);
 });
 
 it("accepts a full uppercase commit id and canonicalizes it for Git", async () => {
