@@ -150,11 +150,12 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
   if (!stdout.endsWith("\0")) return { ok: false, reason: "MALFORMED" };
   const records = stdout.slice(0, -1).split("\0");
   const oid = "(?:[0-9a-f]{40}|[0-9a-f]{64})";
-  const xy = "[.MADRCTU]{2}";
+  const ordinaryXy = "[.MTAD]{2}";
+  const renamedXy = "[.MADRCT]{2}";
   const sub = "(?:N\\.\\.\\.|S[.C][.M][.U])";
   const mode = "[0-7]{6}";
-  const ordinary = new RegExp(`^1 (${xy}) ${sub} ${mode} ${mode} ${mode} ${oid} ${oid} ([\\s\\S]+)$`);
-  const renamed = new RegExp(`^2 (${xy}) ${sub} ${mode} ${mode} ${mode} ${oid} ${oid} [RC](?:100|[0-9]{1,2}) ([\\s\\S]+)$`);
+  const ordinary = new RegExp(`^1 (${ordinaryXy}) ${sub} ${mode} ${mode} ${mode} ${oid} ${oid} ([\\s\\S]+)$`);
+  const renamed = new RegExp(`^2 (${renamedXy}) ${sub} ${mode} ${mode} ${mode} ${oid} ${oid} ([RC])(?:100|[1-9]?[0-9]) ([\\s\\S]+)$`);
   const unmerged = new RegExp(`^u (DD|AU|UD|UA|DU|AA|UU) ${sub} ${mode} ${mode} ${mode} ${mode} ${oid} ${oid} ${oid} ([\\s\\S]+)$`);
   const validRef = (value: string): boolean => value.length > 0 && value.length <= LIMITS.pathChars &&
     value !== "@" && value !== "(unknown)" && wellFormed(value) && !/[\x00-\x20\x7f~^:?*\[\\]/u.test(value) &&
@@ -172,6 +173,7 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
   let sawHead = false;
   let sawUpstream = false;
   let sawAb = false;
+  let headerStage = 0;
   let sawEntry = false;
   const paths: RepositoryStatusPath[] = [];
 
@@ -183,13 +185,14 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
       if (sawEntry) return { ok: false, reason: "MALFORMED" };
       const body = rec.slice(2);
       if (body.startsWith("branch.oid ")) {
-        if (sawOid) return { ok: false, reason: "MALFORMED" };
+        if (sawOid || headerStage !== 0) return { ok: false, reason: "MALFORMED" };
         const value = body.slice("branch.oid ".length);
         if (value !== "(initial)" && !FULL_OID.test(value)) return { ok: false, reason: "MALFORMED" };
         head = value === "(initial)" ? "" : value;
         sawOid = true;
+        headerStage = 1;
       } else if (body.startsWith("branch.head ")) {
-        if (sawHead) return { ok: false, reason: "MALFORMED" };
+        if (sawHead || headerStage !== 1) return { ok: false, reason: "MALFORMED" };
         const value = body.slice("branch.head ".length);
         if (value === "(detached)") { branch = null; detached_head = true; }
         else {
@@ -198,20 +201,23 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
           detached_head = false;
         }
         sawHead = true;
+        headerStage = 2;
       } else if (body.startsWith("branch.upstream ")) {
-        if (sawUpstream) return { ok: false, reason: "MALFORMED" };
+        if (sawUpstream || headerStage !== 2) return { ok: false, reason: "MALFORMED" };
         const value = body.slice("branch.upstream ".length);
         if (!validRef(value)) return { ok: false, reason: "MALFORMED" };
         upstream_ref = value;
         sawUpstream = true;
+        headerStage = 3;
       } else if (body.startsWith("branch.ab ")) {
-        if (sawAb) return { ok: false, reason: "MALFORMED" };
+        if (sawAb || headerStage !== 3) return { ok: false, reason: "MALFORMED" };
         const match = /^\+(\d+) -(\d+)$/.exec(body.slice("branch.ab ".length));
         if (!match) return { ok: false, reason: "MALFORMED" };
         ahead = Number(match[1]);
         behind = Number(match[2]);
         if (!Number.isSafeInteger(ahead) || !Number.isSafeInteger(behind)) return { ok: false, reason: "MALFORMED" };
         sawAb = true;
+        headerStage = 4;
       } else return { ok: false, reason: "MALFORMED" };
       continue;
     }
@@ -221,14 +227,15 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
     const renamedMatch = renamed.exec(rec);
     const unmergedMatch = unmerged.exec(rec);
     if (ordinaryMatch) {
-      if (!boundedStatusPath(ordinaryMatch[2])) return { ok: false, reason: "MALFORMED" };
+      if (ordinaryMatch[1] === ".." || !boundedStatusPath(ordinaryMatch[2])) return { ok: false, reason: "MALFORMED" };
       paths.push(classify(ordinaryMatch[2], ordinaryMatch[1], false));
     } else if (renamedMatch) {
-      if (i + 1 >= records.length || !boundedStatusPath(renamedMatch[2]) || !boundedStatusPath(records[i + 1])) {
+      if (!renamedMatch[1].includes(renamedMatch[2]) || i + 1 >= records.length ||
+          !boundedStatusPath(renamedMatch[3]) || !boundedStatusPath(records[i + 1])) {
         return { ok: false, reason: "MALFORMED" };
       }
       i += 1;
-      paths.push(classify(renamedMatch[2], renamedMatch[1], false));
+      paths.push(classify(renamedMatch[3], renamedMatch[1], false));
     } else if (unmergedMatch) {
       if (!boundedStatusPath(unmergedMatch[2])) return { ok: false, reason: "MALFORMED" };
       paths.push(classify(unmergedMatch[2], unmergedMatch[1], false, true));
@@ -243,7 +250,10 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
     if (paths.length > LIMITS.statusPaths) return { ok: false, reason: "TOO_MANY_PATHS" };
   }
 
-  if (!sawOid || !sawHead) return { ok: false, reason: "MALFORMED" };
+  if (!sawOid || !sawHead || (sawAb && !sawUpstream) || (head === "" && detached_head) ||
+      (detached_head && (branch !== null || sawUpstream)) || (!detached_head && branch === null)) {
+    return { ok: false, reason: "MALFORMED" };
+  }
   const value: ParsedStatus = { branch, detached_head, head, ahead, behind, paths };
   if (upstream_ref !== undefined) value.upstream_ref = upstream_ref;
   return { ok: true, value };

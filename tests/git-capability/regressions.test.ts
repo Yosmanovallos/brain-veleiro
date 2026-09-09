@@ -7,6 +7,7 @@ import { request, registry, output, STATUS, READ } from "./helpers.js";
 import { assertBoundaries, assertPreExistingS14CFailureCause, PRE_EXISTING_S14C_FAILURES } from "./audit.js";
 import { parseStatusPorcelainV2 } from "../../src/providers/capability/git/parsing.js";
 import { withGitBin } from "./fixtures.js";
+import { standaloneCleanupKeepsHostAlive } from "./processExercises.js";
 
 const run = (p: Awaited<ReturnType<typeof createProvider>>, cap: string, input: Record<string, unknown>, timeout_ms = 20000) =>
   p.invoke(request(cap, input, timeout_ms));
@@ -55,6 +56,11 @@ it("rejects structurally malformed porcelain metadata and records before public 
   for (const status of [
     malformedStatus,
     `# branch.oid ${oid}\0# branch.head main\0# branch.ab malformed\0`,
+    `# branch.head main\0# branch.oid ${oid}\0`,
+    `# branch.oid ${oid}\0# branch.head main\0# branch.ab +1 -0\0`,
+    `# branch.oid ${oid}\0# branch.head main\0${`1 R. N... 100644 100644 100644 ${oid} ${oid} renamed.txt`}\0`,
+    `# branch.oid ${oid}\0# branch.head main\0${`2 M. N... 100644 100644 100644 ${oid} ${oid} R90 current.txt`}\0old.txt\0`,
+    `# branch.oid ${oid}\0# branch.head main\0${`2 R. N... 100644 100644 100644 ${oid} ${oid} R00 current.txt`}\0old.txt\0`,
     `# branch.oid ${oid}\0# branch.head ../escape\0`,
     `# branch.oid ${oid}\0# branch.head main\0# branch.upstream refs/heads/../escape\0`,
     `# branch.oid ${oid}\0# branch.head main\0${"2 R. N... BAD BAD BAD BAD BAD RX ok.txt"}\0old.txt\0`,
@@ -86,6 +92,8 @@ it("accepts a full uppercase commit id and canonicalizes it for Git", async () =
     expect(observed.content).toBe("Hello S14D\n");
   });
 });
+
+it("keeps standalone cleanup alive after the process-group leader closes", standaloneCleanupKeepsHostAlive);
 
 it("input accessors are rejected without evaluation", async () => {
   await withSimpleRepo(async fx => {

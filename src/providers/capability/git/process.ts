@@ -102,7 +102,6 @@ export async function runGitProcess(child: ChildProcess, bounds: GitProcessBound
   const timers = new Set<NodeJS.Timeout>();
   const arm = (fn: () => void, ms: number): void => {
     const t = setTimeout(() => { timers.delete(t); fn(); }, ms);
-    t.unref?.();
     timers.add(t);
   };
   const clearTimers = (): void => { for (const t of timers) clearTimeout(t); timers.clear(); };

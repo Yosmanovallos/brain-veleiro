@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
 import { expect, vi } from "vitest";
@@ -128,6 +129,29 @@ export async function stubbornSameGroupDescendantReaped(): Promise<void> {
       // later legitimate call still works
       const ok = await createProvider(providerConfig(fx));
       expect((await run(ok, "repository.status", {})).status).toBe("SUCCESS");
+    });
+  });
+}
+
+export async function standaloneCleanupKeepsHostAlive(): Promise<void> {
+  await withSimpleRepo(async fx => {
+    await withGitBin(async bin => {
+      const marker = join(bin.dir, "standalone-stubborn.pid");
+      const stubborn = await bin.fakeGit("git-standalone-stubborn", { version: "2.50.0", behavior: "stubborn-grandchild", marker });
+      const processModule = new URL("../../src/providers/capability/git/process.ts", import.meta.url).href;
+      const script = [
+        `import { performance } from "node:perf_hooks";`,
+        `import { startGitProcess, runGitProcess } from ${JSON.stringify(processModule)};`,
+        `const child = startGitProcess({ executable: ${JSON.stringify(stubborn)}, argv: ["status"], cwd: ${JSON.stringify(fx.root)}, env: {} });`,
+        `const outcome = await runGitProcess(child, { maxStdoutBytes: 1024, maxStderrBytes: 1024, maxCombinedBytes: 2048, deadlineMs: performance.now() + 1500, terminationGraceMs: 500, groupCleanupBudgetMs: 1000 });`,
+        `process.stdout.write(outcome.kind);`,
+      ].join("\n");
+      const observed = execFileSync(process.execPath, ["--input-type=module", "--eval", script], {
+        encoding: "utf8", timeout: 5000,
+      });
+      expect(observed).toBe("TIMEOUT");
+      const gcPid = await readPidFile(marker);
+      expect(await pidGone(gcPid)).toBe(true);
     });
   });
 }
