@@ -239,7 +239,7 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
     if (paths.length > LIMITS.statusPaths) return { ok: false, reason: "TOO_MANY_PATHS" };
   }
 
-  if (!sawOid || !sawHead || sawAb !== sawUpstream) return { ok: false, reason: "MALFORMED" };
+  if (!sawOid || !sawHead) return { ok: false, reason: "MALFORMED" };
   const value: ParsedStatus = { branch, detached_head, head, ahead, behind, paths };
   if (upstream_ref !== undefined) value.upstream_ref = upstream_ref;
   return { ok: true, value };
