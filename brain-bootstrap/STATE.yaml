@@ -2,11 +2,11 @@ bootstrap_version: 1.2.0
 current_step: S14
 status: IN_PROGRESS
 primary_builder: codex
-independent_verifier: claude-code-fresh-non-authoring-non-fork-read-only
+independent_verifier: antigravity-cli-fresh-non-authoring-non-fork-read-only
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-09-06T18:55:11Z"
+last_verified_at: "2026-09-09T21:15:32Z"
 steps:
   S00: PASS
   S01: PASS
@@ -59,7 +59,7 @@ repository:
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
   commits: 132
-  head_sha: "04f668ad47a1e8c7fac0fc5d241206400fcfd880"
+  head_sha: "d719ee537a2a348c2e86464311555cc77f52493c"
   head_sha_note: "Exact fresh-independently-verified S14C Shell Capability PHASE implementation target and the DIRECT PARENT of the S14C phase-closure commit. Per the established continuity convention this field stores the verified implementation target, not a self-referencing closure SHA; `main` is fast-forwarded 3cd344d0..04f668ad with zero candidate modification (strict fast-forward, merge-base 3cd344d018dbf2d40a39a907a3494bba8f3d940b, candidate 1 ahead / 0 behind, 15 changed files: the 2 already-authorized S14B test-harness files modified plus 13 added shell provider/tests/report files, 3008 insertions / 26 deletions) and the bounded docs-only phase-closure commit (STATE.yaml + CURRENT.md + one phase-closure handoff) is created immediately on top of it. This is an S14C PHASE verification, NOT an S14 step verification. State: S00-S13R VERIFIED PASS / CLOSED; S14 (`CAPABILITY_REGISTRY_TOOLS_MCP`, RUNTIME_INFRASTRUCTURE / DEEP) IN_PROGRESS / NOT_CLOSED; S14A phase VERIFIED PASS (fresh-verifier comment 5554111727 accepted by control-plane comment 5554113574); S14B phase VERIFIED PASS / integrated on fresh-verifier relay comment 5555572846 accepted by ChatGPT control-plane comment 5555591585; S14C phase VERIFIED PASS / integrated on fresh-verifier relay comment 5561406432 accepted by ChatGPT control-plane comment 5561441214 (decision VERIFIED_PASS_ACCEPTED / S14C_PHASE_INTEGRATION_AUTHORIZED), after 4 rejected rounds (Round1-3 source-audit FAIL: comments 5556004891, 5556308690, 5556617161; Round4 source-audit PASS comment 5556973359 then genuine INDEPENDENT_VERIFICATION_FAIL comment 5559233444 on a process-probe marker-readiness race, accepted and Round-5 remediation authorized by comment 5559342564) all preserved on their own branches and NOT in the Round-5 ancestry; HI-054 NOT_AWARDED; S14D NOT_AUTHORIZED / NOT_STARTED. S14B canonical baseline before S14C: 3cd344d018dbf2d40a39a907a3494bba8f3d940b. The stale S14B-era e49ba5c head metadata is superseded and no longer live."
   runtime_foundation:
     status: PASS
@@ -807,6 +807,29 @@ repository:
     verifier_workspace_contamination_disclosure: "The verifier's first full-suite attempt was invalidated because the verifier itself had left its own qualification script and stdout log as untracked files inside the candidate clone; the candidate's own boundary test (assertBoundaries) correctly rejected those verifier-created files (7 test failures, all tracing to audit.ts:262, none to shell-execution logic). This was verifier-workspace contamination, not a candidate FAIL and not a retry of a flaky test. The verifier removed all verifier scratch artifacts from the repository, moved them outside the clone, confirmed a clean candidate worktree, and restarted the complete qualification sequence from zero; only that clean restarted sequence is counted as evidence. Disclosed in relay 5561406432 and accepted in 5561441214."
     boundaries: "Authorized in-memory S14C shell-execution provider only. No Core / RestrictedCapabilityProvider / AgentDefinition / registry types.ts/validateConfig.ts / filesystem production change; no new dependency; no git-process/GitHub-API/docs-search/browser/PostgreSQL/MCP/OAuth/credential-store surface; no S14D+ pull-forward. Process-probe determinism proofs are same-process-group, non-daemonized descendant scenarios only; no setsid/detach path exists or is claimed."
     note: "S14C PHASE VERIFIED PASS / integrated. `main` fast-forwarded 3cd344d0..04f668ad (strict fast-forward, merge-base 3cd344d018dbf2d40a39a907a3494bba8f3d940b, candidate 1 ahead / 0 behind, 15 changed files) with zero candidate modification; this bounded docs-only phase-closure commit follows on top. Authority is a properly paired, separately-timestamped sequence: fresh independent verifier relay (issue #1 comment 5561406432, INDEPENDENT_VERIFICATION_PASS, FRESH_NON_AUTHORING_NON_FORK_READ_ONLY) at 2026-09-06T18:55:11Z, then ChatGPT control-plane acceptance (issue #1 comment 5561441214, in_reply_to_comment_id 5561406432, decision VERIFIED_PASS_ACCEPTED / S14C_PHASE_INTEGRATION_AUTHORIZED) at 2026-09-06T19:01:23Z. Four rejected rounds preceded Round 5, all forked directly from the same baseline main and none an ancestor of Round 5: Round1-3 source-audit FAIL (comments 5556004891, 5556308690, 5556617161); Round4 source-audit PASS (comment 5556973359) then genuine INDEPENDENT_VERIFICATION_FAIL on a process-probe marker-readiness race (comment 5559233444), accepted and Round-5 remediation authorized (comment 5559342564). All four remain preserved on their own branches, unmoved. This closure was performed in a fresh isolated WSL-native clone; the primary /mnt/c working tree was not touched. S14 (`CAPABILITY_REGISTRY_TOOLS_MCP`) remains IN_PROGRESS / NOT_CLOSED; HI-054 NOT_AWARDED; S14D NOT_AUTHORIZED and NOT_STARTED, and was not started, inspected or authored by this phase closure. A phase PASS does not close S14; HI-054 may be awarded only at final S14 closure after all required S14 phases. Next eligible action is to return to ChatGPT for remote S14C closure confirmation and the S14D authoring gate."
+
+  git_capability:
+    status: PHASE_PASS
+    phase: S14D
+    parent_step: S14
+    parent_step_status: IN_PROGRESS
+    classification: RUNTIME_INFRASTRUCTURE
+    depth: DEEP
+    verified_implementation_target: "d719ee537a2a348c2e86464311555cc77f52493c"
+    verified_candidate_branch: "codex/s14d-source-audit-remediation"
+    baseline_before_closure: "b41f4fe5bb1b7562bf0ece080f344beb4de3b8f7"
+    independent_verification_comment_id: 5595385959
+    control_plane_acceptance: "user instruction 'continuemos con la implementacion' in this session, authorizing bounded S14D docs-only phase closure after fresh INDEPENDENT_VERIFICATION_PASS relay"
+    control_plane_decision: "VERIFIED_PASS_ACCEPTED / S14D_PHASE_CLOSURE_AUTHORIZED"
+    independently_verified_at: "2026-09-09T21:15:32Z"
+    control_plane_accepted_at: "2026-09-09T21:15:32Z"
+    honor_invariant: "HI-054 NOT_AWARDED"
+    builder_report: "brain-bootstrap/reports/S14D-git-capability-verification.md"
+    phase_closure_handoff: "brain/context/handoffs/20260909T211532Z-s14d-verified-pass-phase-closure.md"
+    scope: "17 added files, 0 existing tracked files modified. Production (5): src/providers/capability/git/{types,process,workspaceGitCapabilityProvider,environment,parsing}.ts. Tests/helpers (11): tests/git-capability/{gitCapability,registryCompatibility,regressions,unsafeCounters}.test.ts and {audit,cases,fixtures,helpers,repoFixtures,processExercises,gitDirManifest}.ts. Report (1): brain-bootstrap/reports/S14D-git-capability-verification.md. Core, RestrictedCapabilityProvider, AgentDefinition, registry types.ts/validateConfig.ts/validation.ts/capabilityRegistryProvider.ts, filesystem production, shell production, S13G, S13H, package.json/package-lock.json, tsconfig.json, vitest.config.ts, STATE.yaml, CURRENT.md and canonical S14A/S14B/S14C/S14D authored artifacts outside the candidate diff and unchanged by it."
+    contract_tests: "Antigravity CLI (agy 1.1.28) fresh non-authoring, non-fork, read-only verifier (issue #1 comment 5595385959, INDEPENDENT_VERIFICATION_PASS): Part A canonical blobs byte-identical to baseline b41f4fe; exact additive scope 17 files; typecheck PASS; focused S14D 130/130; full pre-build 1908 passed plus 8 inherited S14C failures; repo-local dist genuinely absent then real build PASS; full post-build same; git diff --check clean; verifier tracked worktree clean. Also 188 independent verifier-authored adversarial/challenge assertions PASS: root symlink spellings, uppercase full OID canonicalization, status path and rename-source validation, absolute monotonic deadline through version probe/cleanup/output/success, malformed porcelain versus valid records, standalone no-keepalive Node cleanup with SIGTERM-resistant same-group descendant, whole-.git immutability, gc/auto-maintenance suppression, timeout and output-overflow cleanup. Node v24.19.0 / npm 11.17.0 / Git 2.53.0."
+    boundaries: "In-memory local-explicit-workspace Git capability only. No Core / RestrictedCapabilityProvider / AgentDefinition / registry / filesystem / shell production change; no new dependency; no git-process as model-visible command / no remote Git / no GitHub API / no network / no browser / no PostgreSQL / no MCP / no OAuth / no credential store; no S14E+ pull-forward. Only two capabilities exposed: repository.status and repository.read, both side_effects NONE. Monotonic deadline, process-group cleanup, malformed porcelain fail-closed, uppercase OID canonicalization, and standalone cleanup lifecycle verified by independent adversarial probes."
+    note: "S14D PHASE VERIFIED PASS / branch-closure. Exact candidate d719ee537a2a348c2e86464311555cc77f52493c on origin/codex/s14d-source-audit-remediation with zero candidate modification; this bounded docs-only phase-closure commit (STATE.yaml + CURRENT.md + one phase-closure handoff) follows on top. Authority is a paired sequence: fresh independent verifier relay (issue #1 comment 5595385959, INDEPENDENT_VERIFICATION_PASS, FRESH_NON_AUTHORING_NON_FORK_READ_ONLY) posted first, then control-plane acceptance (this session) to proceed with bounded docs-only closure. S14 (CAPABILITY_REGISTRY_TOOLS_MCP) remains IN_PROGRESS / NOT_CLOSED; HI-054 NOT_AWARDED; S14E NOT_AUTHORIZED and NOT_STARTED, and was not started, inspected or authored by this closure. Next eligible action is the ChatGPT S14E authoring gate, which must not be opened by this coding-agent session."
 
 build_day:
   date: "2026-08-29"
