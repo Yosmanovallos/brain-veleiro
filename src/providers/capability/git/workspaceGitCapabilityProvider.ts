@@ -337,6 +337,7 @@ export class WorkspaceGitCapabilityProvider implements CapabilityProvider {
 
       if (plan.kind === "status") {
         const output = await this.doStatus(cwd, deadline);
+        deadline.check();
         return {
           status: "SUCCESS", ...identity, output,
           evidence_refs: [`repository://${this.repositoryId}/status`],
@@ -344,6 +345,7 @@ export class WorkspaceGitCapabilityProvider implements CapabilityProvider {
         };
       }
       const output = await this.doRead(plan.revision, plan.requestedRevision, plan.parts, cwd, deadline);
+      deadline.check();
       return {
         status: "SUCCESS", ...identity,
         output: output as unknown as Record<string, unknown>,
