@@ -656,3 +656,44 @@ The report commit layered above this code candidate still requires exact-SHA
 reverification and publication before another fresh independent verifier may
 issue an acceptance relay. S14D and S14 remain open, HI-054 remains not awarded,
 and S14E remains unauthorized.
+
+---
+
+## 25. Malformed porcelain finding and remediation
+
+A subsequent fresh verifier confirmed the monotonic-deadline remediation but
+rejected remote candidate `6be268574e447ca5497fff4f8cf0218a9b78f37e`.
+The status parser selected record families from only the first character and
+checked minimum field counts, allowing malformed metadata/records from a
+configured executable to cross the public `repository.status` SUCCESS boundary.
+
+The remediation at `b485dcd7a52e5d23d17d2ea6c8aa0b391d670bf0`:
+
+- requires complete trailing-NUL framing and rejects empty records;
+- requires the expected branch OID and branch-head headers, rejects malformed,
+  duplicate, unknown or out-of-order headers, bounds counters as safe integers,
+  and validates model-visible branch/upstream refs;
+- validates complete porcelain-v2 ordinary, rename/copy and unmerged record
+  grammars, including XY, submodule state, modes, full object IDs and rename
+  score, plus exact untracked/ignored prefixes;
+- validates every current/original path and preserves the valid `T` type-change
+  status code;
+- adds a provider-level fake-Git regression proving malformed output maps to
+  `FAIL / EXECUTION_FAILED`, along with negative header/record cases and a valid
+  type-change control.
+
+Fresh detached WSL/Node 24 verification of that code candidate:
+
+- `npm ci`: **PASS** (54 packages, zero vulnerabilities).
+- `npm run typecheck`: **PASS**.
+- Focused S14D suite: **129 / 129 PASS**.
+- Full suite before and after build: **1907 passed / the same 8 inherited S14C
+  failures (1915 total)** in both runs.
+- `npm run build`: **PASS**.
+- Canonical `gitCapability.test.ts`: **12 / 12 consecutive complete passes**,
+  98 / 98 tests per run, with no hidden retry.
+- `git diff --check` and tracked status: **clean**.
+
+The next report commit requires the same exact-SHA reverification and remote
+publication before a new independent relay. S14D and S14 remain open, HI-054
+remains not awarded, and S14E remains unauthorized.
