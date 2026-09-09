@@ -150,13 +150,17 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
   if (!stdout.endsWith("\0")) return { ok: false, reason: "MALFORMED" };
   const records = stdout.slice(0, -1).split("\0");
   const oid = "(?:[0-9a-f]{40}|[0-9a-f]{64})";
-  const xy = "[.MADRCU]{2}";
+  const xy = "[.MADRCTU]{2}";
   const sub = "(?:N\\.\\.\\.|S[.C][.M][.U])";
   const mode = "[0-7]{6}";
   const ordinary = new RegExp(`^1 (${xy}) ${sub} ${mode} ${mode} ${mode} ${oid} ${oid} ([\\s\\S]+)$`);
   const renamed = new RegExp(`^2 (${xy}) ${sub} ${mode} ${mode} ${mode} ${oid} ${oid} [RC](?:100|[0-9]{1,2}) ([\\s\\S]+)$`);
   const unmerged = new RegExp(`^u (DD|AU|UD|UA|DU|AA|UU) ${sub} ${mode} ${mode} ${mode} ${mode} ${oid} ${oid} ${oid} ([\\s\\S]+)$`);
-  const validRef = (value: string): boolean => value.length > 0 && value.length <= LIMITS.pathChars && wellFormed(value) && !/[\x00-\x20\x7f]/u.test(value);
+  const validRef = (value: string): boolean => value.length > 0 && value.length <= LIMITS.pathChars &&
+    value !== "@" && value !== "(unknown)" && wellFormed(value) && !/[\x00-\x20\x7f~^:?*\[\\]/u.test(value) &&
+    !value.startsWith(".") && !value.startsWith("-") && !value.startsWith("/") &&
+    !value.endsWith(".") && !value.endsWith("/") && !value.endsWith(".lock") &&
+    !value.includes("..") && !value.includes("//") && !value.includes("@{");
 
   let branch: string | null = null;
   let detached_head = false;

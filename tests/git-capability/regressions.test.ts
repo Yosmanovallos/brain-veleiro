@@ -50,13 +50,19 @@ it("fails closed when any returned porcelain status path is outside the bounded 
 });
 
 it("rejects structurally malformed porcelain metadata and records before public success", async () => {
-  const malformedStatus = `# branch.oid ${"a".repeat(40)}\0# branch.head main\0${"1x Z N... BAD BAD BAD BAD BAD ok.txt"}\0`;
+  const oid = "a".repeat(40);
+  const malformedStatus = `# branch.oid ${oid}\0# branch.head main\0${"1x Z N... BAD BAD BAD BAD BAD ok.txt"}\0`;
   for (const status of [
     malformedStatus,
-    `# branch.oid ${"a".repeat(40)}\0# branch.head main\0# branch.ab malformed\0`,
-    `# branch.oid ${"a".repeat(40)}\0# branch.head main\0${"2 R. N... BAD BAD BAD BAD BAD RX ok.txt"}\0old.txt\0`,
-    `# branch.oid ${"a".repeat(40)}\0# branch.head main`,
+    `# branch.oid ${oid}\0# branch.head main\0# branch.ab malformed\0`,
+    `# branch.oid ${oid}\0# branch.head ../escape\0`,
+    `# branch.oid ${oid}\0# branch.head main\0# branch.upstream refs/heads/../escape\0`,
+    `# branch.oid ${oid}\0# branch.head main\0${"2 R. N... BAD BAD BAD BAD BAD RX ok.txt"}\0old.txt\0`,
+    `# branch.oid ${oid}\0# branch.head main`,
   ]) expect(parseStatusPorcelainV2(status)).toEqual({ ok: false, reason: "MALFORMED" });
+
+  const typeChange = parseStatusPorcelainV2(`# branch.oid ${oid}\0# branch.head main\0${`1 .T N... 100644 100644 100755 ${oid} ${oid} script.sh`}\0`);
+  expect(typeChange.ok && typeChange.value.paths[0]).toMatchObject({ path: "script.sh", modified: true });
 
   await withSimpleRepo(async fx => {
     await withGitBin(async bin => {
