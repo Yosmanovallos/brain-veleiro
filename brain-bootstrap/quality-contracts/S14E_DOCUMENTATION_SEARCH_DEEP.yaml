@@ -1,0 +1,157 @@
+schema_version: '1.0'
+id: S14E_DOCUMENTATION_SEARCH_DEEP
+parent_step: S14
+phase: S14E
+name: documentation-search
+version: '1.0.0'
+status: AUTHORING_READY
+classification: RUNTIME_INFRASTRUCTURE
+depth: DEEP
+honor_invariant: HI-054_NOT_AWARDED
+canonical_artifacts:
+  skill: brain-bootstrap/skills/DOCS_SEARCH_CAPABILITY_SKILL_S14E.md
+  quality_contract: brain-bootstrap/quality-contracts/S14E_DOCUMENTATION_SEARCH_DEEP.yaml
+  semantic_contract: brain-bootstrap/specs/DOCS_SEARCH_CAPABILITY_CONTRACT_S14E.md
+baseline:
+  main: a16040a59fd8513b01e711654a09b0ac09ebcfc5
+  s14d_verified_target: d719ee537a2a348c2e86464311555cc77f52493c
+  s14d_acceptance_comment: 5609528853
+  s14e_authoring_comment: null
+  source: supplied_S14E_AUTHORING_CONTEXT
+  implementation_baseline: record_exact_part_a_integration_sha_before_part_b
+authorization:
+  part_b: NOT_AUTHORIZED
+  phase_closure: NOT_AUTHORIZED
+capabilities:
+  - {id: documentation.search, side_effects: NONE}
+runtime_support:
+  node_major: 24
+  canonical_platform: linux_wsl
+  added_dependencies: false
+limits:
+  max_documents: 256
+  max_id_ascii_chars: 64
+  max_title_utf8_bytes: 256
+  max_text_utf8_bytes: 65536
+  max_corpus_title_text_utf8_bytes: 4194304
+  max_line_utf8_bytes: 1024
+  max_query_utf8_bytes: 256
+  max_unique_tokens: 16
+  max_token_utf8_bytes: 64
+  default_limit: 5
+  max_limit: 10
+  max_request_timeout_ms: 60000
+  provider_timeout_ms: 5000
+  max_scanned_lines_between_yields: 32
+  max_success_result_utf8_json_bytes: 262144
+  max_safe_error_ascii_chars: 160
+  max_envelope_id_ascii_chars: 128
+hard_invariants:
+  - {id: S14E-HI-001, rule: Exactly documentation.search is advertised with truthful NONE and faithful closed schemas.}
+  - {id: S14E-HI-002, rule: Existing Core AgentDefinition Restricted registry and S11 interfaces and files remain unchanged.}
+  - {id: S14E-HI-003, rule: Explicit trusted snapshot configuration has no discovery or model overrides.}
+  - {id: S14E-HI-004, rule: Strict bounded configuration validation rejects duplicate IDs invalid Unicode controls unknown fields and finite secret-floor matches.}
+  - {id: S14E-HI-005, rule: Copied snapshot and returned descriptor/result mutation cannot change future invocations.}
+  - {id: S14E-HI-006, rule: Input is exactly query plus optional bounded integer limit and validated envelope.}
+  - {id: S14E-HI-007, rule: Literal ASCII-folded tokens match title or one line with AND semantics and first matching line only.}
+  - {id: S14E-HI-008, rule: One hit per document sorted by ASCII ID is independent of insertion order.}
+  - {id: S14E-HI-009, rule: Explicit total_matches and truncated reflect a completed scan and no-match is offline SUCCESS.}
+  - {id: S14E-HI-010, rule: Excerpts are exact normalized lines with full-text SHA256 and exact logical locators.}
+  - {id: S14E-HI-011, rule: Evidence refs equal ordered result locators with no invented freshness or authority.}
+  - {id: S14E-HI-012, rule: Retrieval content is inert and cannot trigger tools approvals or routing changes.}
+  - {id: S14E-HI-013, rule: One monotonic deadline covers validation scan output and final success with cooperative yields and no orphan work.}
+  - {id: S14E-HI-014, rule: Legal maxima pass the result guard and real registry envelope without silent truncation.}
+  - {id: S14E-HI-015, rule: Errors use existing unions fixed safe messages and preserve typed result correlation.}
+  - {id: S14E-HI-016, rule: Provider performs zero filesystem process network database or MCP activity.}
+  - {id: S14E-HI-017, rule: Restricted capability and NONE denials cause zero underlying invocations.}
+  - {id: S14E-HI-018, rule: Actual registry Restricted and runAgent compose without provider-specific generic changes.}
+  - {id: S14E-HI-019, rule: Corpus and implementation swaps in separate configurations preserve AgentDefinition permission and semantic input bytes.}
+  - {id: S14E-HI-020, rule: Part A and prior tracked surfaces stay locked with no dependency future-phase or self-closure change.}
+unsafe_counters:
+  - {id: UC01, name: unapproved_io_or_model_config_override, required: 0}
+  - {id: UC02, name: invalid_input_or_limit_bypass, required: 0}
+  - {id: UC03, name: fabricated_excerpt_provenance_or_hidden_truncation, required: 0}
+  - {id: UC04, name: permission_or_deadline_bypass, required: 0}
+  - {id: UC05, name: secret_floor_error_leak_or_instruction_execution, required: 0}
+  - {id: UC06, name: protected_scope_drift_or_self_approval, required: 0}
+positive_fixtures:
+  - {id: FX-POS-001, intent: Exact descriptor and defensive descriptor copies satisfy closed schemas.}
+  - {id: FX-POS-002, intent: Distinct real document queries yield independently calculated different hits through provider invoke.}
+  - {id: FX-POS-003, intent: Title and same-line AND matching first-line selection and one-hit-per-document are exact.}
+  - {id: FX-POS-004, intent: Empty corpus and no-match return complete offline SUCCESS with empty evidence.}
+  - {id: FX-POS-005, intent: Default and explicit limits total count and truncated remain correct under reordered corpus.}
+  - {id: FX-POS-006, intent: CRLF and CR normalization exact excerpt lines hashes and locators agree with independent oracle.}
+  - {id: FX-POS-007, intent: Unicode exactness ASCII folding duplicate tokens and literal regex-like punctuation obey spec.}
+  - {id: FX-POS-008, intent: Individual legal maxima and feasible combinations pass including escaped JSON text through real registry.}
+  - {id: FX-POS-009, intent: Caller config result and descriptor mutation plus concurrent calls cannot alter snapshot or other results.}
+  - {id: FX-POS-010, intent: Allowed real registry Restricted and runAgent invocation returns faithful result with unchanged generic code.}
+  - {id: FX-POS-011, intent: Separate corpus swap and independently implemented test-provider swap preserve AgentDefinition and permission bytes.}
+  - {id: FX-POS-012, intent: Hostile retrieved instructions remain inert with zero guarded IO and legitimate call succeeds after timeout.}
+negative_fixtures:
+  - {id: FX-NEG-001, intent: Reject malformed config unknown keys invalid IDs duplicate IDs wrong types and oversized corpus.}
+  - {id: FX-NEG-002, intent: Reject all title text line and aggregate overbounds plus lone surrogates and forbidden controls.}
+  - {id: FX-NEG-003, intent: Each finite secret marker and bearer pattern blocks complete construction with safe error.}
+  - {id: FX-NEG-004, intent: Reject empty whitespace-only oversized or malformed query and excessive token counts or lengths.}
+  - {id: FX-NEG-005, intent: Reject null fractional nonfinite negative zero or oversized limits without coercion.}
+  - {id: FX-NEG-006, intent: Reject every extra input key including path URL auth provider and corpus overrides before search.}
+  - {id: FX-NEG-007, intent: Unknown capability and invalid envelope including invalid deadlines follow fixed failure mapping.}
+  - {id: FX-NEG-008, intent: Terms split across different lines cannot create a false AND hit absent title coverage.}
+  - {id: FX-NEG-009, intent: Deadline expiry during validation scan or finalization returns TIMEOUT without partial success or restarted budget.}
+  - {id: FX-NEG-010, intent: Capability denial produces existing BLOCKED and zero provider invokes.}
+  - {id: FX-NEG-011, intent: NONE denial produces existing BLOCKED and zero provider invokes.}
+  - {id: FX-NEG-012, intent: Wrong snapshot hash locator excerpt line or invented count is independently detected as a defect.}
+  - {id: FX-NEG-013, intent: Deliberately unsafe IO and permission bypass controls fire guarded detectors while real implementation remains zero.}
+  - {id: FX-NEG-014, intent: Unexpected exception and output overbound controls produce safe normalized failures without query config or stack.}
+  - {id: FX-NEG-015, intent: Divergent descriptor collision remains fail-closed and missing routing never selects a fallback.}
+  - {id: FX-NEG-016, intent: Detect deliberate protected-file drift dependency addition future-phase pull-forward and false phase closure.}
+verification_requirements:
+  exact_positive_ids: 12
+  exact_negative_ids: 16
+  hard_invariants_required: 20
+  unsafe_counters_required: 6
+  all_fixture_families_executable: true
+  unsafe_counters_zero_on_legitimate_paths: true
+  unsafe_detectors_independently_fireable: true
+  independent_literal_search_and_hash_oracle: true
+  actual_registry_restricted_run_agent_path: true
+  implementation_swap_separate_from_corpus_swap: true
+  boundary_maxima_and_max_plus_one: true
+  deadline_controlled_clock_and_real_event_loop_exercises: true
+  part_a_byte_identity: true
+  prior_tracked_files_byte_identity: true
+  no_new_dependency: true
+  typecheck: PASS
+  focused_s14e: PASS
+  full_pre_build: COMPARE_EXACT_BASELINE_FAILURES
+  genuine_dist_absent_build: PASS
+  full_post_build: COMPARE_EXACT_BASELINE_FAILURES
+  git_diff_check: PASS
+baseline_failures:
+  policy: Same exact identity AND assertion cause on exact Part A baseline and candidate; no broadened drift or new failure permitted.
+  allowed_outcome_label: PASS_WITH_DOCUMENTED_BASELINE_FAILURES
+  raw_counts_required: true
+  no_skip_or_test_edit: true
+  identities:
+    - 'tests/shell-capability/regressions.test.ts > the S14B regression-harness maintenance is exactly the authorized narrow change'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical negatives > FX-NEG-042'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical hard invariants > S14C-HI-002'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical hard invariants > S14C-HI-038'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical hard invariants > S14C-HI-033'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical hard invariants > S14C-HI-037'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical hard invariants > S14C-HI-039'
+    - 'tests/shell-capability/unsafeCounters.test.ts > UC10 protected_boundary_or_dependency_modified: zero drift; mutated-byte detector fires'
+independent_verification:
+  fresh_session: true
+  verifier_must_be_non_authoring: true
+  verifier_must_be_non_builder: true
+  verifier_must_be_non_fork: true
+  verifier_must_be_read_only: true
+  exact_committed_remote_candidate_required: true
+  standalone_verifier_relay_required: true
+  separate_control_plane_acceptance_required: true
+phase_acceptance:
+  on_pass:
+    S14E: PHASE_PASS
+    S14: IN_PROGRESS
+    S14F: NOT_AUTHORIZED
+    HI-054: NOT_AWARDED
