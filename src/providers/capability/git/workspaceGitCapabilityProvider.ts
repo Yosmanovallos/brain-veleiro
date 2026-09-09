@@ -36,6 +36,26 @@ const dirFlags = constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLL
 const anchor = (handle: FileHandle): string => `/proc/self/fd/${handle.fd}`;
 const same = (a: Stats, b: Stats): boolean => a.dev === b.dev && a.ino === b.ino;
 
+// lstat("link/") and lstat("link/.") follow the final symlink on Linux. Strip
+// only trailing directory syntax so the configured root entry itself is what
+// lstat examines; realpath below still canonicalises an ordinary direct root.
+function directConfiguredRootEntry(repositoryRoot: string): string {
+  let direct = repositoryRoot;
+  while (direct.length > 1) {
+    const withoutSlashes = direct.replace(/\/+$/u, "");
+    if (withoutSlashes !== direct) {
+      direct = withoutSlashes || "/";
+      continue;
+    }
+    if (direct.endsWith("/.")) {
+      direct = direct.slice(0, -2) || "/";
+      continue;
+    }
+    break;
+  }
+  return direct;
+}
+
 class Rejection extends Error {
   constructor(readonly code: NormalizedToolError["code"] | "BLOCKED") { super("Git operation rejected."); }
 }
@@ -198,7 +218,7 @@ export class WorkspaceGitCapabilityProvider implements CapabilityProvider {
       // The configured root itself must be a direct directory. Calling
       // realpath() first would silently accept a symlinked configuration path,
       // contrary to the v1 repository-shape contract.
-      const configuredRoot = await fs.lstat(repository_root);
+      const configuredRoot = await fs.lstat(directConfiguredRootEntry(repository_root));
       if (configuredRoot.isSymbolicLink() || !configuredRoot.isDirectory()) reject("UNAVAILABLE");
       const root = await fs.realpath(repository_root);
       const rootHandle = await fs.open(root, dirFlags);

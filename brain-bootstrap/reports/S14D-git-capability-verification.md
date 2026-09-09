@@ -494,7 +494,7 @@ Candidate: `8 failed | 1903 passed (1911)` → **+125 passing, +0 failing**.
 
 ---
 
-## 20. Targeted stability qualification (final candidate tree)
+## 20. Targeted stability qualification (original builder tree `b7f9dc9`)
 
 | Gate | Requirement | Result |
 |---|---|---|
@@ -552,6 +552,19 @@ integration target and corrected three contract gaps:
    though contract section 17 accepts `[0-9a-fA-F]`. Accepted IDs are now
    canonicalized to lowercase before reaching Git while `requested_revision`
    preserves the caller's spelling.
+4. Linux `lstat()` follows a final symlink when the configured spelling ends
+   in `/` or `/.`. The provider now strips only trailing directory syntax
+   before inspecting the configured root entry, and regressions cover the bare,
+   slash, `/.`, and `/./` spellings.
+5. Parsed status paths were count/output bounded but not individually checked
+   against the contract's logical path limits. Every current and rename-source
+   status path now passes the bounded path grammar or the observation fails
+   closed as malformed.
+
+For small remaining invocation budgets, the cleanup reservation intentionally
+uses at most half the budget for TERM/KILL/liveness cleanup. This can shorten
+the execution portion of a small caller timeout, but preserves the stronger
+single-hard-deadline and no-unbounded-cleanup requirements.
 
 Remediation production surface:
 

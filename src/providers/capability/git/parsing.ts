@@ -136,6 +136,10 @@ export type StatusParseResult =
   | { ok: true; value: ParsedStatus }
   | { ok: false; reason: "MALFORMED" | "TOO_MANY_PATHS" };
 
+function boundedStatusPath(path: string): boolean {
+  return validateLogicalPath(path) !== null;
+}
+
 /**
  * Parse `git status --porcelain=v2 --branch -z` output into the structured
  * public observation. NUL-record aware: a `2 ` (rename / copy) record consumes
@@ -184,6 +188,7 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
       if (fields.length < 9) return { ok: false, reason: "MALFORMED" };
       const xy = fields[1];
       const path = fields.slice(8).join(" ");
+      if (!boundedStatusPath(path)) return { ok: false, reason: "MALFORMED" };
       paths.push(classify(path, xy, false));
     } else if (kind === "2") {
       // 2 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <Xscore> <path> \0 <origPath>
@@ -194,6 +199,7 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
       // Consume the original-path field that follows this record.
       if (i + 1 >= records.length) return { ok: false, reason: "MALFORMED" };
       i += 1;
+      if (!boundedStatusPath(path) || !boundedStatusPath(records[i])) return { ok: false, reason: "MALFORMED" };
       paths.push(classify(path, xy, false));
     } else if (kind === "u") {
       // u <XY> <sub> <m1> <m2> <m3> <mW> <h1> <h2> <h3> <path>
@@ -201,10 +207,12 @@ export function parseStatusPorcelainV2(stdout: string): StatusParseResult {
       if (fields.length < 11) return { ok: false, reason: "MALFORMED" };
       const xy = fields[1];
       const path = fields.slice(10).join(" ");
+      if (!boundedStatusPath(path)) return { ok: false, reason: "MALFORMED" };
       paths.push(classify(path, xy, false, true));
     } else if (kind === "?") {
       // ? <path>
       const path = rec.slice(2);
+      if (!boundedStatusPath(path)) return { ok: false, reason: "MALFORMED" };
       paths.push({ path, tracked: false, staged: false, modified: false, deleted: false, untracked: true });
     } else if (kind === "!") {
       // ! <path> — not requested (no --ignored); ignore defensively.

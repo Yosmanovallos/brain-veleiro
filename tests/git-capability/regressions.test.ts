@@ -5,6 +5,7 @@ import * as gitProcess from "../../src/providers/capability/git/process.js";
 import { withSimpleRepo, providerConfig, createProvider } from "./repoFixtures.js";
 import { request, registry, output, STATUS, READ } from "./helpers.js";
 import { assertBoundaries, assertPreExistingS14CFailureCause, PRE_EXISTING_S14C_FAILURES } from "./audit.js";
+import { parseStatusPorcelainV2 } from "../../src/providers/capability/git/parsing.js";
 
 const run = (p: Awaited<ReturnType<typeof createProvider>>, cap: string, input: Record<string, unknown>, timeout_ms = 20000) =>
   p.invoke(request(cap, input, timeout_ms));
@@ -22,14 +23,22 @@ it("the 8 failing tests/shell-capability tests are PRE-EXISTING inherited S14C-h
   expect(PRE_EXISTING_S14C_FAILURES).toHaveLength(8);
 });
 
-it("rejects a configured repository root that is itself a symlink", async () => {
+it("rejects a configured repository root that is itself a symlink, including trailing directory syntax", async () => {
   await withSimpleRepo(async fx => {
     const linkedRoot = join(fx.base, "configured-root-link");
     symlinkSync(fx.root, linkedRoot, "dir");
-    await expect(createProvider(providerConfig(fx, { repository_root: linkedRoot }))).rejects.toThrow(
-      "Invalid or unavailable explicit Git repository configuration.",
-    );
+    for (const repository_root of [linkedRoot, `${linkedRoot}/`, `${linkedRoot}/.`, `${linkedRoot}/./`]) {
+      await expect(createProvider(providerConfig(fx, { repository_root }))).rejects.toThrow(
+        "Invalid or unavailable explicit Git repository configuration.",
+      );
+    }
   });
+});
+
+it("fails closed when porcelain status contains a path outside the bounded logical grammar", () => {
+  expect(parseStatusPorcelainV2(`? ${"x".repeat(256)}\0`)).toEqual({ ok: false, reason: "MALFORMED" });
+  expect(parseStatusPorcelainV2(`? ${"x".repeat(4097)}\0`)).toEqual({ ok: false, reason: "MALFORMED" });
+  expect(parseStatusPorcelainV2("? ../escape\0")).toEqual({ ok: false, reason: "MALFORMED" });
 });
 
 it("accepts a full uppercase commit id and canonicalizes it for Git", async () => {
