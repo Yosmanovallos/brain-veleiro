@@ -28,7 +28,7 @@ export const LIMITS = {
 } as const;
 
 export const REPOSITORY_ID = /^[a-z0-9][a-z0-9._-]*$/;
-const FULL_OID = /^[0-9a-f]{40}$|^[0-9a-f]{64}$/;
+const FULL_OID = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i;
 
 export const wellFormed = (value: string): boolean => !/[\uD800-\uDFFF]/u.test(value);
 
@@ -46,7 +46,7 @@ export function validateRevision(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   if (raw.length === 0 || raw.length > LIMITS.revisionChars) return null;
   if (raw === "HEAD") return "HEAD";
-  if (FULL_OID.test(raw)) return raw;
+  if (FULL_OID.test(raw)) return raw.toLowerCase();
   return null;
 }
 

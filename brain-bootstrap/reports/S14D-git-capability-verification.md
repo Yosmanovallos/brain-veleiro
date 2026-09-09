@@ -1,9 +1,12 @@
 # S14D — Git Capability Part B: Builder Verification Report
 
-**Status:** S14D BUILDER PASS AWAITING CONTROL-PLANE SOURCE AUDIT
+**Builder status:** S14D BUILDER PASS AWAITING CONTROL-PLANE SOURCE AUDIT  
+**Control-plane status:** REMEDIATED CANDIDATE AWAITING FRESH INDEPENDENT VERIFICATION
 
-This report records only the fresh primary builder's evidence for S14D Git
-Capability Part B. It does **not** claim independent-verifier pass, phase pass,
+The original body records the fresh primary builder's evidence for S14D Git
+Capability Part B at `b7f9dc943d9b30a64cfc4db646f56ccc89e34bf8`.
+Section 23 records the later control-plane remediation and superseding test
+counts. This report does **not** claim independent-verifier pass, phase pass,
 S14 closure, HI-054, or S14E authorization.
 
 ---
@@ -531,3 +534,48 @@ HI-054, or S14E authorization.
 
 **Next: control-plane source audit of the exact remote candidate on branch
 `s14d-git-capability-part-b`.**
+
+---
+
+## 23. Control-plane source-audit remediation addendum
+
+The control-plane source audit rejected the original builder SHA as an
+integration target and corrected three contract gaps:
+
+1. A configured `repository_root` symlink was accepted because `realpath()` ran
+   before the configured path was checked. Construction now uses `lstat()` first
+   and rejects a symlink or non-directory root.
+2. Timeout cleanup began only after the full remaining operation deadline
+   expired. The process runner now reserves cleanup time inside one hard
+   invocation deadline and caps liveness polling by that deadline.
+3. The revision grammar rejected uppercase full hexadecimal object IDs even
+   though contract section 17 accepts `[0-9a-fA-F]`. Accepted IDs are now
+   canonicalized to lowercase before reaching Git while `requested_revision`
+   preserves the caller's spelling.
+
+Remediation production surface:
+
+- `src/providers/capability/git/workspaceGitCapabilityProvider.ts`
+- `src/providers/capability/git/process.ts`
+- `src/providers/capability/git/parsing.ts`
+
+Remediation test surface:
+
+- `tests/git-capability/regressions.test.ts`
+- `tests/git-capability/processExercises.ts`
+- `tests/git-capability/cases.ts`
+
+The original builder counts elsewhere in this report remain historical evidence
+for `b7f9dc943d9b30a64cfc4db646f56ccc89e34bf8`; they are not claims about the
+final remediated HEAD. Final remediated counts are recorded here after running
+the exact final candidate:
+
+- `npm ci`: pending final candidate run.
+- `npm run typecheck`: pending final candidate run.
+- Focused S14D suite: pending final candidate run.
+- `npm run build`: pending final candidate run.
+- Full suite: pending final candidate run.
+
+State remains unchanged: S14D and S14 are not closed, HI-054 is not awarded,
+and S14E is not authorized pending a fresh independent-verifier relay and
+separate control-plane acceptance.

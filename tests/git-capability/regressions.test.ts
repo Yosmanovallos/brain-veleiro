@@ -32,6 +32,17 @@ it("rejects a configured repository root that is itself a symlink", async () => 
   });
 });
 
+it("accepts a full uppercase commit id and canonicalizes it for Git", async () => {
+  await withSimpleRepo(async fx => {
+    const p = await createProvider(providerConfig(fx));
+    const requested = fx.head().toUpperCase();
+    const observed = output(await run(p, READ, { path: "hello.txt", revision: requested }));
+    expect(observed.requested_revision).toBe(requested);
+    expect(observed.resolved_commit).toBe(fx.head());
+    expect(observed.content).toBe("Hello S14D\n");
+  });
+});
+
 it("input accessors are rejected without evaluation", async () => {
   await withSimpleRepo(async fx => {
     const p = await createProvider(providerConfig(fx));

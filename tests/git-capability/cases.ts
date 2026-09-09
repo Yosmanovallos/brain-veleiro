@@ -324,7 +324,7 @@ export const negatives: Record<string, () => Promise<void>> = {
       for (const revision of [
         "", "abc123", "deadbeef", "main", "v1.0", "HEAD~1", "HEAD^", "HEAD^{}", "HEAD@{0}",
         "-HEAD", " HEAD", "HEAD ", "a\tb", "a\0b", "HEAD:hello.txt", "aaaa..bbbb", "x".repeat(65),
-        "refs/heads/main", "@", ":/msg", "ABCDEF0123456789abcdef0123456789abcdef01", // 40 chars but uppercase mixed -> not [0-9a-f]{40}
+        "refs/heads/main", "@", ":/msg",
       ]) {
         failCode(await run(p, READ, { path: "hello.txt", revision }), "INVALID_INPUT");
       }
