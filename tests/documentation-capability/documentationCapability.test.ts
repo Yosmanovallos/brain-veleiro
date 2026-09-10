@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { InMemoryDocumentationCapabilityProvider } from "../../src/providers/capability/documentation/inMemoryDocumentationCapabilityProvider.js";
 import { agentExec, output, registry, request, restricted, sampleCorpus, DOC_CAP } from "./helpers.js";
 
@@ -372,10 +372,42 @@ describe("S14E negative fixtures", () => {
   });
 
   it("FX-NEG-009: deadline expiry during validation or scan returns TIMEOUT", async () => {
-    const huge = { ...sampleCorpus, documents: Array.from({ length: 100 }, (_, i) => ({ document_id: `doc${String(i).padStart(3, "0")}`, revision: "v1", title: `Title ${i}`, text: "line one\nline two\nline three\n" })) };
-    const r = await provider(huge).invoke(request({ query: "line one" }, 1, "timeout"));
-    expect(r.status).toBe("FAIL");
-    if (r.status === "FAIL") expect(r.error.code).toBe("TIMEOUT");
+    // Controlled clock. The provider derives its invocation budget from performance.now(),
+    // so a virtual clock that advances a fixed step per read makes the deadline expire at a
+    // fixed point in the scan on every run, independent of how fast the host machine is.
+    // Real event-loop cooperative-yield timeouts stay covered by HI-013 and UC04.
+    const CLOCK_STEP_MS = 1;
+    const TIMEOUT_MS = 96;
+    // 20 documents of 20 lines each: the provider reads the clock once per document plus once
+    // per line, so the budget expires roughly a quarter of the way through the scan. The query
+    // matches nothing, so no document short-circuits out of its line loop before that point.
+    const corpus = {
+      ...sampleCorpus,
+      documents: Array.from({ length: 20 }, (_, i) => ({
+        document_id: `doc${String(i).padStart(3, "0")}`,
+        revision: "v1",
+        title: `Title ${i}`,
+        text: Array.from({ length: 20 }, (_, j) => `line ${j}`).join("\n"),
+      })),
+    };
+    const p = provider(corpus);
+
+    let virtualNow = 0;
+    const clock = vi.spyOn(performance, "now").mockImplementation(() => {
+      const reading = virtualNow;
+      virtualNow += CLOCK_STEP_MS;
+      return reading;
+    });
+    try {
+      const r = await p.invoke(request({ query: "zzz" }, TIMEOUT_MS, "timeout"));
+      expect(r.status).toBe("FAIL");
+      if (r.status === "FAIL") {
+        expect(r.call_id).toBe("timeout");
+        expect(r.error.code).toBe("TIMEOUT");
+      }
+    } finally {
+      clock.mockRestore();
+    }
   });
 
   it("FX-NEG-010: capability denial produces existing BLOCKED", async () => {
