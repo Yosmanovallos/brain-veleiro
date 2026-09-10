@@ -21,7 +21,8 @@
   "homepage": "https://github.com/Yosmanovallos/brain-veleiro#readme",
   "private": true,
   "dependencies": {
-    "better-sqlite3": "^13.0.3"
+    "better-sqlite3": "^13.0.3",
+    "playwright-core": "1.63.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
