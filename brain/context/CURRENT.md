@@ -6,7 +6,7 @@
 
 ## Current Objective
 
-S00–S13R are `VERIFIED PASS / CLOSED`. S14 (`CAPABILITY_REGISTRY_TOOLS_MCP`, RUNTIME_INFRASTRUCTURE / DEEP) is `IN_PROGRESS` / `NOT_CLOSED`. Its first six phases are now verified and integrated on `main`:
+S00–S13R are `VERIFIED PASS / CLOSED`. S14 (`CAPABILITY_REGISTRY_TOOLS_MCP`, RUNTIME_INFRASTRUCTURE / DEEP) is `IN_PROGRESS` / `NOT_CLOSED`. Its first seven phases are now verified and integrated on `main`:
 
 - **S14A Capability Registry Foundation** (`PHASE_PASS`)
 - **S14B Filesystem Capability** (`PHASE_PASS`)
@@ -14,51 +14,50 @@ S00–S13R are `VERIFIED PASS / CLOSED`. S14 (`CAPABILITY_REGISTRY_TOOLS_MCP`, R
 - **S14D Git Capability** (`PHASE_PASS`)
 - **S14E Documentation/Search** (`PHASE_PASS`)
 - **S14F GitHub REST Capability** (`PHASE_PASS`)
+- **S14G Browser Capability** (`PHASE_PASS`)
 
-S14F closed on exact candidate `54401f943e5e01e461f578230ac804e97ba50c3d` with a fresh independent `PASS_WITH_DOCUMENTED_BASELINE_FAILURES` relay (issue #1 comment 5620849939, Antigravity CLI non-authoring, non-builder, non-fork, read-only verifier) and a separate ChatGPT control-plane acceptance (issue #1 comment 5620853896, `in_reply_to_comment_id: 5620849939`, decision `VERIFIED_PASS_ACCEPTED / S14F_PHASE_INTEGRATION_AUTHORIZED`).
+S14G closed on exact candidate `78d6f6dceb3b5652fc2d26da4115ae52a513899a` with a fresh independent `PASS_WITH_DOCUMENTED_BASELINE_FAILURES` relay (issue #1 comment 5626540483, Antigravity CLI non-authoring, non-builder, non-fork, read-only verifier) and a separate ChatGPT control-plane acceptance (issue #1 comment 5626543320, `in_reply_to_comment_id: 5626540483`, decision `VERIFIED_PASS_ACCEPTED / S14G_PHASE_INTEGRATION_AUTHORIZED`).
 
-`HI-054` is `NOT_AWARDED`. `S14G` is `NOT_AUTHORIZED` / `NOT_STARTED`.
+`HI-054` is `NOT_AWARDED`. `S14H` is `NOT_AUTHORIZED` / `NOT_STARTED`.
 
 ## Current Repository State
 
-**Branch:** `main` (fast-forwarded to the S14F docs-only phase-closure commit on top of `54401f943e5e01e461f578230ac804e97ba50c3d`)
+**Branch:** `main` (fast-forwarded to the S14G docs-only phase-closure commit on top of `78d6f6dceb3b5652fc2d26da4115ae52a513899a`)
 
-**S14F verified implementation target:** `54401f943e5e01e461f578230ac804e97ba50c3d` (GitHub REST final — SR-001 credential-resolution deadline repair). Baseline before this phase: `040cc43ff2ad42deb06c8edf794e3bdfa7762be6`.
+**S14G verified implementation target:** `78d6f6dceb3b5652fc2d26da4115ae52a513899a` (Browser final — SR-G-001..006 repairs + canonical traceability repair). Baseline before this phase: `e4c90bc8a43f1ffb855617ba7db30ce4e46d2595`.
 
-**S14F historical source-review-failed candidate:** `3372914ca1b879485c1961ead6fec2223e87ed7a` remains on branch `s14f-github-capability-part-b` and is an ancestor of the verified candidate.
+**S14G historical source-review-failed candidate:** `df3cdb90e87d4d6b31580de4d33af18c98de10a1`; source-review repair candidate `20e0ff780de7494e8e7039208f9fb1f534bc3f54`; traceability repair commit `1c4a182e1336f8c87f0339a3c599ca05bacd7120` — all remain ancestors of the verified candidate on branch `s14g-browser-capability-part-b`.
 
 **Worktree status:** the docs-only phase-closure commit (`STATE.yaml` + `CURRENT.md` + one phase-closure handoff) is created in a fresh isolated WSL-native worktree directly on the exact verified candidate and then fast-forwarded to `main`. The Windows-side `/mnt/c` working tree was **not** reset, stashed, cleaned, staged, merged, or committed and may remain stale/dirty by design — remote `main` is the authoritative closure state.
 
-**Last independently verified stage:** S14F phase at 2026-09-10T15:05:46Z by a fresh non-authoring, non-builder, non-fork, read-only Antigravity CLI verifier; accepted by the control plane at 2026-09-10T15:06:03Z. This is an S14F **phase** verification, not an S14 **step** verification — S14 stays `IN_PROGRESS`.
+**Last independently verified stage:** S14G phase at 2026-09-10T22:33:00Z by a fresh non-authoring, non-builder, non-fork, read-only Antigravity CLI verifier; accepted by the control plane at 2026-09-10T22:56:52Z. This is an S14G **phase** verification, not an S14 **step** verification — S14 stays `IN_PROGRESS`.
 
 ## Current Handoff
 
-**Handoff file:** `brain/context/handoffs/20260910T150646Z-s14f-verified-pass-phase-closure.md`
+**Handoff file:** `brain/context/handoffs/20260910T230500Z-s14g-verified-pass-phase-closure.md`
 
-**Handoff status:** `S14F VERIFIED PASS / INTEGRATED ON MAIN` (S14 `IN_PROGRESS` / `NOT_CLOSED`)
+**Handoff status:** `S14G VERIFIED PASS / INTEGRATED ON MAIN` (S14 `IN_PROGRESS` / `NOT_CLOSED`)
 
 ## Current Status
 
-Verified candidate: `54401f943e5e01e461f578230ac804e97ba50c3d`. Fresh verifier relay: issue #1 comment `5620849939` (`phase: S14F`, `status: PASS_WITH_DOCUMENTED_BASELINE_FAILURES`, `independence: fresh_session/non_authoring/non_builder/non_fork/read_only`). Control-plane acceptance: issue #1 comment `5620853896` (`in_reply_to_comment_id: 5620849939`, decision `VERIFIED_PASS_ACCEPTED / S14F_PHASE_INTEGRATION_AUTHORIZED`). `HI-054`: `NOT_AWARDED`. `S14G`: `NOT_AUTHORIZED` / `NOT_STARTED`.
+Verified candidate: `78d6f6dceb3b5652fc2d26da4115ae52a513899a`. Fresh verifier relay: issue #1 comment `5626540483` (`phase: S14G`, `status: PASS_WITH_DOCUMENTED_BASELINE_FAILURES`, `independence: fresh_session/non_authoring/non_builder/non_fork/read_only`). Control-plane acceptance: issue #1 comment `5626543320` (`in_reply_to_comment_id: 5626540483`, decision `VERIFIED_PASS_ACCEPTED / S14G_PHASE_INTEGRATION_AUTHORIZED`). Clarification-02: issue #1 comment `5624887844`. `HI-054`: `NOT_AWARDED`. `S14H`: `NOT_AUTHORIZED` / `NOT_STARTED`.
 
 ## Procedural Note
 
-The S14F independent verification confirmed:
+The S14G independent verification confirmed:
 
-- the SR-001 credential-resolution deadline repair bounds the resolver against the single invocation `Deadline` with no second timer;
-- hanging READ resolvers produce `FAIL / TIMEOUT / retryable true / timeoutRead` with zero HTTP;
-- hanging WRITE resolvers produce `FAIL / TIMEOUT / retryable false / timeoutWrite` with `write.dispatched` still `false` and zero HTTP;
-- pre-deadline resolver rejection remains `PERMISSION_DENIED / retryable false / credentialUnavailable`;
-- late resolver settlement/rejection cannot alter the result, trigger HTTP, leak the credential, or produce an unhandled rejection;
-- the credential-deadline regression file passed 10 consecutive runs (5/5 each);
-- the focused S14F suite is 85/85 PASS;
-- the candidate adds 85 passing S14F Part B tests to the 1960-test baseline, producing 2031 passed / 14 inherited failed;
-- the 14 inherited failure identities and assertion causes are unchanged and attributable only to `brain-bootstrap/STATE.yaml` and `brain/context/CURRENT.md`;
-- the repair changed exactly five paths (`src/providers/capability/github/githubCapabilityProvider.ts`, `tests/github-capability/cases.ts`, `tests/github-capability/helpers.ts`, `tests/github-capability/credentialDeadline.test.ts`, and `brain-bootstrap/reports/S14F-github-capability-verification.md`) and left all production source, Part A artifacts, `package.json`, `package-lock.json` and `dist` untouched.
+- the read-only `browser.inspect` capability (`side_effects: EXTERNAL`) launches Playwright-managed headless Chromium via `playwright-core@1.63.0` (exact pin) with a fresh nonpersistent browser/context/page per invocation;
+- SR-G-001 through SR-G-006 repairs verified in source and at runtime (final-URL validation, 512-byte link-text bound, final deadline/popup/download success gate, single monotonic deadline with bounded cleanup, real Chromium smoke, awaited route/WebSocket handler promises);
+- the canonical traceability oracle proves exact set equality against the Part A YAML for positives 10/10, negatives 24/24, hard invariants 30/30, unsafe counters 10/10 (zero on legitimate source, independently fireable);
+- the focused S14G suite is 125/125 PASS across 11 files including the real Chromium no-network smoke (`FX-POS-010`);
+- timing-sensitive regressions passed 10/10 consecutive runs (125/125 each);
+- the candidate adds passing S14G tests to the 2045-test baseline, producing 2170 total / 2135 passed / 35 documented legacy failures;
+- the 35 failure identities reconcile exactly to 18 baseline + 2 Clarification-01 + 15 Clarification-02 (comment 5624887844), all attributable only to the authorized `playwright-core@1.63.0` manifest change plus the pre-existing `STATE.yaml`/`CURRENT.md` continuity drift;
+- the traceability repair changed exactly six `tests/browser-capability/**` files (Codex GPT-5.6 Sol) and the control-plane report commit changed only the verification report; production source is unchanged from the source-reviewed `20e0ff7` candidate.
 
 ## Next Exact Action
 
-Return to ChatGPT for the **S14G authoring gate**. S14 remains `IN_PROGRESS`; `S14G` is `NOT_AUTHORIZED` / `NOT_STARTED` and must not be implemented, inspected, or authored before the gate. `HI-054` is `NOT_AWARDED` and must remain so until the final S14 closure.
+Return to ChatGPT for the **S14H authoring gate**. S14 remains `IN_PROGRESS`; `S14H` is `NOT_AUTHORIZED` / `NOT_STARTED` and must not be implemented, inspected, or authored before the gate. `HI-054` is `NOT_AWARDED` and must remain so until the final S14 closure.
 
 ### Operating Rule
 
