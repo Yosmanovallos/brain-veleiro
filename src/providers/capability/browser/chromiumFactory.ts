@@ -61,7 +61,11 @@ class PlaywrightBrowserHandle implements BrowserHandle {
   }
 }
 
-class PlaywrightBrowserContextHandle implements BrowserContextHandle {
+/**
+ * Exported only so tests can drive the real adapter against a structural
+ * BrowserContext double; it is not part of the provider's public index.
+ */
+export class PlaywrightBrowserContextHandle implements BrowserContextHandle {
   constructor(private readonly context: BrowserContext) {}
 
   async newPage(): Promise<PageHandle> {
@@ -69,16 +73,18 @@ class PlaywrightBrowserContextHandle implements BrowserContextHandle {
     return new PlaywrightPageHandle(page);
   }
 
+  // Both route callbacks RETURN the provider handler's Promise so Playwright
+  // tracks its completion and observes a rejection instead of orphaning it.
   async route(pattern: string | RegExp, handler: RouteHandler): Promise<void> {
     await this.context.route(pattern, (pwRoute: PlaywrightRoute) => {
       const request = pwRoute.request();
-      handler(new PlaywrightRouteAdapter(pwRoute, request));
+      return handler(new PlaywrightRouteAdapter(pwRoute, request));
     });
   }
 
   async routeWebSocket(pattern: string | RegExp, handler: WebSocketRouteHandler): Promise<void> {
     await this.context.routeWebSocket(pattern, (ws: PlaywrightWebSocketRoute) => {
-      handler(new PlaywrightWebSocketRouteAdapter(ws));
+      return handler(new PlaywrightWebSocketRouteAdapter(ws));
     });
   }
 
