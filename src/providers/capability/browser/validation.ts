@@ -302,6 +302,32 @@ export function validateUrl(value: string, allowedOrigins: string[]): string {
   return value;
 }
 
+// --- final main-frame URL (contract §14) ----------------------------------
+
+/**
+ * Revalidate the post-navigation main-frame URL before it can enter SUCCESS:
+ * absolute HTTPS, no userinfo, exact allowed navigation origin, and within the
+ * final_url byte bound. Policy violations are denials; an in-policy URL that
+ * is too long is an output overflow.
+ */
+export function validateFinalUrl(value: string, allowedOrigins: ReadonlySet<string>): string {
+  const denied = (): never => reject("PERMISSION_DENIED", SAFE_MESSAGES.requestDenied);
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return denied();
+  }
+
+  if (parsed.protocol !== "https:") return denied();
+  if (parsed.username || parsed.password) return denied();
+  if (!allowedOrigins.has(parsed.origin)) return denied();
+  if (utf8Bytes(value) > LIMITS.finalUrlBytes) reject("EXECUTION_FAILED", SAFE_MESSAGES.outputOverflow);
+
+  return value;
+}
+
 // --- safe output helpers --------------------------------------------------
 
 export function safeOrigin(value: string): string | undefined {

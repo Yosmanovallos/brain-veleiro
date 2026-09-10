@@ -32,11 +32,11 @@ import {
   Rejection,
   SAFE_MESSAGES,
   reject,
-  safeOrigin,
   toSafeError,
   utf8Bytes,
   validateConfig,
   validateEnvelope,
+  validateFinalUrl,
   validateInput,
 } from "./validation.js";
 
@@ -180,12 +180,8 @@ export class BrowserInspectCapabilityProvider implements CapabilityProvider {
         timeout: 0,
       });
 
-      // 7. Revalidate the final main-frame URL.
-      const finalUrl = page.url();
-      const finalOrigin = safeOrigin(finalUrl);
-      if (!finalOrigin || !allowedNavigation.has(finalOrigin)) {
-        reject("PERMISSION_DENIED", SAFE_MESSAGES.requestDenied);
-      }
+      // 7. Revalidate the final main-frame URL: HTTPS, no userinfo, allowed origin, byte bound.
+      const finalUrl = validateFinalUrl(page.url(), allowedNavigation);
 
       // A navigation that became a download or opened an extra page cannot be a success.
       if (downloadObserved) {
