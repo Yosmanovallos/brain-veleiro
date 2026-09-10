@@ -72,6 +72,7 @@ export const LIMITS = {
   navigationOriginsMax: 8,
   requestOriginsMax: 32,
   titleBytes: 1024,
+  linkTextBytes: 512,
   finalUrlBytes: 2048,
   outputBytes: 393216,
   safeErrorAsciiChars: 160,

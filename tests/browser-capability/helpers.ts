@@ -38,6 +38,8 @@ import {
 
 export { BROWSER_INSPECT, SAFE_MESSAGES };
 
+type AriaSnapshotOptions = Parameters<PageHandle["ariaSnapshotJSON"]>[0];
+
 export const TEST_ORIGIN = "https://qa.example.com";
 export const TEST_ORIGIN2 = "https://qa.other.com";
 export const TEST_BROWSER_ID = "qa.browser";
@@ -222,6 +224,12 @@ export class FakePageHandle implements PageHandle {
   hang = false;
   failOnGoto?: Error;
   redirectTo?: string;
+  /** Runs inside `title()` before it resolves (late post-navigation events). */
+  beforeTitle?: () => Promise<void> | void;
+  /** Runs inside `ariaSnapshotJSON()` before it resolves (late post-navigation events). */
+  beforeSnapshot?: (options: AriaSnapshotOptions) => Promise<void> | void;
+  /** When set, `ariaSnapshotJSON()` ignores abort and resolves only after the signal aborts. */
+  snapshotResolvesAfterAbort = false;
 
   constructor(readonly context: FakeBrowserContextHandle) {}
 
@@ -282,12 +290,17 @@ export class FakePageHandle implements PageHandle {
     return route;
   }
 
-  title(): Promise<string> {
-    return Promise.resolve(this._title);
+  async title(): Promise<string> {
+    await this.beforeTitle?.();
+    return this._title;
   }
 
-  ariaSnapshotJSON(_options: { mode: "default"; boxes: false; depth: number; signal: AbortSignal; timeout: number }): Promise<unknown> {
-    return Promise.resolve(this._snapshot);
+  async ariaSnapshotJSON(options: AriaSnapshotOptions): Promise<unknown> {
+    await this.beforeSnapshot?.(options);
+    if (this.snapshotResolvesAfterAbort && !options.signal.aborted) {
+      await new Promise<void>((resolve) => options.signal.addEventListener("abort", () => resolve(), { once: true }));
+    }
+    return this._snapshot;
   }
 
   onDialog(handler: (dialog: DialogHandle) => void): void {

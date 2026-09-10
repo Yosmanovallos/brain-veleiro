@@ -231,6 +231,18 @@ export class BrowserInspectCapabilityProvider implements CapabilityProvider {
         reject("EXECUTION_FAILED", SAFE_MESSAGES.outputOverflow);
       }
 
+      // 12. Final success gate: the one deadline must still hold, and a popup or
+      // download observed late (during title/snapshot/finalization) still fails.
+      if (deadline.expired()) {
+        reject("TIMEOUT", SAFE_MESSAGES.timeout);
+      }
+      if (downloadObserved) {
+        reject("PERMISSION_DENIED", SAFE_MESSAGES.downloadBlocked);
+      }
+      if (popupObserved) {
+        reject("PERMISSION_DENIED", SAFE_MESSAGES.popupBlocked);
+      }
+
       return {
         status: "SUCCESS",
         ...identity,
@@ -496,7 +508,9 @@ function extractLinks(
     if (obj.role === "link" && typeof obj.url === "string") {
       const text = typeof obj.name === "string" ? obj.name : "";
       const resolved = resolveLink(String(obj.url), pageUrl);
-      if (resolved !== undefined && utf8Bytes(text) <= LIMITS.titleBytes && utf8Bytes(resolved) <= LIMITS.urlBytes) {
+      // A link outside the per-link bounds is not a normalized link: it is
+      // excluded whole, never text-truncated, and does not set links_truncated.
+      if (resolved !== undefined && utf8Bytes(text) <= LIMITS.linkTextBytes && utf8Bytes(resolved) <= LIMITS.urlBytes) {
         found.push({ text, url: resolved });
       }
     }
