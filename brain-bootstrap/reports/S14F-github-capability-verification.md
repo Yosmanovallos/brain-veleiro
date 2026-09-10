@@ -56,7 +56,8 @@ The focused Part B suite under `tests/github-capability/` contains:
 | `unsafeCounters.test.ts` | 10 unsafe counters (UC01 … UC10) |
 | `regressions.test.ts` | 2 regression/boundary checks |
 | `registryCompatibility.test.ts` | 2 registry / provider-swap checks |
-| **Total** | **80 / 80 passed** |
+| `credentialDeadline.test.ts` | 5 SR-001 credential-deadline regressions (added by the §11 correction) |
+| **Total** | **85 / 85 passed** after the §11 correction (80 / 80 at candidate `3372914`) |
 
 ### 4.1 Hard invariants (28/28)
 
@@ -197,3 +198,51 @@ No modifications, renames, deletions, or dependency files are present.
 - **Candidate code commit:** `53f5bbd` (contains the provider, tests, and this report before remote SHA insertion).
 - **Remote branch SHA verified at push:** `5d4268e8a2253320209a0176c476b3f14ba40a04` (matches `FETCH_HEAD` after `git fetch origin s14f-github-capability-part-b`).
 - **Final remote branch tip:** recorded in the `STEP_STATUS` handoff after any subsequent report update.
+
+## 11. Source-review correction SR-001 (credential resolution deadline)
+
+Sections 5 to 10 describe candidate `3372914` and have not been updated for this correction. This section supersedes the focused-suite counts. It does not restate the full builder QA or git-status results: those will be re-measured by the control plane.
+
+- **Failed candidate:** `3372914ca1b879485c1961ead6fec2223e87ed7a`
+- **Implementation baseline:** `040cc43ff2ad42deb06c8edf794e3bdfa7762be6` (unchanged)
+- **Environment:** Node `v24.19.0`, npm `11.17.0`, Vitest `4.1.11`
+
+### 11.1 Defect
+
+`resolveCredential()` awaited `credentialResolver.resolve(...)` without racing it against the invocation deadline (contract §15). A never-settling resolver could keep `invoke()` alive past the effective timeout, and a resolver rejecting after expiry was classified `PERMISSION_DENIED` instead of `TIMEOUT`.
+
+### 11.2 Repair (`src/providers/capability/github/githubCapabilityProvider.ts` only)
+
+- `Deadline.bound(pending)` races a provider-side wait against the existing single `AbortController`. It creates no second timer and no resettable budget. The deadline is still armed once in `invoke()` with `min(request.timeout_ms, config.max_timeout_ms)` and the start time is still captured at `invoke()` entry.
+- The provider-created abort listener is `{ once: true }` and is removed on both the fulfil and reject paths. A settlement arriving after the deadline has a rejection handler attached and is discarded, so it is never unhandled and its value is never stored.
+- `resolveCredential()` awaits `deadline.bound(...)`. If the wait fails and `deadline.expired()` holds (which includes `signal.aborted`), the result goes through the existing `failTimeout(write)`: READ gives `TIMEOUT` / retryable `true` / `timeoutRead`, and WRITE gives `TIMEOUT` / retryable `false` / `timeoutWrite` because `write.dispatched` is still `false`. Otherwise the result stays `PERMISSION_DENIED` / `credentialUnavailable`. A synchronously throwing resolver is also mapped to `PERMISSION_DENIED`.
+- `GitHubCredentialResolver`, Core, `AgentDefinition`, registry, restricted provider and dependency manifests are unchanged. Nothing is retried.
+
+### 11.3 Regression evidence (non-canonical, `tests/github-capability/credentialDeadline.test.ts`)
+
+| Test | Assertion |
+|------|-----------|
+| `SR-001-T1` | Hanging resolver on READ (remote / review / checks inspect, and a request-side short timeout): `FAIL` / `TIMEOUT` / retryable `true` / `timeoutRead`, resolver calls `1`, HTTP `0` |
+| `SR-001-T2` | Hanging resolver on WRITE (`review.open`, `review.comment`): `FAIL` / `TIMEOUT` / retryable `false` / `timeoutWrite`, HTTP `0` (no preflight, no POST) |
+| `SR-001-T3` | Resolver rejection before the deadline (immediate, explicit pending, synchronous throw): `FAIL` / `PERMISSION_DENIED` / retryable `false` / `credentialUnavailable`, HTTP `0`, no rejection text echoed |
+| `SR-001-T4` | Late settle or late reject after timeout (READ and both WRITEs): result bytes unchanged, HTTP `0`, no unhandled rejection, no credential in the result |
+| `SR-001-T5` | Success path: every abort listener added during the resolver wait is removed |
+
+Canonical `FX-NEG-014` (read) and `FX-NEG-015` (write, pre-dispatch) each gained a hanging-resolver assertion covering code, message, resolver count and zero HTTP, with no wall-clock bound. No canonical fixture was renumbered, removed or weakened.
+
+Counterfactual: when these tests run against the unrepaired provider from `3372914`, `SR-001-T1`, `T2` and `T4` hit the 5 s test timeout and `T5` observes no bounded listener. `T3` passes on both versions, because that behavior is preserved.
+
+### 11.4 QA
+
+- `npm run typecheck`: exit `0`.
+- `npx vitest run tests/github-capability/credentialDeadline.test.ts`: 10 consecutive runs, `5 / 5` passed each time.
+- `npx vitest run tests/github-capability`: `85 / 85` passed. Inventories: `28 / 28` hard invariants, `14 / 14` positive fixtures, `24 / 24` negative fixtures, `10 / 10` unsafe counters zero.
+- Worktree hygiene: the temporary control-plane prompt file was removed before final QA. `assertBoundaries()` passed.
+- Full builder QA (post-correction, same WSL-native worktree):
+  - `rm -rf dist` then `npm test`: **2031 passed / 14 failed** (2045 total)
+  - `npm run build`: exit `0`; `dist/` produced and ignored
+  - `npm test`: **2031 passed / 14 failed** (2045 total)
+  - Inherited failure identities and cause unchanged from baseline `040cc43` (`brain-bootstrap/STATE.yaml` and `brain/context/CURRENT.md` continuity drift)
+- `git diff --check 040cc43..HEAD`: no whitespace errors.
+
+No merge, phase closure, HI-054 award or S14G authorization is made or implied.

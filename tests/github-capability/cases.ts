@@ -3,7 +3,7 @@ import {
   ALL_IDS, BASE_SHA, CHECKS, CompatibleRemoteInspectTestProvider, DEFINITION_BYTES, HEAD_SHA,
   OTHER_SHA, REMOTE, REVIEW_COMMENT, REVIEW_INSPECT, REVIEW_OPEN, SENTINEL, SHA_256,
   assertCompatibleContracts, assertNoCredential, baseConfig, checkRun, checksPayload,
-  commentInput, commentPayload, definition, definitionWith, failCode, harness, openReviewInput,
+  commentInput, commentPayload, controlledResolver, definition, definitionWith, failCode, harness, openReviewInput,
   openReviewScript, output, refPayload, registry, repoPayload, request, restricted, reviewPayload,
   agentExec, type Harness,
 } from "./helpers.js";
@@ -786,6 +786,15 @@ export const negatives: Record<string, () => Promise<void>> = {
     const result = await run(shared, REMOTE, {}, 60);
     failCode(result, "TIMEOUT", true);
     expect(result.duration_ms).toBeLessThan(4000);
+
+    // Credential resolution draws from the same deadline: a hanging resolver times out with zero HTTP.
+    const hangingCredential = controlledResolver();
+    const unresolved = harness({ config: { max_timeout_ms: 60 }, resolver: hangingCredential, script: [] });
+    const credentialTimeout = await run(unresolved, REMOTE, {});
+    failCode(credentialTimeout, "TIMEOUT", true);
+    if (credentialTimeout.status === "FAIL") expect(credentialTimeout.error.message).toBe(SAFE_MESSAGES.timeoutRead);
+    expect(hangingCredential.probe.calls).toBe(1);
+    expect(unresolved.transport.requests).toHaveLength(0);
   },
 
   // A write deadline is non-retryable; a post-dispatch outcome requires inspection.
@@ -795,6 +804,15 @@ export const negatives: Record<string, () => Promise<void>> = {
     failCode(before, "TIMEOUT", false);
     if (before.status === "FAIL") expect(before.error.message).toBe(SAFE_MESSAGES.timeoutWrite);
     expect(preDispatch.transport.requests.filter(r => r.method === "POST")).toHaveLength(0);
+
+    // A write whose credential resolution outlives the deadline never reaches a preflight or POST.
+    const hangingCredential = controlledResolver();
+    const unresolved = harness({ config: { max_timeout_ms: 60 }, resolver: hangingCredential, script: [] });
+    const credentialTimeout = await run(unresolved, REVIEW_OPEN, openReviewInput());
+    failCode(credentialTimeout, "TIMEOUT", false);
+    if (credentialTimeout.status === "FAIL") expect(credentialTimeout.error.message).toBe(SAFE_MESSAGES.timeoutWrite);
+    expect(hangingCredential.probe.calls).toBe(1);
+    expect(unresolved.transport.requests).toHaveLength(0);
 
     const postDispatch = harness({
       config: { max_timeout_ms: 300 },

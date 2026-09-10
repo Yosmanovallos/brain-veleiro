@@ -109,6 +109,34 @@ class Deadline {
   duration(): number {
     return Math.max(0, Math.round(performance.now() - this.start));
   }
+  /**
+   * Bound a provider-side wait by THIS deadline without a second timer: the
+   * returned promise rejects as soon as the one controller aborts. A later
+   * settlement of `pending` is observed (never unhandled) and discarded, and the
+   * provider-created abort listener is removed on every settle path.
+   */
+  bound<T>(pending: Promise<T>): Promise<T> {
+    const signal = this.controller.signal;
+    return new Promise<T>((resolve, rejectPromise) => {
+      const onAbort = (): void => rejectPromise(new Error(SAFE_MESSAGES.internalError));
+      if (signal.aborted) {
+        pending.then(undefined, () => undefined);
+        onAbort();
+        return;
+      }
+      signal.addEventListener("abort", onAbort, { once: true });
+      pending.then(
+        (value) => {
+          signal.removeEventListener("abort", onAbort);
+          resolve(value);
+        },
+        (error: unknown) => {
+          signal.removeEventListener("abort", onAbort);
+          rejectPromise(error);
+        },
+      );
+    });
+  }
   /** Leaves no provider-created timer or in-flight request behind. */
   dispose(): void {
     if (this.timer !== undefined) clearTimeout(this.timer);
@@ -333,13 +361,18 @@ export class GitHubRestCapabilityProvider implements CapabilityProvider {
     this.ensureTime(deadline, write);
     // No process.env discovery, no default token, no ambient session: without an
     // explicitly injected provider-private resolver the operation fails closed.
-    if (this.credentialResolver === undefined) {
+    const resolver = this.credentialResolver;
+    if (resolver === undefined) {
       reject("PERMISSION_DENIED", SAFE_MESSAGES.credentialUnavailable);
     }
+    // The resolver wait draws from the same invocation deadline (contract §15):
+    // a never-settling resolver cannot outlive it, and expiry is classified as
+    // TIMEOUT before any preflight or POST. `write.dispatched` stays false here.
     let resolved: unknown;
     try {
-      resolved = await this.credentialResolver.resolve(this.config.credential_ref);
+      resolved = await deadline.bound(Promise.resolve().then(() => resolver.resolve(this.config.credential_ref)));
     } catch {
+      if (deadline.expired()) this.failTimeout(write);
       reject("PERMISSION_DENIED", SAFE_MESSAGES.credentialUnavailable);
     }
     this.ensureTime(deadline, write);

@@ -137,6 +137,34 @@ export function sentinelResolver(value: unknown = SENTINEL): {
   return { resolver, probe };
 }
 
+/**
+ * A resolver whose single pending resolution the test settles explicitly (or
+ * never), so credential-deadline behavior is exercised without timer races.
+ */
+export interface ControlledResolver {
+  resolver: GitHubCredentialResolver;
+  probe: CredentialProbe;
+  settle(value: unknown): void;
+  fail(error: unknown): void;
+}
+
+export function controlledResolver(): ControlledResolver {
+  const probe: CredentialProbe = { calls: 0, refs: [] };
+  let settle: (value: unknown) => void = () => undefined;
+  let fail: (error: unknown) => void = () => undefined;
+  const resolver: GitHubCredentialResolver = {
+    resolve(credential_ref: string): Promise<string> {
+      probe.calls++;
+      probe.refs.push(credential_ref);
+      return new Promise<string>((resolve, rejectPromise) => {
+        settle = value => resolve(value as string);
+        fail = rejectPromise;
+      });
+    },
+  };
+  return { resolver, probe, settle: value => settle(value), fail: error => fail(error) };
+}
+
 // --- harness ---------------------------------------------------------------
 
 export const baseConfig = (over: Partial<GitHubRestProviderConfig> = {}): GitHubRestProviderConfig => ({
@@ -160,10 +188,11 @@ export function harness(options: {
   script?: Script;
   credential?: unknown;
   omitResolver?: boolean;
+  resolver?: { resolver: GitHubCredentialResolver; probe: CredentialProbe };
 } = {}): Harness {
   const transport = new FakeTransport(options.script ?? []);
   const credentialValue = options.credential === undefined ? SENTINEL : options.credential;
-  const { resolver, probe } = sentinelResolver(credentialValue);
+  const { resolver, probe } = options.resolver ?? sentinelResolver(credentialValue);
   const provider = new GitHubRestCapabilityProvider(
     baseConfig(options.config),
     options.omitResolver === true ? { transport } : { credentialResolver: resolver, transport },
