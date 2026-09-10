@@ -66,7 +66,7 @@ const snapshotWithNestedLinks = (): unknown =>
 
 export const positives: Record<string, () => Promise<void>> = {
   // Exactly one closed, truthfully EXTERNAL descriptor, free of provider identity.
-  "FX-POS-001": async () => {
+  "LEGACY-POS-001": async () => {
     const h = harness();
     const descriptors = await h.provider.list_capabilities();
     expect(descriptors).toHaveLength(1);
@@ -86,7 +86,7 @@ export const positives: Record<string, () => Promise<void>> = {
   },
 
   // Happy-path inspection returns bounded observation and deterministic HTTPS links.
-  "FX-POS-002": async () => {
+  "LEGACY-POS-002": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => {
       page.setPage("QA Page", snapshotWithLinks([
@@ -111,7 +111,7 @@ export const positives: Record<string, () => Promise<void>> = {
   },
 
   // Both wait_until values succeed and are preserved in the observation.
-  "FX-POS-003": async () => {
+  "LEGACY-POS-003": async () => {
     for (const wait_until of ["domcontentloaded", "load"] as const) {
       const h = harness();
       h.factory.onNewPage = (page) => page.setPage("Wait", [{ role: "document", name: "Wait" }]);
@@ -122,7 +122,7 @@ export const positives: Record<string, () => Promise<void>> = {
   },
 
   // Links are resolved, filtered to HTTPS, deduplicated by DOM order and truncation is reported.
-  "FX-POS-004": async () => {
+  "LEGACY-POS-004": async () => {
     const h = harness({ config: { max_links: 2 } });
     h.factory.onNewPage = (page) => page.setPage("Links", snapshotWithNestedLinks());
     const observed = output(await run(h, { url: "https://qa.example.com/page" }));
@@ -134,7 +134,7 @@ export const positives: Record<string, () => Promise<void>> = {
   },
 
   // Allowed request-origin subresources continue; forbidden ones are blocked without failing the page.
-  "FX-POS-005": async () => {
+  "LEGACY-POS-005": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => {
       page.setPage("Subresources", [{ role: "document", name: "Sub" }]);
@@ -154,7 +154,7 @@ export const positives: Record<string, () => Promise<void>> = {
   },
 
   // A snapshot that fits the configured max_snapshot_bytes succeeds exactly at the bound.
-  "FX-POS-006": async () => {
+  "LEGACY-POS-006": async () => {
     const h = harness({ config: { max_snapshot_bytes: 4096 } });
     const snapshot = { role: "document", name: "Sized", children: [] };
     h.factory.onNewPage = (page) => page.setPage("Sized", snapshot);
@@ -164,7 +164,7 @@ export const positives: Record<string, () => Promise<void>> = {
   },
 
   // Real registry + Restricted + runAgent composition executes the allowed capability.
-  "FX-POS-007": async () => {
+  "LEGACY-POS-007": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => page.setPage("Agent", snapshotWithLinks([{ text: "Home", url: "/" }]));
     const result = await agentExec(h.provider, { url: "https://qa.example.com/" });
@@ -174,7 +174,7 @@ export const positives: Record<string, () => Promise<void>> = {
   },
 
   // A compatible implementation swap preserves the exact AgentDefinition bytes.
-  "FX-POS-008": async () => {
+  "LEGACY-POS-008": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => page.setPage("Swap", [{ role: "document", name: "Swap" }]);
     const compatible = new CompatibleBrowserInspectTestProvider();
@@ -190,7 +190,7 @@ export const positives: Record<string, () => Promise<void>> = {
   },
 
   // Cleanup oracle: exactly one fresh browser, context and page are launched and closed per invoke.
-  "FX-POS-009": async () => {
+  "LEGACY-POS-009": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => page.setPage("Clean", [{ role: "document", name: "Clean" }]);
     output(await run(h, { url: "https://qa.example.com/" }));
@@ -201,7 +201,7 @@ export const positives: Record<string, () => Promise<void>> = {
   },
 
   // Real Playwright Chromium no-network smoke: an unreachable allowed origin yields TIMEOUT or UNAVAILABLE.
-  "FX-POS-010": async () => {
+  "LEGACY-POS-010": async () => {
     const unreachable = "https://unreachable.invalid.example";
     const provider = new BrowserInspectCapabilityProvider(
       baseConfig({
@@ -239,7 +239,7 @@ const badConfig = (config: unknown): void => {
 
 export const negatives: Record<string, () => Promise<void>> = {
   // Unknown or forbidden keys, missing required fields, and wrong types fail construction.
-  "FX-NEG-001": async () => {
+  "LEGACY-NEG-001": async () => {
     for (const bad of [
       null,
       undefined,
@@ -262,7 +262,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Navigation-origins must be a subset of request-origins.
-  "FX-NEG-002": async () => {
+  "LEGACY-NEG-002": async () => {
     badConfig(baseConfig({
       allowed_navigation_origins: ["https://qa.example.com", "https://evil.invalid"],
       allowed_request_origins: ["https://qa.example.com"],
@@ -270,7 +270,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Explicit forbidden configuration surfaces are rejected: channel, args, viewport, cookies, etc.
-  "FX-NEG-003": async () => {
+  "LEGACY-NEG-003": async () => {
     for (const forbidden of [
       "channel",
       "args",
@@ -294,7 +294,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Origins must be exact, canonical, allowed HTTPS origins.
-  "FX-NEG-004": async () => {
+  "LEGACY-NEG-004": async () => {
     for (const origin of [
       "http://qa.example.com",
       "https://qa.example.com/",
@@ -322,7 +322,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Navigation-origins bounds: 1..8, request-origins: 1..32.
-  "FX-NEG-005": async () => {
+  "LEGACY-NEG-005": async () => {
     badConfig(baseConfig({ allowed_navigation_origins: [], allowed_request_origins: [TEST_ORIGIN] }));
     badConfig(baseConfig({ allowed_navigation_origins: Array(9).fill(TEST_ORIGIN), allowed_request_origins: Array(9).fill(TEST_ORIGIN) }));
     badConfig(baseConfig({ allowed_request_origins: [], allowed_navigation_origins: [TEST_ORIGIN] }));
@@ -330,12 +330,12 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Duplicate origins are not allowed.
-  "FX-NEG-006": async () => {
+  "LEGACY-NEG-006": async () => {
     badConfig(baseConfig({ allowed_navigation_origins: [TEST_ORIGIN, TEST_ORIGIN], allowed_request_origins: [TEST_ORIGIN, TEST_ORIGIN] }));
   },
 
   // Numeric configuration bounds.
-  "FX-NEG-007": async () => {
+  "LEGACY-NEG-007": async () => {
     badConfig(baseConfig({ max_timeout_ms: 0 }));
     badConfig(baseConfig({ max_timeout_ms: 60001 }));
     badConfig(baseConfig({ snapshot_depth: 0 }));
@@ -347,21 +347,21 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // browser_id must match the allowed grammar.
-  "FX-NEG-008": async () => {
+  "LEGACY-NEG-008": async () => {
     for (const id of ["", "A", "-start", "start ", "a b", "a".repeat(161)]) {
       badConfig(baseConfig({ browser_id: id }));
     }
   },
 
   // Wrong capability id, invalid envelope fields and bad input all fail closed.
-  "FX-NEG-009": async () => {
+  "LEGACY-NEG-009": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => page.setPage("Fail", [{ role: "document", name: "Fail" }]);
     failCode(await h.provider.invoke({ ...request({ url: "https://qa.example.com/" }), capability_id: "browser.navigate" }), "NOT_FOUND", false);
   },
 
   // Invalid envelope.
-  "FX-NEG-010": async () => {
+  "LEGACY-NEG-010": async () => {
     const h = harness();
     const base = { capability_id: BROWSER_INSPECT, input: { url: "https://qa.example.com/" }, timeout_ms: 5000 };
     for (const bad of [
@@ -377,14 +377,14 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Input must be a closed object with only allowed keys.
-  "FX-NEG-011": async () => {
+  "LEGACY-NEG-011": async () => {
     const h = harness();
     failCode(await run(h, { url: "https://qa.example.com/", extra: 1 }), "INVALID_INPUT", false);
     failCode(await run(h, null as unknown as Record<string, unknown>), "INVALID_INPUT", false);
   },
 
   // URL must be a bounded, well-formed HTTPS URL.
-  "FX-NEG-012": async () => {
+  "LEGACY-NEG-012": async () => {
     const h = harness();
     for (const bad of ["", "a".repeat(2049), 42, null, "https://\x01invalid"]) {
       failCode(await run(h, { url: bad as string }), "INVALID_INPUT", false);
@@ -392,7 +392,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Only https scheme is accepted.
-  "FX-NEG-013": async () => {
+  "LEGACY-NEG-013": async () => {
     const h = harness();
     for (const bad of [
       "http://qa.example.com/",
@@ -406,7 +406,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Forbidden hostname patterns.
-  "FX-NEG-014": async () => {
+  "LEGACY-NEG-014": async () => {
     const h = harness();
     for (const bad of [
       "https://localhost/",
@@ -422,20 +422,20 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // URL origin must be in the allowed navigation origins.
-  "FX-NEG-015": async () => {
+  "LEGACY-NEG-015": async () => {
     const h = harness();
     failCode(await run(h, { url: "https://evil.invalid/" }), "PERMISSION_DENIED", false);
   },
 
   // wait_until must be one of the two allowed values.
-  "FX-NEG-016": async () => {
+  "LEGACY-NEG-016": async () => {
     const h = harness();
     failCode(await run(h, { url: "https://qa.example.com/", wait_until: "networkidle" }), "INVALID_INPUT", false);
     failCode(await run(h, { url: "https://qa.example.com/", wait_until: 1 as unknown as string }), "INVALID_INPUT", false);
   },
 
   // Main-frame navigation to a forbidden origin is aborted.
-  "FX-NEG-017": async () => {
+  "LEGACY-NEG-017": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => {
       page.setPage("Block", [{ role: "document", name: "Block" }]);
@@ -445,7 +445,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // A final URL (post-redirect) outside the allowed navigation origins is rejected.
-  "FX-NEG-018": async () => {
+  "LEGACY-NEG-018": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => {
       page.setPage("Redirect", [{ role: "document", name: "Redirect" }]);
@@ -455,7 +455,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Subresources with disallowed methods, schemes or origins are blocked.
-  "FX-NEG-019": async () => {
+  "LEGACY-NEG-019": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => {
       page.setPage("Block", [{ role: "document", name: "Block" }]);
@@ -472,7 +472,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Download observed fails the invocation.
-  "FX-NEG-020": async () => {
+  "LEGACY-NEG-020": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => {
       page.setPage("Download", [{ role: "document", name: "Download" }]);
@@ -482,7 +482,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Popup / extra page observed fails the invocation.
-  "FX-NEG-021": async () => {
+  "LEGACY-NEG-021": async () => {
     const h = harness();
     h.factory.onNewPage = (page) => {
       page.setPage("Popup", [{ role: "document", name: "Popup" }]);
@@ -492,7 +492,7 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Timeout when navigation does not settle before the effective deadline.
-  "FX-NEG-022": async () => {
+  "LEGACY-NEG-022": async () => {
     const h = harness({ config: { max_timeout_ms: 200 } });
     h.factory.onNewPage = (page) => {
       page.hang = true;
@@ -502,14 +502,14 @@ export const negatives: Record<string, () => Promise<void>> = {
   },
 
   // Snapshot overflow is rejected.
-  "FX-NEG-023": async () => {
+  "LEGACY-NEG-023": async () => {
     const h = harness({ config: { max_snapshot_bytes: 4096 } });
     h.factory.onNewPage = (page) => page.setPage("Overflow", { role: "document", name: "a".repeat(8192) });
     failCode(await run(h, { url: "https://qa.example.com/" }), "EXECUTION_FAILED", false);
   },
 
   // Browser launch failure is reported as UNAVAILABLE.
-  "FX-NEG-024": async () => {
+  "LEGACY-NEG-024": async () => {
     const factory = {
       launch: async () => {
         throw new Error("Executable doesn't exist at /fake");

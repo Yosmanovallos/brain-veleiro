@@ -1,5 +1,5 @@
-import { describe, it } from "vitest";
-import { positives, negatives } from "./cases.js";
+﻿import { describe, it } from "vitest";
+import { positives, negatives } from "./canonicalCases.js";
 
 describe("browser capability positives", () => {
   for (const [id, fn] of Object.entries(positives)) {
