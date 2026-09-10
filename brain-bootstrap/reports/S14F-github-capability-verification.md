@@ -244,5 +244,6 @@ Counterfactual: when these tests run against the unrepaired provider from `33729
   - `npm test`: **2031 passed / 14 failed** (2045 total)
   - Inherited failure identities and cause unchanged from baseline `040cc43` (`brain-bootstrap/STATE.yaml` and `brain/context/CURRENT.md` continuity drift)
 - `git diff --check 040cc43..HEAD`: no whitespace errors.
+- **Final remote branch tip:** `6cd64c44a573cab61cb92d61c89fec52ef8a741a` (matches `FETCH_HEAD` after `git fetch origin s14f-github-capability-part-b`).
 
 No merge, phase closure, HI-054 award or S14G authorization is made or implied.
