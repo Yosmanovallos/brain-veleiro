@@ -1,0 +1,206 @@
+schema_version: '1.0'
+id: S14F_GITHUB_CAPABILITY_DEEP
+parent_step: S14
+phase: S14F
+name: github-capability
+version: '1.0.0'
+status: AUTHORING_READY
+classification: RUNTIME_INFRASTRUCTURE
+depth: DEEP
+honor_invariant: HI-054_NOT_AWARDED
+
+baseline:
+  semantic_authoring_main: 3bb02b72925c68c59782f085796b47ba9aef078b
+  implementation_baseline: record_exact_part_a_integration_sha_before_part_b
+  source: repository_truth_plus_s14_parent_contract_plus_official_github_rest_docs
+
+authorization:
+  part_a_integration: AUTHORIZED_BY_THIS_CHATGPT_ARTIFACT
+  part_b: NOT_AUTHORIZED
+  phase_closure: NOT_AUTHORIZED
+  next_phase_s14g: NOT_AUTHORIZED
+
+capabilities:
+  - {id: repository.remote.inspect, side_effects: EXTERNAL}
+  - {id: repository.review.inspect, side_effects: EXTERNAL}
+  - {id: repository.review.open, side_effects: EXTERNAL}
+  - {id: repository.review.comment, side_effects: EXTERNAL}
+  - {id: repository.checks.inspect, side_effects: EXTERNAL}
+
+transport:
+  runtime: Node_24
+  origin: https://api.github.com
+  api_version: '2026-03-10'
+  accept: application/vnd.github+json
+  redirect_policy: DENY
+  hidden_retries: 0
+  github_enterprise: DEFERRED
+  graphql: FORBIDDEN
+  arbitrary_rest: FORBIDDEN
+  cli_fallback: FORBIDDEN
+  new_dependency: false
+
+hard_invariants:
+  - {id: S14F-HI-001, rule: Exactly five authorized provider-neutral capabilities are advertised and every descriptor is EXTERNAL.}
+  - {id: S14F-HI-002, rule: Core AgentDefinition Restricted registry and S14A-S14E protected surfaces remain byte-identical.}
+  - {id: S14F-HI-003, rule: Capability IDs and AgentDefinition contain no GitHub host auth transport or REST identity.}
+  - {id: S14F-HI-004, rule: Trusted config binds one repository and opaque credential_ref with an exact enabled-capability subset.}
+  - {id: S14F-HI-005, rule: Model input cannot select repository origin URL endpoint method headers credential provider or API version.}
+  - {id: S14F-HI-006, rule: Transport is fixed to HTTPS api.github.com API version 2026-03-10 and provider-owned headers.}
+  - {id: S14F-HI-007, rule: Redirects arbitrary origins Enterprise GraphQL proxies and CLI fallback are forbidden or fail closed.}
+  - {id: S14F-HI-008, rule: Raw credential is provider-private and reaches only the Authorization transport header.}
+  - {id: S14F-HI-009, rule: Credential bytes never appear in public results evidence diagnostics errors logs fixtures or tracked artifacts.}
+  - {id: S14F-HI-010, rule: Runtime validation enforces closed bounded inputs independently of descriptor schemas.}
+  - {id: S14F-HI-011, rule: Fixed operation table permits only the authorized repository review and checks REST families.}
+  - {id: S14F-HI-012, rule: Read capabilities never invoke a write endpoint or HTTP method.}
+  - {id: S14F-HI-013, rule: review.open verifies expected head/base SHA and same-repository branches before write.}
+  - {id: S14F-HI-014, rule: review.open duplicate-open-review preflight blocks POST when a match exists.}
+  - {id: S14F-HI-015, rule: review.comment requires OPEN review and exact expected head SHA before one top-level comment POST.}
+  - {id: S14F-HI-016, rule: All unapproved GitHub mutation/admin operations are unreachable.}
+  - {id: S14F-HI-017, rule: One monotonic deadline covers credential resolution preflights HTTP response normalization and final success.}
+  - {id: S14F-HI-018, rule: Timeout and overflow abort in-flight work and leave no provider-created orphan request or timer.}
+  - {id: S14F-HI-019, rule: Request response array and output bounds are enforced without partial success.}
+  - {id: S14F-HI-020, rule: HTTP network timeout auth rate-limit validation and malformed-response failures map to existing Brain errors.}
+  - {id: S14F-HI-021, rule: Raw GitHub bodies headers stacks and credential-bearing errors never cross the provider boundary.}
+  - {id: S14F-HI-022, rule: Provider performs zero hidden retries and uncertain write outcomes are non-retryable.}
+  - {id: S14F-HI-023, rule: Outputs and evidence are provider-neutral bounded and deterministically ordered.}
+  - {id: S14F-HI-024, rule: Remote content is inert and outbound finite secret-floor matches block writes before mutation.}
+  - {id: S14F-HI-025, rule: Restricted capability or EXTERNAL denial causes zero concrete invoke credential resolution and HTTP.}
+  - {id: S14F-HI-026, rule: Compatible provider swap works with identical AgentDefinition bytes capability ID semantic input and permissions.}
+  - {id: S14F-HI-027, rule: Production uses Node 24 built-ins with no dependency env discovery or gh git curl shell execution.}
+  - {id: S14F-HI-028, rule: Part A remains byte-locked and no S14G-plus future work self-closure STATE or CURRENT mutation enters Part B.}
+
+positive_fixtures:
+  - {id: FX-POS-001, intent: Exact five descriptors are defensive closed and truthfully EXTERNAL.}
+  - {id: FX-POS-002, intent: remote.inspect emits fixed repository GET and bounded normalized metadata.}
+  - {id: FX-POS-003, intent: review.inspect normalizes open closed and merged observations without raw body leakage.}
+  - {id: FX-POS-004, intent: checks.inspect normalizes sorts and reports total/truncated at the 100-item bound.}
+  - {id: FX-POS-005, intent: review.open with matching SHAs and no duplicate emits exactly one authorized POST.}
+  - {id: FX-POS-006, intent: review.comment with open review and matching head emits exactly one top-level comment POST.}
+  - {id: FX-POS-007, intent: Enabled-capability subsets advertise and execute only the trusted subset.}
+  - {id: FX-POS-008, intent: Sentinel credential reaches only Authorization header and never public data.}
+  - {id: FX-POS-009, intent: Actual registry Restricted and runAgent composition executes an allowed provider capability.}
+  - {id: FX-POS-010, intent: Compatible implementation swap preserves exact AgentDefinition and semantic input bytes.}
+  - {id: FX-POS-011, intent: Valid Unicode title/body within bounds is preserved as inert write content.}
+  - {id: FX-POS-012, intent: Legal request response and output maxima pass without accidental over-rejection.}
+  - {id: FX-POS-013, intent: Empty check-run set is a complete successful observation.}
+  - {id: FX-POS-014, intent: Adversarial remote prose remains inert and cannot affect a later legitimate invocation.}
+
+negative_fixtures:
+  - {id: FX-NEG-001, intent: Malformed config unknown keys bad identifiers duplicate or unknown enabled capabilities and timeout fail construction.}
+  - {id: FX-NEG-002, intent: Token password base URL headers endpoint method env executable and forbidden config overrides are rejected.}
+  - {id: FX-NEG-003, intent: Extra model URL owner repo auth provider credential endpoint method header or API-version keys fail INVALID_INPUT.}
+  - {id: FX-NEG-004, intent: Invalid review number SHA branch title body Unicode controls and overbounds fail before network.}
+  - {id: FX-NEG-005, intent: Outbound private-key and Bearer secret-floor matches block writes before mutation.}
+  - {id: FX-NEG-006, intent: Redirect or alternate-origin attempt fails closed without credential forwarding.}
+  - {id: FX-NEG-007, intent: Missing credential and HTTP 401 map to safe PERMISSION_DENIED.}
+  - {id: FX-NEG-008, intent: Non-rate-limit HTTP 403 maps to safe PERMISSION_DENIED.}
+  - {id: FX-NEG-009, intent: Read rate limit maps to retryable UNAVAILABLE while write equivalent is non-retryable.}
+  - {id: FX-NEG-010, intent: HTTP 404 maps to NOT_FOUND without unsafe existence claims.}
+  - {id: FX-NEG-011, intent: HTTP 409 and 422 map to non-retryable EXECUTION_FAILED.}
+  - {id: FX-NEG-012, intent: Read 5xx/network is retryable UNAVAILABLE while write failure is non-retryable and outcome-unknown when dispatched.}
+  - {id: FX-NEG-013, intent: Oversized malformed JSON malformed 2xx and output overflow fail safely.}
+  - {id: FX-NEG-014, intent: Read deadline returns retryable TIMEOUT and aborts in-flight work.}
+  - {id: FX-NEG-015, intent: Write deadline is non-retryable and post-dispatch outcome requires inspection.}
+  - {id: FX-NEG-016, intent: Stale review.open head SHA blocks before POST.}
+  - {id: FX-NEG-017, intent: Stale review.open base SHA blocks before POST.}
+  - {id: FX-NEG-018, intent: Existing matching open review blocks duplicate creation before POST.}
+  - {id: FX-NEG-019, intent: Closed or merged review blocks comment before POST.}
+  - {id: FX-NEG-020, intent: Stale expected review head SHA blocks comment before POST.}
+  - {id: FX-NEG-021, intent: Restricted capability or EXTERNAL denial produces BLOCKED with zero credential and HTTP activity.}
+  - {id: FX-NEG-022, intent: Disabled capability invocation fails closed with zero request.}
+  - {id: FX-NEG-023, intent: Fork owner arbitrary endpoint GraphQL and raw-method attempts have no reachable input or operation.}
+  - {id: FX-NEG-024, intent: Structural detector catches forbidden mutation route hidden retry dependency CLI protected drift or false closure.}
+
+unsafe_counters:
+  - {id: UC01, name: model_selected_repository_origin_or_transport, required: 0}
+  - {id: UC02, name: credential_leak_or_environment_secret_discovery, required: 0}
+  - {id: UC03, name: redirect_ssrf_arbitrary_endpoint_or_graphql_escape, required: 0}
+  - {id: UC04, name: restricted_or_enabled_capability_permission_bypass, required: 0}
+  - {id: UC05, name: stale_precondition_duplicate_review_or_wrong_review_write, required: 0}
+  - {id: UC06, name: hidden_retry_or_ambiguous_write_retry, required: 0}
+  - {id: UC07, name: raw_remote_error_payload_or_remote_instruction_execution, required: 0}
+  - {id: UC08, name: request_response_output_or_array_bound_bypass, required: 0}
+  - {id: UC09, name: protected_boundary_dependency_or_prior_phase_drift, required: 0}
+  - {id: UC10, name: forbidden_github_mutation_future_phase_or_self_closure, required: 0}
+
+verification_requirements:
+  exact_positive_ids: 14
+  exact_negative_ids: 24
+  hard_invariants_required: 28
+  unsafe_counters_required: 10
+  all_fixture_families_executable: true
+  unsafe_counters_zero_on_legitimate_paths: true
+  unsafe_detectors_independently_fireable: true
+  fixed_transport_request_oracle: true
+  credential_non_leakage_oracle: true
+  deterministic_abort_timeout_fixture: true
+  ambiguous_write_fixture: true
+  actual_registry_restricted_run_agent_path: true
+  provider_swap_same_agent_definition: true
+  part_a_byte_identity: true
+  core_byte_identity: true
+  prior_phase_protected_identity: true
+  no_new_dependency: true
+  typecheck: PASS
+  focused_s14f: PASS
+  full_pre_build: COMPARE_EXACT_BASELINE_FAILURES
+  genuine_dist_absent_build: PASS
+  full_post_build: COMPARE_EXACT_BASELINE_FAILURES
+  git_diff_check: PASS
+
+baseline_failures:
+  baseline_to_measure: exact_part_a_integration_sha
+  policy: Same exact identity AND assertion cause on exact Part A integration baseline and candidate; no broadened drift or new failure permitted.
+  allowed_outcome_label: PASS_WITH_DOCUMENTED_BASELINE_FAILURES
+  raw_counts_required: true
+  no_skip_or_historical_test_edit: true
+  expected_cause_paths:
+    - brain-bootstrap/STATE.yaml
+    - brain/context/CURRENT.md
+  provisional_inherited_identities_from_s14e:
+    - 'tests/git-capability/gitCapability.test.ts > canonical negatives > FX-NEG-040'
+    - 'tests/git-capability/gitCapability.test.ts > canonical hard invariants > S14D-HI-002'
+    - 'tests/git-capability/gitCapability.test.ts > canonical hard invariants > S14D-HI-039'
+    - 'tests/git-capability/gitCapability.test.ts > canonical hard invariants > S14D-HI-040'
+    - 'tests/git-capability/regressions.test.ts > the S14D candidate surface is exactly additive under the authorized prefixes'
+    - 'tests/git-capability/unsafeCounters.test.ts > UC10 protected_boundary_or_dependency_modified: zero drift; mutated-byte detector fires'
+    - 'tests/shell-capability/regressions.test.ts > the S14B regression-harness maintenance is exactly the authorized narrow change'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical negatives > FX-NEG-042'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical hard invariants > S14C-HI-002'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical hard invariants > S14C-HI-038'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical hard invariants > S14C-HI-033'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical hard invariants > S14C-HI-037'
+    - 'tests/shell-capability/shellCapability.test.ts > canonical hard invariants > S14C-HI-039'
+    - 'tests/shell-capability/unsafeCounters.test.ts > UC10 protected_boundary_or_dependency_modified: zero drift; mutated-byte detector fires'
+
+part_b_scope:
+  allowed:
+    - src/providers/capability/github/**
+    - tests/github-capability/**
+    - brain-bootstrap/reports/S14F-github-capability-verification.md
+  forbidden:
+    - src/core/**
+    - package.json
+    - package-lock.json
+    - brain-bootstrap/STATE.yaml
+    - brain/context/CURRENT.md
+    - prior_phase_canonical_artifacts
+    - S14G_plus_implementation
+
+independent_verification:
+  fresh_session: true
+  verifier_must_be_non_authoring: true
+  verifier_must_be_non_builder: true
+  verifier_must_be_non_fork: true
+  verifier_must_be_read_only: true
+  exact_committed_remote_candidate_required: true
+  standalone_verifier_relay_required: true
+  separate_control_plane_acceptance_required: true
+
+phase_acceptance:
+  on_pass:
+    S14F: PHASE_PASS
+    S14: IN_PROGRESS
+    S14G: NOT_AUTHORIZED
+    HI-054: NOT_AWARDED
