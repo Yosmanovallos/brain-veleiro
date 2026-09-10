@@ -1,0 +1,233 @@
+schema_version: '1.0'
+id: S14H_POSTGRES_INSPECT_CAPABILITY_DEEP
+parent_step: S14
+phase: S14H
+name: postgres-inspect-capability
+version: '1.0.0'
+status: AUTHORING_READY
+classification: RUNTIME_INFRASTRUCTURE
+depth: DEEP
+honor_invariant: HI-054_NOT_AWARDED
+
+baseline:
+  semantic_authoring_main: 8edd55a6b95e1b3c71ce07b342ea6348a70cac6b
+  implementation_baseline: record_exact_part_a_integration_sha_before_part_b
+
+authorization:
+  part_a_integration: AUTHORIZED_BY_THIS_CHATGPT_ARTIFACT
+  part_b: NOT_AUTHORIZED
+  phase_closure: NOT_AUTHORIZED
+  next_phase_s14i: NOT_AUTHORIZED
+
+capabilities:
+  - id: postgres.inspect
+    side_effects: EXTERNAL
+
+operations:
+  - server
+  - schemas
+  - tables
+  - columns
+  - indexes
+  - constraints
+
+dependency_decision:
+  part_a_changes_package_manifest: false
+  part_b_allowed_runtime_dependency:
+    package: pg
+    version: 8.23.0
+    exact_pin: true
+  part_b_allowed_dev_dependency:
+    package: '@types/pg'
+    version: 8.23.1
+    exact_pin: true
+  other_dependency_changes: FORBIDDEN
+  pg_native: FORBIDDEN
+
+provider_profile:
+  fresh_client_per_invocation: true
+  pool: FORBIDDEN
+  environment_connection_fallback: FORBIDDEN
+  connection_string: FORBIDDEN
+  arbitrary_sql: FORBIDDEN
+  row_data: FORBIDDEN
+  read_only_transaction: REQUIRED
+  transaction_end: ROLLBACK
+  hidden_retry: FORBIDDEN
+
+limits:
+  max_input_identifier_utf8_bytes: 63
+  max_allowed_schemas: 32
+  max_timeout_ms: 60000
+  max_rows: 500
+  max_output_bytes: 262144
+  max_password_utf8_bytes: 4096
+  max_safe_error_ascii_chars: 160
+
+hard_invariants:
+  - {id: S14H-HI-001, rule: Exactly postgres.inspect is advertised and it declares EXTERNAL.}
+  - {id: S14H-HI-002, rule: Core AgentDefinition Restricted Registry and S14A-S14G protected surfaces remain unchanged except the explicitly authorized Part B dependency pins.}
+  - {id: S14H-HI-003, rule: PostgreSQL driver vendor host database user and credential identity never enters AgentDefinition or capability ID.}
+  - {id: S14H-HI-004, rule: Input schema is closed and exposes only operation schema and table.}
+  - {id: S14H-HI-005, rule: Operation-specific schema/table requirement matrix is enforced before resolver or network.}
+  - {id: S14H-HI-006, rule: Model-selected schema must exactly match trusted allowed_schemas and system schemas cannot be configured.}
+  - {id: S14H-HI-007, rule: connection_ref is opaque provider config and connection material is provider-private.}
+  - {id: S14H-HI-008, rule: Resolver waits are bounded by the one invocation deadline with late settlement contained.}
+  - {id: S14H-HI-009, rule: Resolved connection material is structurally bounded and TLS-disabled mode is loopback-only.}
+  - {id: S14H-HI-010, rule: Production uses a fresh pg Client per invocation and never Pool pg-native or persistent session state.}
+  - {id: S14H-HI-011, rule: Every pg Client connection field is explicit so PG environment variables cannot choose connection scope.}
+  - {id: S14H-HI-012, rule: Dependency diff is exactly pg 8.23.0 and @types/pg 8.23.1 with no other package drift.}
+  - {id: S14H-HI-013, rule: Production SQL belongs to a closed fixed provider-owned query registry.}
+  - {id: S14H-HI-014, rule: Model schema/table data is supplied only as query values and never concatenated into SQL text.}
+  - {id: S14H-HI-015, rule: BEGIN TRANSACTION READ ONLY succeeds before metadata inspection.}
+  - {id: S14H-HI-016, rule: Read-only transaction state is verified before returning metadata.}
+  - {id: S14H-HI-017, rule: The production command surface contains only BEGIN READ ONLY SELECT and ROLLBACK and no write or execution SQL.}
+  - {id: S14H-HI-018, rule: No user table row data is queried or returned.}
+  - {id: S14H-HI-019, rule: Catalog scope excludes roles settings statistics definitions source comments and other sensitive system metadata.}
+  - {id: S14H-HI-020, rule: Operation outputs are closed normalized metadata records with no raw SQL or driver object.}
+  - {id: S14H-HI-021, rule: Results are deterministically ordered and bounded to max_rows with explicit truncation.}
+  - {id: S14H-HI-022, rule: Output byte overflow fails the whole invocation and is never silently truncated.}
+  - {id: S14H-HI-023, rule: Credential connection TLS and raw PostgreSQL error material never enters result evidence or safe diagnostics.}
+  - {id: S14H-HI-024, rule: Existing Brain errors and fixed safe messages normalize resolver auth privilege network query timeout and internal failures.}
+  - {id: S14H-HI-025, rule: One monotonic invocation deadline covers resolver through rollback end and final success without reset.}
+  - {id: S14H-HI-026, rule: ROLLBACK and client.end are attempted under bounded cleanup and cannot hang invocation forever.}
+  - {id: S14H-HI-027, rule: Late resolver connect query rollback or end settlement cannot mutate returned result or create unhandled rejection.}
+  - {id: S14H-HI-028, rule: Restricted capability or EXTERNAL denial causes zero resolver calls client creation network and SQL.}
+  - {id: S14H-HI-029, rule: Compatible provider swap works through Registry Restricted and runAgent with identical AgentDefinition bytes.}
+  - {id: S14H-HI-030, rule: Canonical tests require no shared production staging public or user database.}
+  - {id: S14H-HI-031, rule: A real disposable local PostgreSQL smoke succeeds before candidate readiness or the phase returns BLOCKED.}
+  - {id: S14H-HI-032, rule: Part A remains byte-locked and Part B cannot update STATE CURRENT start S14I close S14 or award HI-054.}
+
+positive_fixtures:
+  - {id: FX-POS-001, intent: Exact deterministic postgres.inspect descriptor and EXTERNAL classification.}
+  - {id: FX-POS-002, intent: server returns only safe version metadata through a read-only transaction.}
+  - {id: FX-POS-003, intent: schemas returns only existing configured allowed schemas in deterministic order.}
+  - {id: FX-POS-004, intent: tables across configured schemas returns bounded normalized relation metadata.}
+  - {id: FX-POS-005, intent: tables scoped to one allowed schema returns only that schema.}
+  - {id: FX-POS-006, intent: columns returns normalized type nullability ordinal default-presence and generated metadata without default expression.}
+  - {id: FX-POS-007, intent: indexes returns normalized columns uniqueness primary and expression flag without raw index SQL.}
+  - {id: FX-POS-008, intent: constraints returns normalized key/reference metadata without CHECK or definition expression text.}
+  - {id: FX-POS-009, intent: max_rows plus one detection returns deterministic first max_rows and truncated true.}
+  - {id: FX-POS-010, intent: Actual Registry plus Restricted plus runAgent executes allowed postgres.inspect.}
+  - {id: FX-POS-011, intent: Compatible alternate provider executes same semantic request with identical AgentDefinition bytes.}
+  - {id: FX-POS-012, intent: Real disposable local PostgreSQL smoke performs all six operations successfully without row-data access.}
+
+negative_fixtures:
+  - {id: FX-NEG-001, intent: Malformed config unknown keys duplicate/forbidden/system schemas and invalid bounds fail construction.}
+  - {id: FX-NEG-002, intent: Public config attempts for host port database user password connection string SSL pool native timeouts options or retry fail closed.}
+  - {id: FX-NEG-003, intent: Missing operation extra input key invalid operation and invalid schema/table matrix fail before resolver.}
+  - {id: FX-NEG-004, intent: Schema outside trusted allowlist is PERMISSION_DENIED before resolver/network.}
+  - {id: FX-NEG-005, intent: Overlong control-containing or NUL schema/table input fails before resolver.}
+  - {id: FX-NEG-006, intent: Missing resolver or resolver rejection before deadline maps safe PERMISSION_DENIED without secret leak.}
+  - {id: FX-NEG-007, intent: Hanging resolver is bounded by one deadline and returns TIMEOUT.}
+  - {id: FX-NEG-008, intent: Late resolver resolve/reject after timeout is consumed and cannot mutate result or cause unhandled rejection.}
+  - {id: FX-NEG-009, intent: Malformed resolved host port database user password or TLS material fails before pg Client/network.}
+  - {id: FX-NEG-010, intent: TLS-disabled resolved connection to non-loopback host is rejected before pg Client/network.}
+  - {id: FX-NEG-011, intent: Production pg Client config cannot inherit PG environment connection variables.}
+  - {id: FX-NEG-012, intent: Arbitrary SQL query text limit connection fields or driver options supplied by model are rejected.}
+  - {id: FX-NEG-013, intent: Query-registry oracle rejects DML DDL COPY CALL DO EXECUTE PREPARE LISTEN NOTIFY and semicolon batch additions.}
+  - {id: FX-NEG-014, intent: Query parameter oracle proves schema/table strings never alter SQL text.}
+  - {id: FX-NEG-015, intent: Read-only BEGIN failure returns safe failure and no metadata SUCCESS.}
+  - {id: FX-NEG-016, intent: Read-only verification failure prevents metadata SUCCESS.}
+  - {id: FX-NEG-017, intent: Detector rejects any application-table row SELECT or dynamic FROM target.}
+  - {id: FX-NEG-018, intent: Detector rejects raw view/index/constraint/function/trigger definitions comments roles settings stats and source metadata.}
+  - {id: FX-NEG-019, intent: Authentication SQLSTATE maps PERMISSION_DENIED without raw database error fields or credential sentinel.}
+  - {id: FX-NEG-020, intent: Catalog privilege SQLSTATE maps PERMISSION_DENIED without raw database error leakage.}
+  - {id: FX-NEG-021, intent: DNS TCP TLS connection failure maps safe retryable UNAVAILABLE.}
+  - {id: FX-NEG-022, intent: Timeout during connect BEGIN query normalization rollback or end is bounded and never returns partial SUCCESS.}
+  - {id: FX-NEG-023, intent: Output overflow fails whole invocation and no metadata item is byte-truncated.}
+  - {id: FX-NEG-024, intent: Hanging rollback/client.end is bounded and normal cleanup order remains ROLLBACK then end.}
+  - {id: FX-NEG-025, intent: Restricted capability or EXTERNAL denial yields BLOCKED with zero resolver client network and SQL counters.}
+  - {id: FX-NEG-026, intent: Structural detector catches Pool pg-native env fallback arbitrary SQL row-data secret leakage dependency prior-phase future-phase or self-closure drift.}
+
+unsafe_counters:
+  - {id: UC01, name: model_selected_connection_driver_or_sql_surface, required: 0}
+  - {id: UC02, name: environment_or_connection_string_scope_inference, required: 0}
+  - {id: UC03, name: non_loopback_tls_bypass_or_insecure_remote_connection, required: 0}
+  - {id: UC04, name: arbitrary_sql_write_or_multi_statement_surface, required: 0}
+  - {id: UC05, name: row_data_or_sensitive_catalog_definition_exposure, required: 0}
+  - {id: UC06, name: credential_connection_or_raw_postgres_error_leak, required: 0}
+  - {id: UC07, name: deadline_retry_cleanup_or_orphan_client_escape, required: 0}
+  - {id: UC08, name: result_order_row_limit_or_output_bound_bypass, required: 0}
+  - {id: UC09, name: restricted_registry_or_provider_swap_boundary_bypass, required: 0}
+  - {id: UC10, name: protected_dependency_future_phase_or_self_closure_drift, required: 0}
+
+verification_requirements:
+  hard_invariants_required: 32
+  exact_positive_ids: 12
+  exact_negative_ids: 26
+  unsafe_counters_required: 10
+  unsafe_counters_zero_on_legitimate_paths: true
+  unsafe_detectors_independently_fireable: true
+  canonical_traceability_oracle: true
+  deterministic_postgres_driver_oracle: true
+  fixed_query_registry_oracle: true
+  parameterization_oracle: true
+  resolver_secret_leak_oracle: true
+  cleanup_oracle: true
+  actual_registry_restricted_run_agent_path: true
+  provider_swap_same_agent_definition: true
+  real_disposable_postgres_smoke: true
+  part_a_byte_identity: true
+  core_byte_identity: true
+  prior_phase_protected_identity: true
+  dependency_diff_exact_pins_only: true
+  typecheck: PASS
+  focused_s14h: PASS
+  full_pre_build: COMPARE_EXACT_MEASURED_BASELINE
+  genuine_dist_absent_build: PASS
+  full_post_build: COMPARE_EXACT_MEASURED_BASELINE
+  git_diff_check: PASS
+
+baseline_failures:
+  baseline_to_measure: exact_part_a_integration_sha
+  policy: No inherited numeric allowlist is assumed. Measure fresh WSL-native Part A baseline identities and exact causes before Part B authorization.
+  raw_counts_required: true
+  pre_post_identity_cause_diff_required: 0
+  historical_test_edits_forbidden: true
+  windows_primary_worktree_not_canonical: true
+
+postgres_runtime_preflight:
+  part_a_installation_forbidden: true
+  report_commands:
+    - command -v postgres
+    - command -v initdb
+    - command -v docker
+    - command -v podman
+  real_smoke_strategy: select_only_after_part_a_preflight
+  shared_or_public_database: FORBIDDEN
+  system_package_mutation: FORBIDDEN_WITHOUT_SEPARATE_USER_AUTHORIZATION
+
+part_b_scope:
+  allowed:
+    - src/providers/capability/postgres/**
+    - tests/postgres-capability/**
+    - brain-bootstrap/reports/S14H-postgres-capability-verification.md
+    - package.json
+    - package-lock.json
+  dependency_exception:
+    runtime: pg@8.23.0 exact
+    dev: '@types/pg@8.23.1 exact'
+  forbidden:
+    - src/core/**
+    - brain-bootstrap/STATE.yaml
+    - brain/context/CURRENT.md
+    - prior_phase_canonical_artifacts_or_implementations_or_tests
+    - S14I_plus_implementation
+
+independent_verification:
+  fresh_session: true
+  verifier_must_be_non_authoring: true
+  verifier_must_be_non_builder: true
+  verifier_must_be_non_fork: true
+  verifier_must_be_read_only: true
+  exact_committed_remote_candidate_required: true
+  standalone_verifier_relay_required: true
+  separate_control_plane_acceptance_required: true
+
+phase_acceptance:
+  on_pass:
+    S14H: PHASE_PASS
+    S14: IN_PROGRESS
+    S14I: NOT_AUTHORIZED
+    HI-054: NOT_AWARDED
