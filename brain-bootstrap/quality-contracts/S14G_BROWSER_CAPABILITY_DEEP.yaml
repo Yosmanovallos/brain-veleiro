@@ -1,0 +1,194 @@
+schema_version: '1.0'
+id: S14G_BROWSER_CAPABILITY_DEEP
+parent_step: S14
+phase: S14G
+name: browser-inspect-capability
+version: '1.0.0'
+status: AUTHORING_READY
+classification: RUNTIME_INFRASTRUCTURE
+depth: DEEP
+honor_invariant: HI-054_NOT_AWARDED
+
+baseline:
+  semantic_authoring_main: a3d73f6ae6d947b44391f0e13c065e58ecd4c002
+  implementation_baseline: record_exact_part_a_integration_sha_before_part_b
+
+authorization:
+  part_a_integration: AUTHORIZED_BY_THIS_CHATGPT_ARTIFACT
+  part_b: NOT_AUTHORIZED
+  phase_closure: NOT_AUTHORIZED
+  next_phase_s14h: NOT_AUTHORIZED
+
+capabilities:
+  - id: browser.inspect
+    side_effects: EXTERNAL
+
+dependency_decision:
+  part_a_changes_package_manifest: false
+  part_b_allowed_new_runtime_dependency:
+    package: playwright-core
+    version: 1.63.0
+    exact_pin: true
+  other_dependency_changes: FORBIDDEN
+  browser_binary_tracked_in_git: false
+
+provider_profile:
+  engine: chromium
+  headless: true
+  fresh_browser_per_invocation: true
+  fresh_nonpersistent_context_per_invocation: true
+  service_workers: BLOCK
+  websockets: BLOCK
+  downloads: BLOCK_AND_DO_NOT_PERSIST
+  popups: BLOCK
+  persistent_context: FORBIDDEN
+  remote_connect: FORBIDDEN
+  cdp: FORBIDDEN
+  model_javascript: FORBIDDEN
+  auth_storage_state: FORBIDDEN
+
+hard_invariants:
+  - {id: S14G-HI-001, rule: Exactly browser.inspect is advertised and declares EXTERNAL.}
+  - {id: S14G-HI-002, rule: Core AgentDefinition Restricted Registry and S14A-S14F remain unchanged except the exact authorized Part B dependency pin.}
+  - {id: S14G-HI-003, rule: Browser and Playwright identity never enters AgentDefinition or capability ID.}
+  - {id: S14G-HI-004, rule: Provider config is closed trusted host-side data and model input cannot override runtime/network policy.}
+  - {id: S14G-HI-005, rule: Part B dependency diff is exactly playwright-core 1.63.0 with no other version drift.}
+  - {id: S14G-HI-006, rule: Production uses Playwright-managed Chromium headless with no channel executablePath args remote connect or CDP.}
+  - {id: S14G-HI-007, rule: Every invocation uses fresh nonpersistent browser state with no auth cookie or storage reuse.}
+  - {id: S14G-HI-008, rule: Navigation URL is bounded absolute HTTPS credential-free and exact-origin allowlisted.}
+  - {id: S14G-HI-009, rule: Every continued browser request is HTTPS GET or HEAD to an exact allowed request origin.}
+  - {id: S14G-HI-010, rule: Redirect hops and final URL cannot escape configured navigation/request origins.}
+  - {id: S14G-HI-011, rule: Service workers are blocked before page navigation.}
+  - {id: S14G-HI-012, rule: WebSocket connections are prevented from connecting.}
+  - {id: S14G-HI-013, rule: Popup or extra-page creation cannot yield hidden second-page success.}
+  - {id: S14G-HI-014, rule: Downloads are never persisted or implicitly forwarded to filesystem.}
+  - {id: S14G-HI-015, rule: No model-supplied JavaScript selector program or arbitrary Playwright action is executable.}
+  - {id: S14G-HI-016, rule: Snapshot uses provider-owned bounded ARIA semantics.}
+  - {id: S14G-HI-017, rule: ARIA overflow fails whole invocation and link truncation is explicit deterministic and bounded.}
+  - {id: S14G-HI-018, rule: Remote content is inert and cannot change policy permission routing or capability execution.}
+  - {id: S14G-HI-019, rule: One monotonic deadline covers launch through final success.}
+  - {id: S14G-HI-020, rule: Async browser waits without native signal are bounded by the same deadline controller.}
+  - {id: S14G-HI-021, rule: Page context and browser cleanup runs in finally and cleanup itself is bounded.}
+  - {id: S14G-HI-022, rule: No browser process page timer listener or route remains after legitimate bounded cleanup.}
+  - {id: S14G-HI-023, rule: Errors use existing Brain codes and fixed safe messages without raw browser/page leakage.}
+  - {id: S14G-HI-024, rule: Restricted or EXTERNAL denial causes zero browser launch context page and network activity.}
+  - {id: S14G-HI-025, rule: Compatible provider swap works with identical AgentDefinition bytes semantic input and permissions.}
+  - {id: S14G-HI-026, rule: Canonical tests do not depend on public internet or authenticated accounts.}
+  - {id: S14G-HI-027, rule: Real playwright-core Chromium no-network smoke passes before candidate readiness.}
+  - {id: S14G-HI-028, rule: Browser binaries caches traces videos HAR screenshots downloads node_modules and dist are never committed.}
+  - {id: S14G-HI-029, rule: No interaction auth persistence pooling private-network or future S14 phase surface is introduced.}
+  - {id: S14G-HI-030, rule: Part A stays byte-locked and Part B cannot self-close S14G start S14H or award HI-054.}
+
+positive_fixtures:
+  - {id: FX-POS-001, intent: Exact deterministic browser.inspect descriptor and EXTERNAL class.}
+  - {id: FX-POS-002, intent: Allowed HTTPS inspection returns normalized title final URL ARIA snapshot and links from isolated lifecycle.}
+  - {id: FX-POS-003, intent: domcontentloaded default and explicit load are the only accepted wait strategies.}
+  - {id: FX-POS-004, intent: Allowed redirect remains in policy and final URL normalizes faithfully.}
+  - {id: FX-POS-005, intent: Allowed configured cross-origin GET subresource can continue.}
+  - {id: FX-POS-006, intent: Link output is deterministic and explicitly truncated at max_links.}
+  - {id: FX-POS-007, intent: Legal configured/input/output maxima pass without accidental over-rejection.}
+  - {id: FX-POS-008, intent: Registry plus Restricted plus runAgent executes allowed browser.inspect.}
+  - {id: FX-POS-009, intent: Compatible alternate provider executes with identical AgentDefinition bytes.}
+  - {id: FX-POS-010, intent: Real playwright-core 1.63.0 Chromium no-network launch/context/snapshot/close smoke passes.}
+
+negative_fixtures:
+  - {id: FX-NEG-001, intent: Malformed config unknown keys bad origins counts duplicates and invalid bounds fail construction.}
+  - {id: FX-NEG-002, intent: Engine channel executable args proxy auth storage header CDP and remote-connect overrides fail.}
+  - {id: FX-NEG-003, intent: Missing URL extra input keys and unsupported wait strategy fail before browser launch.}
+  - {id: FX-NEG-004, intent: HTTP file data javascript blob about ftp ws wss malformed credentialed and unapproved URLs are denied.}
+  - {id: FX-NEG-005, intent: localhost IP-literal private-style and wildcard origin escape are denied.}
+  - {id: FX-NEG-006, intent: Redirect to unapproved origin cannot return SUCCESS.}
+  - {id: FX-NEG-007, intent: Unapproved subresource request is aborted.}
+  - {id: FX-NEG-008, intent: POST PUT PATCH DELETE CONNECT OPTIONS and other non-GET-HEAD requests are aborted.}
+  - {id: FX-NEG-009, intent: WebSocket attempt never connects.}
+  - {id: FX-NEG-010, intent: Service-worker bypass is structurally prevented.}
+  - {id: FX-NEG-011, intent: Popup extra page is closed and blocks hidden second-page success.}
+  - {id: FX-NEG-012, intent: Download is not persisted and fails safely.}
+  - {id: FX-NEG-013, intent: Model cannot submit evaluate JavaScript selector action or arbitrary Playwright command.}
+  - {id: FX-NEG-014, intent: Missing browser binary/runtime maps safe UNAVAILABLE.}
+  - {id: FX-NEG-015, intent: Navigation TLS DNS network failure is safely normalized.}
+  - {id: FX-NEG-016, intent: Deadline during browser launch returns TIMEOUT and eventual launch cannot escape.}
+  - {id: FX-NEG-017, intent: Deadline during navigation bounds work and returns no partial snapshot.}
+  - {id: FX-NEG-018, intent: Deadline during snapshot/link extraction returns TIMEOUT and no partial SUCCESS.}
+  - {id: FX-NEG-019, intent: Late completion after deadline cannot mutate result or resurrect work.}
+  - {id: FX-NEG-020, intent: Hanging close path is bounded.}
+  - {id: FX-NEG-021, intent: Snapshot/output overflow fails whole result.}
+  - {id: FX-NEG-022, intent: Raw Playwright/page error HTML headers console and stack are absent from result.}
+  - {id: FX-NEG-023, intent: Restricted or EXTERNAL denial gives BLOCKED with zero launch context page and network counters.}
+  - {id: FX-NEG-024, intent: Structural detector catches interaction auth persistence pooling private-network future-phase dependency or self-closure drift.}
+
+unsafe_counters:
+  - {id: UC01, name: model_selected_engine_runtime_origin_policy_or_browser_config, required: 0}
+  - {id: UC02, name: non_https_unapproved_origin_or_forbidden_method_continued, required: 0}
+  - {id: UC03, name: service_worker_websocket_popup_or_download_escape, required: 0}
+  - {id: UC04, name: auth_cookie_storage_profile_or_credential_surface, required: 0}
+  - {id: UC05, name: model_javascript_interaction_or_arbitrary_playwright_execution, required: 0}
+  - {id: UC06, name: deadline_cleanup_or_orphan_browser_escape, required: 0}
+  - {id: UC07, name: raw_remote_or_playwright_secret_error_leak, required: 0}
+  - {id: UC08, name: snapshot_link_or_output_bound_bypass, required: 0}
+  - {id: UC09, name: restricted_registry_or_provider_swap_boundary_bypass, required: 0}
+  - {id: UC10, name: protected_dependency_future_phase_or_self_closure_drift, required: 0}
+
+verification_requirements:
+  hard_invariants_required: 30
+  exact_positive_ids: 10
+  exact_negative_ids: 24
+  unsafe_counters_required: 10
+  unsafe_counters_zero_on_legitimate_paths: true
+  unsafe_detectors_independently_fireable: true
+  deterministic_browser_driver_oracle: true
+  request_policy_oracle: true
+  cleanup_oracle: true
+  real_playwright_chromium_no_network_smoke: true
+  actual_registry_restricted_run_agent_path: true
+  provider_swap_same_agent_definition: true
+  part_a_byte_identity: true
+  core_byte_identity: true
+  prior_phase_protected_identity: true
+  dependency_diff_exact_pin_only: true
+  typecheck: PASS
+  focused_s14g: PASS
+  full_pre_build: COMPARE_EXACT_MEASURED_BASELINE
+  genuine_dist_absent_build: PASS
+  full_post_build: COMPARE_EXACT_MEASURED_BASELINE
+  git_diff_check: PASS
+
+baseline_failures:
+  baseline_to_measure: exact_part_a_integration_sha
+  policy: No provisional numeric allowlist. Measure exact fresh WSL-native Part A baseline identities and assertion causes before Part B authorization.
+  raw_counts_required: true
+  same_identity_and_same_cause_required_on_candidate: true
+  no_skip_or_historical_test_edit: true
+  windows_primary_worktree_not_canonical: true
+
+part_b_scope:
+  allowed:
+    - src/providers/capability/browser/**
+    - tests/browser-capability/**
+    - brain-bootstrap/reports/S14G-browser-capability-verification.md
+    - package.json
+    - package-lock.json
+  dependency_exception: package manifests may change only to add exact playwright-core 1.63.0
+  forbidden:
+    - src/core/**
+    - brain-bootstrap/STATE.yaml
+    - brain/context/CURRENT.md
+    - prior_phase_canonical_artifacts_or_implementations
+    - S14H_plus_implementation
+
+independent_verification:
+  fresh_session: true
+  verifier_must_be_non_authoring: true
+  verifier_must_be_non_builder: true
+  verifier_must_be_non_fork: true
+  verifier_must_be_read_only: true
+  exact_committed_remote_candidate_required: true
+  standalone_verifier_relay_required: true
+  separate_control_plane_acceptance_required: true
+
+phase_acceptance:
+  on_pass:
+    S14G: PHASE_PASS
+    S14: IN_PROGRESS
+    S14H: NOT_AUTHORIZED
+    HI-054: NOT_AWARDED
