@@ -173,12 +173,16 @@ export class BrowserInspectCapabilityProvider implements CapabilityProvider {
         deadline,
       );
 
-      // 6. Navigate with the one invocation signal and a disabled Playwright timeout.
-      await page.goto(input.url, {
-        waitUntil: input.wait_until,
-        signal: deadline.controller.signal,
-        timeout: 0,
-      });
+      // 6. Navigate with the one invocation signal and a disabled Playwright timeout,
+      // also raced against that same deadline so a signal-ignoring hang cannot outlive it.
+      await this.raceSignal(
+        page.goto(input.url, {
+          waitUntil: input.wait_until,
+          signal: deadline.controller.signal,
+          timeout: 0,
+        }),
+        deadline,
+      );
 
       // 7. Revalidate the final main-frame URL: HTTPS, no userinfo, allowed origin, byte bound.
       const finalUrl = validateFinalUrl(page.url(), allowedNavigation);
@@ -197,14 +201,17 @@ export class BrowserInspectCapabilityProvider implements CapabilityProvider {
         reject("EXECUTION_FAILED", SAFE_MESSAGES.outputOverflow);
       }
 
-      // 9. Capture the bounded ARIA snapshot.
-      const ariaSnapshot = await page.ariaSnapshotJSON({
-        mode: "default",
-        boxes: false,
-        depth: this.config.snapshot_depth,
-        signal: deadline.controller.signal,
-        timeout: 0,
-      });
+      // 9. Capture the bounded ARIA snapshot under the same signal and deadline race.
+      const ariaSnapshot = await this.raceSignal(
+        page.ariaSnapshotJSON({
+          mode: "default",
+          boxes: false,
+          depth: this.config.snapshot_depth,
+          signal: deadline.controller.signal,
+          timeout: 0,
+        }),
+        deadline,
+      );
 
       const snapshotText = JSON.stringify(ariaSnapshot);
       if (utf8Bytes(snapshotText) > this.config.max_snapshot_bytes) {
