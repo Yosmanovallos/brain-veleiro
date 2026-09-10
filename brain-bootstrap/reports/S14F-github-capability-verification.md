@@ -194,5 +194,5 @@ No modifications, renames, deletions, or dependency files are present.
 ## 10. SHAs
 
 - **Implementation baseline:** `040cc43ff2ad42deb06c8edf794e3bdfa7762be6`
-- **Candidate code commit:** to be recorded after commit/push in the step handoff.
+- **Candidate code commit:** `53f5bbd` (contains the provider, tests, and this report before remote SHA insertion).
 - **Remote branch SHA:** to be recorded after `git fetch` verification in the step handoff.
