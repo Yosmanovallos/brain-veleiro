@@ -6,7 +6,7 @@ independent_verifier: claude-code-fresh-non-authoring-non-fork-read-only
 researcher: chatgpt-manual
 backup_builder: claude-code
 started_at: "2026-08-25T00:00:00Z"
-last_verified_at: "2026-09-09T22:20:13Z"
+last_verified_at: "2026-09-10T00:35:25Z"
 steps:
   S00: PASS
   S01: PASS
@@ -59,8 +59,8 @@ repository:
   origin: "https://github.com/Yosmanovallos/brain-veleiro.git"
   origin_verified_via: "gh api repos/Yosmanovallos/brain-veleiro"
   commits: 175
-  head_sha: "d719ee537a2a348c2e86464311555cc77f52493c"
-  head_sha_note: "S14D Git Capability verified implementation target d719ee5 and DIRECT PARENT of the corrected docs-only phase-closure commit. main fast-forwarded b41f4fe5bb1b7562bf0ece080f344beb4de3b8f7..<closure> with zero candidate modification; superseded closure attempt 88252daa2e6bdbaa9727c9acab5a55dcabff90b4 remains on branch codex/s14d-source-audit-remediation and is NOT in main. State: S00-S14C VERIFIED PASS / CLOSED; S14 IN_PROGRESS / NOT_CLOSED; S14D PHASE_PASS / INTEGRATED; S14E NOT_AUTHORIZED / NOT_STARTED; HI-054 NOT_AWARDED. Authority: fresh independent verifier relay 5595385959 (Antigravity CLI 1.1.28, issue #1) then ChatGPT control-plane acceptance 5609528853 (in_reply_to_comment_id 5595385959, decision VERIFIED_PASS_ACCEPTED / S14D_PHASE_INTEGRATION_AUTHORIZED)."
+  head_sha: "c9a9189a94abfe105faa99bba553ba515059f815"
+  head_sha_note: "S14E Documentation/Search verified implementation target c9a9189 and DIRECT PARENT of the corrected docs-only phase-closure commit. main fast-forwarded 2a6a4a911f7de34c827afbd3fd1b1171a6a59431..<closure> with zero candidate modification; previous failed candidate b65eab486059cdc58419870688ed7ef7bfe2c70b remains on branch codex/s14e-documentation-search-part-b and is NOT in main. State: S00-S14D VERIFIED PASS / CLOSED; S14 IN_PROGRESS / NOT_CLOSED; S14E PHASE_PASS / INTEGRATED; S14F NOT_AUTHORIZED; HI-054 NOT_AWARDED. Authority: fresh independent verifier relay 5610807813 (Antigravity CLI 1.1.28, issue #1) then count-reconciliation comment 5610807986 then ChatGPT control-plane acceptance 5610810146 (in_reply_to_comment_id 5610807813, decision VERIFIED_PASS_ACCEPTED / S14E_PHASE_INTEGRATION_AUTHORIZED)."
   runtime_foundation:
     status: PASS
     runtime: "Node.js 24 LTS"
@@ -831,6 +831,32 @@ repository:
     contract_tests: "Antigravity CLI (agy 1.1.28) fresh non-authoring, non-fork, read-only verifier (issue #1 comment 5595385959, INDEPENDENT_VERIFICATION_PASS): Part A canonical blobs byte-identical to baseline b41f4fe; exact additive scope 17 files; typecheck PASS; focused S14D 130/130; full pre-build 1908 passed plus 8 inherited S14C failures; repo-local dist genuinely absent then real build PASS; full post-build same; git diff --check clean; verifier tracked worktree clean. Also 188 independent verifier-authored adversarial/challenge assertions PASS: root symlink spellings, uppercase full OID canonicalization, status path and rename-source validation, absolute monotonic deadline through version probe/cleanup/output/success, malformed porcelain versus valid records, standalone no-keepalive Node cleanup with SIGTERM-resistant same-group descendant, whole-.git immutability, gc/auto-maintenance suppression, timeout and output-overflow cleanup. Node v24.19.0 / npm 11.17.0 / Git 2.53.0."
     boundaries: "In-memory local-explicit-workspace Git capability only. No Core / RestrictedCapabilityProvider / AgentDefinition / registry / filesystem / shell production change; no new dependency; no git-process as model-visible command / no remote Git / no GitHub API / no network / no browser / no PostgreSQL / no MCP / no OAuth / no credential store; no S14E+ pull-forward. Only two capabilities exposed: repository.status and repository.read, both side_effects NONE. Monotonic deadline, process-group cleanup, malformed porcelain fail-closed, uppercase OID canonicalization, and standalone cleanup lifecycle verified by independent adversarial probes."
     note: "S14D PHASE VERIFIED PASS / integrated. Exact candidate d719ee537a2a348c2e86464311555cc77f52493c with zero candidate modification; this bounded docs-only phase-closure commit (STATE.yaml + CURRENT.md + one phase-closure handoff) follows on top. Authority is a properly paired, separately-timestamped sequence: fresh independent verifier relay (issue #1 comment 5595385959, INDEPENDENT_VERIFICATION_PASS, FRESH_NON_AUTHORING_NON_FORK_READ_ONLY) at 2026-09-09T03:35:07Z, then ChatGPT control-plane acceptance (issue #1 comment 5609528853, in_reply_to_comment_id 5595385959, decision VERIFIED_PASS_ACCEPTED / S14D_PHASE_INTEGRATION_AUTHORIZED) at 2026-09-09T22:20:13Z. The superseded closure attempt 88252daa2e6bdbaa9727c9acab5a55dcabff90b4 remains on branch codex/s14d-source-audit-remediation and is NOT an ancestor of this corrected closure or of main. S14 (CAPABILITY_REGISTRY_TOOLS_MCP) remains IN_PROGRESS / NOT_CLOSED; HI-054 NOT_AWARDED; S14E NOT_AUTHORIZED and NOT_STARTED, and was not started, inspected or authored by this closure. A phase PASS does not close S14; HI-054 may be awarded only at final S14 closure after all required S14 phases. Next eligible action is the ChatGPT S14E authoring gate."
+
+  documentation_search:
+    status: PHASE_PASS
+    phase: S14E
+    parent_step: S14
+    parent_step_status: IN_PROGRESS
+    classification: RUNTIME_INFRASTRUCTURE
+    depth: DEEP
+    verified_implementation_target: "c9a9189a94abfe105faa99bba553ba515059f815"
+    verified_candidate_branch: "codex/s14e-documentation-search-part-b"
+    previous_failed_candidate: "b65eab486059cdc58419870688ed7ef7bfe2c70b"
+    baseline_before_closure: "2a6a4a911f7de34c827afbd3fd1b1171a6a59431"
+    independent_verifier: "antigravity-cli-fresh-non-authoring-non-fork-read-only"
+    independent_verification_comment_id: 5610807813
+    count_reconciliation_comment_id: 5610807986
+    control_plane_acceptance_comment_id: 5610810146
+    control_plane_decision: "VERIFIED_PASS_ACCEPTED / S14E_PHASE_INTEGRATION_AUTHORIZED"
+    independently_verified_at: "2026-09-10T00:35:25Z"
+    control_plane_accepted_at: "2026-09-10T00:35:25Z"
+    honor_invariant: "HI-054 NOT_AWARDED"
+    builder_report: "brain-bootstrap/reports/S14E-documentation-search-verification.md"
+    phase_closure_handoff: "brain/context/handoffs/20260910T003525Z-s14e-verified-pass-phase-closure.md"
+    scope: "1 tracked file modified: tests/documentation-capability/documentationCapability.test.ts. Correction: deterministic controlled-clock FX-NEG-009 fixture. Production source, package.json, package-lock.json, Part A authored artifacts, STATE.yaml and CURRENT.md unchanged by the implementation candidate. The docs-only phase-closure commit adds STATE.yaml + CURRENT.md + one handoff only."
+    contract_tests: "Fresh independent non-authoring, non-builder, non-fork, read-only verifier (issue #1 comment 5610807813, PASS_WITH_DOCUMENTED_BASELINE_FAILURES): exact HEAD c9a9189; npm ci PASS; npm run typecheck PASS; FX-NEG-009 10/10 consecutive PASS after controlled-clock fix; focused S14E 44/44 PASS; baseline 1902 passed / 14 failed; candidate 1946 passed / 14 failed; build PASS; git diff --check clean; Part A byte identity PASS; no package.json/package-lock.json changes; no committed dist. The 14 inherited failures are unchanged in identity and assertion cause, attributable only to brain-bootstrap/STATE.yaml and brain/context/CURRENT.md. Count reconciliation: the +44 candidate passes are the new S14E Part B tests (comment 5610807986)."
+    boundaries: "In-memory offline documentation search capability only. No Core / RestrictedCapabilityProvider / AgentDefinition / registry / filesystem / shell / git production change; no new dependency; no network / filesystem / database / MCP / OAuth / credential-store surface. Controlled-clock test-only fixture for FX-NEG-009; real event-loop cooperative-yield deadline coverage remains in HI-013 and UC04."
+    note: "S14E PHASE VERIFIED PASS / integrated. Exact candidate c9a9189a94abfe105faa99bba553ba515059f815 with zero candidate modification; this bounded docs-only phase-closure commit (STATE.yaml + CURRENT.md + one phase-closure handoff) follows on top. Authority is a properly paired, separately-timestamped sequence: fresh independent verifier relay (issue #1 comment 5610807813, PASS_WITH_DOCUMENTED_BASELINE_FAILURES, FRESH_NON_AUTHORING_NON_FORK_READ_ONLY), then count-reconciliation comment 5610807986, then ChatGPT control-plane acceptance (issue #1 comment 5610810146, in_reply_to_comment_id 5610807813, decision VERIFIED_PASS_ACCEPTED / S14E_PHASE_INTEGRATION_AUTHORIZED) at 2026-09-10T00:35:25Z. The previous failed candidate b65eab486059cdc58419870688ed7ef7bfe2c70b remains preserved on branch codex/s14e-documentation-search-part-b and is NOT in main. S14 (CAPABILITY_REGISTRY_TOOLS_MCP) remains IN_PROGRESS / NOT_CLOSED; HI-054 NOT_AWARDED; S14F NOT_AUTHORIZED and NOT_STARTED, and was not started, inspected or authored by this closure. A phase PASS does not close S14; HI-054 may be awarded only at final S14 closure after all required S14 phases. Next eligible action is the ChatGPT S14F authoring gate."
 
 build_day:
   date: "2026-08-29"
