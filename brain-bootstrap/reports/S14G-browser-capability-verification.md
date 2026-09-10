@@ -132,10 +132,7 @@ git status --short
 Result:
 
 ```text
- M package-lock.json
- M package.json
-?? src/providers/capability/browser/
-?? tests/browser-capability/
+(clean — all authorized additions are committed)
 ```
 
 ```bash
@@ -151,8 +148,22 @@ git diff --name-status e4c90bc8a43f1ffb855617ba7db30ce4e46d2595
 Result:
 
 ```text
+A       brain-bootstrap/reports/S14G-browser-capability-verification.md
 M       package-lock.json
 M       package.json
+A       src/providers/capability/browser/browserCapabilityProvider.ts
+A       src/providers/capability/browser/chromiumFactory.ts
+A       src/providers/capability/browser/descriptors.ts
+A       src/providers/capability/browser/index.ts
+A       src/providers/capability/browser/types.ts
+A       src/providers/capability/browser/validation.ts
+A       tests/browser-capability/audit.ts
+A       tests/browser-capability/browserCapability.test.ts
+A       tests/browser-capability/cases.ts
+A       tests/browser-capability/hardInvariants.test.ts
+A       tests/browser-capability/helpers.ts
+A       tests/browser-capability/regressions.test.ts
+A       tests/browser-capability/unsafeCounters.test.ts
 ```
 
 Part A canonical files (`brain-bootstrap/skills/BROWSER_CAPABILITY_SKILL_S14G.md`, `brain-bootstrap/specs/BROWSER_CAPABILITY_CONTRACT_S14G.md`, `brain-bootstrap/quality-contracts/S14G_BROWSER_CAPABILITY_DEEP.yaml`) are byte-identical to Part A baseline.
@@ -202,7 +213,7 @@ No S14H+ artifacts are present.
 ## 6. Closure state
 
 - S14: `IN_PROGRESS`
-- S14G: `PHASE_PASS` — implementation and verification complete on this branch
+- S14G: `CANDIDATE_RETURNED_FOR_CHATGPT_SOURCE_REVIEW` — implementation and focused QA complete; full-suite legacy failure count (35) exceeds the control-plane authorized inventory (20). No S14G canonical test fails, and the extra 15 failures are prior-phase boundary/dependency guards. A fresh control-plane decision is required before independent verification.
 - S14H: `NOT_AUTHORIZED`
 - `HI-054`: `NOT_AWARDED`
 
