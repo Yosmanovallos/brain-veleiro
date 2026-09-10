@@ -195,4 +195,5 @@ No modifications, renames, deletions, or dependency files are present.
 
 - **Implementation baseline:** `040cc43ff2ad42deb06c8edf794e3bdfa7762be6`
 - **Candidate code commit:** `53f5bbd` (contains the provider, tests, and this report before remote SHA insertion).
-- **Remote branch SHA:** to be recorded after `git fetch` verification in the step handoff.
+- **Remote branch SHA verified at push:** `5d4268e8a2253320209a0176c476b3f14ba40a04` (matches `FETCH_HEAD` after `git fetch origin s14f-github-capability-part-b`).
+- **Final remote branch tip:** recorded in the `STEP_STATUS` handoff after any subsequent report update.
