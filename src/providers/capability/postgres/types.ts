@@ -36,10 +36,12 @@ export interface PostgresClientHandle {
 }
 
 export interface PostgresClientOptions {
-  host: string; port: number; database: string; user: string; password: string;
+  host: string; port: number; database: string; user: string; password: string | (() => string | Promise<string>);
   ssl: false | { rejectUnauthorized: true; ca: string; servername?: string };
   application_name: "brain-postgres-inspect";
+  client_encoding: "UTF8";
   options: "-c default_transaction_read_only=on";
+  replication: "false";
   sslnegotiation: "postgres";
   pipeline: false;
   keepAlive: false;

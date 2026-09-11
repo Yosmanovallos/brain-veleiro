@@ -45,7 +45,7 @@ export class PgPostgresInspectProvider implements CapabilityProvider {
       catch(error){ if(error instanceof Rejection) throw error; reject("PERMISSION_DENIED",SAFE_MESSAGES.permissionDenied); }
       const remaining=()=>Math.max(1,Math.floor(deadline.remaining()));
       const ssl: PostgresClientOptions["ssl"] = material.tls.mode==="verify-full" ? {rejectUnauthorized:true,ca:material.tls.ca,...(material.tls.servername?{servername:material.tls.servername}:{})} : false;
-      try { client=this.clientFactory.create({host:material.host,port:material.port,database:material.database,user:material.user,password:material.password,ssl,application_name:"brain-postgres-inspect",options:"-c default_transaction_read_only=on",sslnegotiation:"postgres",pipeline:false,keepAlive:false,connectionTimeoutMillis:remaining(),statement_timeout:remaining(),query_timeout:remaining()}); }
+      try { client=this.clientFactory.create({host:material.host,port:material.port,database:material.database,user:material.user,password:()=>material.password,ssl,application_name:"brain-postgres-inspect",client_encoding:"UTF8",options:"-c default_transaction_read_only=on",replication:"false",sslnegotiation:"postgres",pipeline:false,keepAlive:false,connectionTimeoutMillis:remaining(),statement_timeout:remaining(),query_timeout:remaining()}); }
       catch { reject("INTERNAL_ERROR",SAFE_MESSAGES.internalError); }
       try { await deadline.bound(client.connect()); } catch(error) { throw this.classify(error,"connect",deadline); }
       try { await deadline.bound(client.query(BEGIN_READ_ONLY)); transactionStarted=true; } catch(error) { throw this.classify(error,"query",deadline); }

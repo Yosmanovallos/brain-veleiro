@@ -33,7 +33,7 @@ Verification:
 
 - Contract §§2–5: one static `postgres.inspect` / `EXTERNAL` descriptor; closed runtime input and exact six-operation matrix.
 - §§6–7: copied/frozen provider configuration, exact key validation, schema restrictions, opaque resolver, bounded structured connection material, and loopback/verify-full TLS policy.
-- §§9–13, 17: fresh explicitly configured `pg.Client`, disabled pipeline/keepalive/environment option fallback, fixed read-only command/query registry, parameter-only scope, qualified catalog reads, and no row-data query surface. Environment fallback is disabled with explicit connection fields, the non-empty provider-owned startup option `-c default_transaction_read_only=on`, and provider-owned `sslnegotiation: "postgres"`. `ssl` was already immune to `PGSSLMODE` because node-postgres uses an undefined check and the provider always supplies `ssl`. The hostile-all-`PG*` regression in `envFallback.test.ts` constructs the real installed `pg@8.23.0` `Client` from the exact captured production options and verifies the effective values.
+- §§9–13, 17: fresh explicitly configured `pg.Client`, disabled pipeline/keepalive/environment option fallback, fixed read-only command/query registry, parameter-only scope, qualified catalog reads, and no row-data query surface. Environment isolation covers `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `PGSSLMODE`, `PGOPTIONS`, `PGSSLNEGOTIATION`, `PGCLIENT_ENCODING`, and `PGREPLICATION`. The provider pins `client_encoding: "UTF8"`, explicitly disables replication with the provider-owned truthy startup value `replication: "false"`, and delivers the resolved password—including an empty string—through a provider-private callback so neither `PGPASSWORD` nor pgpass can substitute it. The provider also supplies the non-empty startup option `-c default_transaction_read_only=on` and `sslnegotiation: "postgres"`; `ssl` is immune to `PGSSLMODE` because node-postgres uses an undefined check and the provider always supplies it. The hostile-all-`PG*` regression in `envFallback.test.ts` constructs the real installed `pg@8.23.0` `Client` from the exact captured production options and verifies the effective values and startup configuration.
 - §§14–16: closed operation-specific normalization, identifier/type bounds, deterministic provider-side ordering, `max_rows + 1` truncation, and atomic serialized-output bound.
 - §§18–22: fixed safe diagnostics, SQLSTATE/network mapping, one monotonic deadline, contained late promises, and bounded `ROLLBACK` then `end()` cleanup. `PgClientFactory` synchronously installs a client `error` listener that retains only a fatal boolean; wrapper operation gates and the provider's final success gate normalize that state to retryable `UNAVAILABLE`. Regressions cover a real `pg.Client` error emission without uncaught/raw-error escape and a deterministic provider path that cannot resurrect `SUCCESS` while preserving cleanup.
 - §§23–24: restricted denial before resolver/client and actual Registry + Restricted + `runAgent` composition/provider compatibility tests. `FX-POS-011` and `S14H-HI-029` each execute both the real provider and an independently implemented compatible provider through `compileAgentDefinition` → `RestrictedCapabilityProvider` → `CapabilityRegistryProvider` → `runAgent`, with the same byte-identical frozen `AgentDefinition`.
@@ -50,16 +50,14 @@ Verification:
 
 - Runtime: Node `v24.19.0`, npm `11.17.0`.
 - `npm run typecheck`: PASS on the repaired source.
-- `npx vitest run tests/postgres-capability`: PASS — 7 files passed, 1 environment-gated file skipped; 85 tests passed, 2 skipped.
-- `npx vitest run tests/postgres-capability --reporter=json`: PASS — 87 total, 85 passed, 2 skipped, 0 failed.
-- Timing-sensitive focused suite: PASS for 10 consecutive runs; every run reported 85 passed, 2 skipped.
+- `npx vitest run tests/postgres-capability`: PASS — 7 files passed, 1 environment-gated file skipped; 86 tests passed, 2 skipped (88 total).
 - `git diff --check`: PASS.
 - Scope inspection: new implementation/test/report files are only in the authorized S14H paths. `package.json` and `package-lock.json` already contain the control-plane-provided exact `pg@8.23.0` and `@types/pg@8.23.1` changes; the builder did not edit or install dependencies.
 - Protected surfaces: no Core, Registry, Restricted, Part A, S14A–S14G, STATE, CURRENT, or S14I+ file was edited.
 
 ## Real smoke facts
 
-- The real smoke was re-executed by the control plane on repaired candidate `461ec77`: PASS.
+- The real smoke was re-executed by the control plane on the repaired candidate: PASS.
 - The disposable container used `postgres:16-alpine` by immutable image ID `sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685`, with `--pull=never`, temporary random credentials, and an ephemeral host port published only on `127.0.0.1`; the container was destroyed after the run.
 - A control-plane run against disposable PostgreSQL 16.15 established that `name[]` catalog aggregates arrived through node-postgres as array-literal strings. The fixed indexes/constraints queries now cast those values to `text[]`; deterministic regressions retain strict rejection of array-literal strings.
 - `tests/postgres-capability/realPostgresSmoke.test.ts`: 2 tests, 2 passed, 0 failed. `FX-POS-012` exercised all six operations (`server`, `schemas`, `tables`, `columns`, `indexes`, and `constraints`), and `S14H-HI-031` performed a real server observation; both ran against disposable PostgreSQL 16.15 and passed. The canonical IDs are executable in the smoke file.
@@ -67,4 +65,4 @@ Verification:
 
 ## Known limitation / remaining external gate
 
-The disposable PostgreSQL smoke now passes on repaired candidate `461ec77`, with canonical IDs `FX-POS-012` and `S14H-HI-031` executable in `realPostgresSmoke.test.ts`. No credentials are recorded here.
+The disposable PostgreSQL smoke passes on the repaired candidate, with canonical IDs `FX-POS-012` and `S14H-HI-031` executable in `realPostgresSmoke.test.ts`. No credentials are recorded here.

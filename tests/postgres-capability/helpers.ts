@@ -24,7 +24,7 @@ const defaultRows:Record<string,unknown[]>={
 export class FakeClientFactory implements PostgresClientFactory {
   creates=0; options:PostgresClientOptions[]=[]; clients:FakeClient[]=[];
   constructor(readonly behaviors:Partial<Record<Step,Behavior>>={},readonly rows:Partial<Record<string,unknown[]>>={}){}
-  create(options:PostgresClientOptions):PostgresClientHandle{this.creates++;this.options.push(structuredClone(options));const c=new FakeClient(this.behaviors,this.rows);this.clients.push(c);return c;}
+  create(options:PostgresClientOptions):PostgresClientHandle{this.creates++;this.options.push({...options});const c=new FakeClient(this.behaviors,this.rows);this.clients.push(c);return c;}
 }
 export class FakeClient implements PostgresClientHandle {
   log:string[]=[]; queries:Array<string|{text:string;values?:unknown[]}>=[];
