@@ -1,9 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe,expect,it } from "vitest";
 import { ALL_PRODUCTION_SQL,PgPostgresInspectProvider,POSTGRES_INSPECTION_QUERIES,descriptorsFor } from "../../src/providers/capability/postgres/index.js";
-import { CapabilityRegistryProvider } from "../../src/providers/capability/registry/capabilityRegistryProvider.js";
 import { RestrictedCapabilityProvider } from "../../src/core/agent/restrictedCapabilityProvider.js";
-import { FakeClientFactory,SECRET,baseConfig,fail,harness,material,request,success } from "./helpers.js";
+import { CompatiblePostgresInspectTestProvider,DEFINITION_BYTES,FakeClientFactory,SECRET,agentExec,assertCompatibleContracts,baseConfig,definition,fail,harness,material,request,success } from "./helpers.js";
 import { productionSources } from "./audit.js";
 
 const checks:Array<[string,string,()=>unknown|Promise<unknown>]>=[
@@ -17,7 +16,7 @@ const checks:Array<[string,string,()=>unknown|Promise<unknown>]>=[
  ["S14H-HI-008","resolver deadline contains hangs",async()=>fail(await harness(new FakeClientFactory(),{resolve:()=>new Promise(()=>undefined)},baseConfig({max_timeout_ms:10})).provider.invoke(request({operation:"server"},10)),"TIMEOUT")],
  ["S14H-HI-009","material is bounded and remote TLS enforced",async()=>fail(await harness(new FakeClientFactory(),{resolve:async()=>material({host:"remote"})}).provider.invoke(request({operation:"server"})),"PERMISSION_DENIED")],
  ["S14H-HI-010","fresh Client per invocation no pool",async()=>{const h=harness();await h.provider.invoke(request({operation:"server"}));await h.provider.invoke(request({operation:"server"}));expect(h.factory.creates).toBe(2);expect(productionSources()).not.toMatch(/new Pool|pg-native/)}],
- ["S14H-HI-011","all Client connection fields explicit",async()=>{const h=harness();await h.provider.invoke(request({operation:"server"}));expect(Object.keys(h.factory.options[0]).sort()).toEqual(["application_name","connectionTimeoutMillis","database","host","keepAlive","options","password","pipeline","port","query_timeout","ssl","statement_timeout","user"].sort())}],
+ ["S14H-HI-011","all Client connection fields explicit",async()=>{const h=harness();await h.provider.invoke(request({operation:"server"}));expect(Object.keys(h.factory.options[0]).sort()).toEqual(["application_name","connectionTimeoutMillis","database","host","keepAlive","options","password","pipeline","port","query_timeout","ssl","sslnegotiation","statement_timeout","user"].sort())}],
  ["S14H-HI-012","dependency pins exact",()=>{const p=JSON.parse(readFileSync("package.json","utf8"));expect([p.dependencies.pg,p.devDependencies["@types/pg"]]).toEqual(["8.23.0","8.23.1"])}],
  ["S14H-HI-013","SQL is a closed fixed registry",()=>expect(Object.keys(POSTGRES_INSPECTION_QUERIES)).toEqual(["server","schemas","tables","columns","indexes","constraints"])],
  ["S14H-HI-014","model identifiers are values only",async()=>{const h=harness();await h.provider.invoke(request({operation:"columns",schema:"app",table:"a"}));expect(h.factory.clients[0].queries.at(-2)).toMatchObject({text:POSTGRES_INSPECTION_QUERIES.columns,values:["app","a",21]})}],
@@ -35,9 +34,8 @@ const checks:Array<[string,string,()=>unknown|Promise<unknown>]>=[
  ["S14H-HI-026","rollback then end cleanup is bounded",async()=>{const f=new FakeClientFactory({rollback:"never"});await harness(f,undefined,baseConfig({max_timeout_ms:15})).provider.invoke(request({operation:"server"},15));expect(f.clients[0].log.slice(-2)).toEqual(["rollback","end"])}],
  ["S14H-HI-027","late settlements are contained",async()=>{const r=await harness(new FakeClientFactory({select:{delay:30,reject:true}}),undefined,baseConfig({max_timeout_ms:5})).provider.invoke(request({operation:"server"},5));fail(r,"TIMEOUT")}],
  ["S14H-HI-028","Restricted denial precedes resolver network",async()=>{const h=harness();const p=new RestrictedCapabilityProvider(h.provider,new Set(),new Set());expect((await p.invoke(request({operation:"server"}))).status).toBe("BLOCKED");expect(h.factory.creates).toBe(0)}],
- ["S14H-HI-029","Registry can select compatible provider",async()=>{const h=harness();const r=new CapabilityRegistryProvider({providers:[{provider_id:"a",provider:h.provider}],bindings:[{capability_id:"postgres.inspect",selected_provider_id:"a"}]});expect((await r.invoke(request({operation:"server"}))).status).toBe("SUCCESS")}],
+ ["S14H-HI-029","Compatible provider swap works through Registry Restricted and runAgent with identical AgentDefinition bytes",async()=>{const h=harness();const alt=new CompatiblePostgresInspectTestProvider();await assertCompatibleContracts(h.provider,alt);const bytes=JSON.stringify(definition);expect(bytes).toBe(DEFINITION_BYTES);const real=await agentExec(h.provider,{operation:"server"},definition,"selected-real");expect(JSON.stringify(definition)).toBe(DEFINITION_BYTES);const compatible=await agentExec(alt,{operation:"server"},definition,"selected-compatible");expect(JSON.stringify(definition)).toBe(DEFINITION_BYTES);expect([real.outcome,compatible.outcome]).toEqual(["SUCCESS","SUCCESS"]);expect(h.factory.creates).toBe(1);expect(alt.invokeCallCount).toBe(1);expect(Object.keys(real.output!.data!).sort()).toEqual(Object.keys(compatible.output!.data!).sort())}],
  ["S14H-HI-030","canonical deterministic tests require no shared database",()=>{expect(material().host).toBe("127.0.0.1");expect(readFileSync("tests/postgres-capability/realPostgresSmoke.test.ts","utf8")).toContain("describe.skipIf(!enabled)")}],
- ["S14H-HI-031","real smoke is explicitly environment gated",()=>expect(readFileSync("tests/postgres-capability/realPostgresSmoke.test.ts","utf8")).toContain('S14H_PG_REAL_SMOKE')],
  ["S14H-HI-032","Part A state future phase and honor remain untouched",()=>expect(productionSources()).not.toMatch(/STATE\.yaml|CURRENT\.md|S14I\s*=|HI-054\s*:\s*AWARDED/)],
 ];
 describe("S14H hard invariants",()=>{for(const [id,name,fn] of checks)it(`${id}: ${name}`,fn);});

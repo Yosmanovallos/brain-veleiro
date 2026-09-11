@@ -32,13 +32,15 @@ export interface PostgresClientHandle {
   connect(): Promise<void>;
   query(query: string | { text: string; values?: unknown[] }): Promise<PostgresQueryResult>;
   end(): Promise<void>;
+  hasFatalIdleError(): boolean;
 }
 
 export interface PostgresClientOptions {
   host: string; port: number; database: string; user: string; password: string;
   ssl: false | { rejectUnauthorized: true; ca: string; servername?: string };
   application_name: "brain-postgres-inspect";
-  options: "";
+  options: "-c default_transaction_read_only=on";
+  sslnegotiation: "postgres";
   pipeline: false;
   keepAlive: false;
   connectionTimeoutMillis: number;

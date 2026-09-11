@@ -45,7 +45,7 @@ export class PgPostgresInspectProvider implements CapabilityProvider {
       catch(error){ if(error instanceof Rejection) throw error; reject("PERMISSION_DENIED",SAFE_MESSAGES.permissionDenied); }
       const remaining=()=>Math.max(1,Math.floor(deadline.remaining()));
       const ssl: PostgresClientOptions["ssl"] = material.tls.mode==="verify-full" ? {rejectUnauthorized:true,ca:material.tls.ca,...(material.tls.servername?{servername:material.tls.servername}:{})} : false;
-      try { client=this.clientFactory.create({host:material.host,port:material.port,database:material.database,user:material.user,password:material.password,ssl,application_name:"brain-postgres-inspect",options:"",pipeline:false,keepAlive:false,connectionTimeoutMillis:remaining(),statement_timeout:remaining(),query_timeout:remaining()}); }
+      try { client=this.clientFactory.create({host:material.host,port:material.port,database:material.database,user:material.user,password:material.password,ssl,application_name:"brain-postgres-inspect",options:"-c default_transaction_read_only=on",sslnegotiation:"postgres",pipeline:false,keepAlive:false,connectionTimeoutMillis:remaining(),statement_timeout:remaining(),query_timeout:remaining()}); }
       catch { reject("INTERNAL_ERROR",SAFE_MESSAGES.internalError); }
       try { await deadline.bound(client.connect()); } catch(error) { throw this.classify(error,"connect",deadline); }
       try { await deadline.bound(client.query(BEGIN_READ_ONLY)); transactionStarted=true; } catch(error) { throw this.classify(error,"query",deadline); }
@@ -66,7 +66,7 @@ export class PgPostgresInspectProvider implements CapabilityProvider {
     if(transactionStarted&&client){ try{await deadline.bound(client.query(ROLLBACK));}catch{/* primary result is retained; deadline gate below handles timeout */} }
     if(client){ try{await deadline.bound(client.end());}catch{/* bounded best effort */} }
     if(!result) {
-      result = deadline.expired() ? this.failure(new Rejection("TIMEOUT",SAFE_MESSAGES.timeout,true),identity,deadline) : {status:"SUCCESS",...identity,output:output!,evidence_refs:[`postgres://${this.config.connection_id}`],duration_ms:deadline.duration()};
+      result = deadline.expired() ? this.failure(new Rejection("TIMEOUT",SAFE_MESSAGES.timeout,true),identity,deadline) : client?.hasFatalIdleError() ? this.failure(new Rejection("UNAVAILABLE",SAFE_MESSAGES.unavailable,true),identity,deadline) : {status:"SUCCESS",...identity,output:output!,evidence_refs:[`postgres://${this.config.connection_id}`],duration_ms:deadline.duration()};
     }
     deadline.dispose(); return result;
   }
