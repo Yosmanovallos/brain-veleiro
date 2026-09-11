@@ -59,11 +59,12 @@ Verification:
 
 ## Real smoke facts
 
-- Docker is not available in this WSL coding-worker environment, so no new live-database claim is made for this repaired candidate.
+- The real smoke was re-executed by the control plane on repaired candidate `461ec77`: PASS.
+- The disposable container used `postgres:16-alpine` by immutable image ID `sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685`, with `--pull=never`, temporary random credentials, and an ephemeral host port published only on `127.0.0.1`; the container was destroyed after the run.
 - A control-plane run against disposable PostgreSQL 16.15 established that `name[]` catalog aggregates arrived through node-postgres as array-literal strings. The fixed indexes/constraints queries now cast those values to `text[]`; deterministic regressions retain strict rejection of array-literal strings.
-- Both canonical executable tests, `FX-POS-012` (all six operations) and `S14H-HI-031` (a real server observation), live in `realPostgresSmoke.test.ts`, are gated on `S14H_PG_REAL_SMOKE=1`, and consume only the five specified `S14H_PG_*` connection environment variables. The exact-ID traceability oracle now scans this file.
-- Control-plane re-run on the repaired candidate: PENDING. The control plane will re-execute the disposable PostgreSQL smoke.
+- `tests/postgres-capability/realPostgresSmoke.test.ts`: 2 tests, 2 passed, 0 failed. `FX-POS-012` exercised all six operations (`server`, `schemas`, `tables`, `columns`, `indexes`, and `constraints`), and `S14H-HI-031` performed a real server observation; both ran against disposable PostgreSQL 16.15 and passed. The canonical IDs are executable in the smoke file.
+- The engine was Windows Docker Desktop, and the test ran in the WSL QA worktree with loopback-only publishing and no host database volume.
 
 ## Known limitation / remaining external gate
 
-The prior candidate's disposable PostgreSQL smoke passed after the SQL array casts. This repaired candidate still requires the explicitly pending control-plane smoke re-run. No credentials are recorded here.
+The disposable PostgreSQL smoke now passes on repaired candidate `461ec77`, with canonical IDs `FX-POS-012` and `S14H-HI-031` executable in `realPostgresSmoke.test.ts`. No credentials are recorded here.
